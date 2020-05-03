@@ -1,9 +1,9 @@
-# roll_service.py
+# roll_command.py
 
 from models import Channel, Scene, User, Character
 from utils import Roll
 
-class RollService():
+class RollCommand():
     def __init__(self, ctx, args):
         self.ctx = ctx
         self.args = args

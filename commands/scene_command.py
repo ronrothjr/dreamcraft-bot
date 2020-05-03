@@ -1,11 +1,15 @@
-# scene_service
+# scene_command
 
 from models.channel import Channel
 from models.scene import Scene
 from models.character import Character
 from models.user import User
+from config.setup import Setup
 
-class SceneService():
+SETUP = Setup()
+SCENE_HELP = SETUP.scene_help
+
+class SceneCommand():
     def __init__(self, ctx, args):
         self.ctx = ctx
         self.args = args[1:]
@@ -17,6 +21,7 @@ class SceneService():
 
     def run(self):
         switcher = {
+            'help': self.help,
             'name': self.name,
             'n': self.name,
             'description': self.description,
@@ -40,6 +45,9 @@ class SceneService():
             messages = [f'Unknown command: {self.command}']
         # Send messages
         return messages
+
+    def help(self):
+        return [SCENE_HELP]
     
     def name(self):
         if len(self.args) == 0:

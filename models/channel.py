@@ -32,6 +32,6 @@ class Channel(Document):
     def get_string(self):
         users = ''
         if self.users:
-            users = 'Players:\n' + ''.join([f'        {u}\n' for u in self.users])
+            users = f'\n{self.get_users_string()}'
         scenes = ''
-        return f'{users}'
+        return f'Guild: {self.guild}\nChannel: {self.name}{users}'

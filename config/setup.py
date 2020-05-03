@@ -1,7 +1,22 @@
 # config.py
 
 class Setup():
-    help = '.d - display these instructions\nCharacter Generation:\n\
+    help = '.d - display these instructions\nDreamcraft Bot:\n\
+            .d (c)haracter - display active character\n\
+            .d c help - display character help\n\
+            \nScene Setup\n\
+            .d (s)cene - display active scene\n\
+            .d s help - display scene help\n\
+            \nRoll Fate Dice\n\
+            .d r - roll fate dice\n\
+            .d r {approach|skill} - roll fate dice with active character\'s stat bonus\n\
+            .d r {approach|skill} (i)nvoke {aspect} [...(i)nvoke {aspect}] - roll fate dice with active character\'s stat bonus\n\
+            .d r compel {aspect} - compels an aspect and grants the active character a fate point\n\
+            .d re - reroll the character\'s last roll'
+
+    character_help = '.d c help - display these instructions\nCharacter Help:\n\
+            .d (c)haracter - display active character\n\
+            .d c help - display character help\n\
             .d c (n)ame \{name\} - display/set active character\n\
             .d c (l)ist - display list of characters\n\
             .d c (desc)ription \{description\} - set the description for the active character\n\
@@ -14,19 +29,16 @@ class Setup():
             .d c (app)roach [(d)elete] \{approach\} \{bonus\} - add/remove approach bonuses\n\
             .d c (app)roach help - display a list of approach descriptions\n\
             .d c (sk)ill [(d)elete] \{skill\} \{bonus\} - set/remove bonuses\n\
-            .d c (sk)ill help - display a list of skill descriptions\n\
-            \nScene Setup\n\
-            .d s (n)ame \{name\} - display/set active character\n\
+            .d c (sk)ill help - display a list of skill descriptions'
+
+    scene_help = '.d s help - display these instructions\nScene Help:\n\
+            .d (s)cene - display active scene\n\
+            .d s (n)ame \{name\} - add/display/set active scene\n\
             .d s (l)ist - display list of scenes\n\
             .d s (desc)ription \{description\} - set the description for the active scene\n\
-            .d c (a)spect [(d)elete] \{aspect} - add/remove aspects\n\
-            .d s (d)delete \{name} - removes a scene\n\
-            \nRoll Fate Dice\n\
-            .d r - roll fate dice\n\
-            .d r {approach|skill} - roll fate dice with active character\'s stat bonus\n\
-            .d r {approach|skill} (i)nvoke {aspect} [...(i)nvoke {aspect}] - roll fate dice with active character\'s stat bonus\n\
-            .d r compel {aspect} - compels an aspect and grants the active character a fate point\n\
-            .d re - reroll the character\'s last roll'
+            .d s (a)spect [(d)elete] \{aspect} - add/remove aspect for active scene\n\
+            .d s (c)haracter [(d)elete] \{character} - add/remove character for active scene\n\
+            .d s (d)delete \{name} - removes a scene'
 
     approaches = [
         'Careful - pay close attention to detail and take your time.',

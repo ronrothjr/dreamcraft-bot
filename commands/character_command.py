@@ -1,4 +1,4 @@
-# character.py
+# character_command.py
 
 from models import User, Character
 from config.setup import Setup
@@ -6,8 +6,9 @@ from config.setup import Setup
 SETUP = Setup()
 APPROACHES = SETUP.approaches
 SKILLS = SETUP.skills
+CHARACTER_HELP = SETUP.character_help
 
-class CharacterService():
+class CharacterCommand():
     def __init__(self, ctx, args):
         self.ctx = ctx
         self.args = args[1:]
@@ -17,6 +18,7 @@ class CharacterService():
 
     def run(self):
         switcher = {
+            'help': self.help,
             'name': self.name,
             'n': self.name,
             'list': self.character_list,
@@ -51,6 +53,9 @@ class CharacterService():
             messages = [f'Unknown command: {self.command}']
         # Send messages
         return messages
+
+    def help(self):
+        return [CHARACTER_HELP]
 
     def name(self):
         if len(self.args) == 0:

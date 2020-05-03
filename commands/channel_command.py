@@ -1,8 +1,8 @@
-# channel_service
+# channel_command
 
 from models import Channel, User, Character, Scene
 
-class ChannelService():
+class ChannelCommand():
     def __init__(self, ctx, args):
         self.ctx = ctx
         self.args = args[1:]

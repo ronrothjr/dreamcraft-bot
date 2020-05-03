@@ -9,6 +9,9 @@ APPROACHES = SETUP.approaches
 SKILLS = SETUP.skills
 
 class DreamcraftHandler():
+    """
+    DreamcraftHandler class for parsing commands and assigning execution
+    """
     def __init__(self, ctx, args):
         self.ctx = ctx
         self.args = args

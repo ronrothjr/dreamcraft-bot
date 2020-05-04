@@ -68,9 +68,9 @@ class RollCommand():
     def find_aspect(self, aspect):
         aspect = aspect.replace('_', ' ')
         if self.char:
-            if aspect.lower() in self.char.high_concept.lower():
+            if self.char.high_concept and aspect.lower() in self.char.high_concept.lower():
                 return self.char.high_concept
-            if aspect.lower() in self.char.trouble.lower():
+            if self.char.trouble and aspect.lower() in self.char.trouble.lower():
                 return self.char.trouble
             aspects = [a for a in self.char.aspects if aspect.lower() in a.lower()]
             if aspects:

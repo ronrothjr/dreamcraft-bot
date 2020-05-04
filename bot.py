@@ -21,11 +21,14 @@ bot = commands.Bot(command_prefix='.')
 
 @bot.command(name='d')
 async def command_handler(ctx, *args):
+    """
+    Command handler for .d, the Dreamcraft Bot command
+    """
 
     if len(args) == 0:
         await ctx.send(HELP)
         return
-
+    
     handler = DreamcraftHandler(ctx, args)
     await handler.handle()
 

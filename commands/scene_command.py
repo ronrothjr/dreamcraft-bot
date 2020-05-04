@@ -57,9 +57,6 @@ class SceneCommand():
             scene_name = ' '.join(self.args[1:])
             self.sc = Scene().get_or_create(self.channel, scene_name)
             self.channel.set_active_scene(self.sc)
-            if self.sc.name not in self.channel.scenes:
-                self.channel.scenes.append(self.sc.name)
-                self.channel.save()
         return ['Scene:' + self.sc.get_string(self.channel)]
 
     def scene_list(self):

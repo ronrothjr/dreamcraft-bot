@@ -1,3 +1,4 @@
+from commands.cheat_command import CheatCommand
 from commands.channel_command import ChannelCommand
 from commands.character_command import CharacterCommand
 from commands.scene_command import SceneCommand

@@ -9,6 +9,9 @@ APPROACHES = SETUP.approaches
 SKILLS = SETUP.skills
 
 class DreamcraftHandler():
+    """
+    DreamcraftHandler class for parsing commands and assigning execution
+    """
     def __init__(self, ctx, args):
         self.ctx = ctx
         self.args = args
@@ -16,6 +19,7 @@ class DreamcraftHandler():
 
     async def handle(self):
         switcher = {
+            'cheat': CheatCommand,
             'channel': ChannelCommand,
             'chan': ChannelCommand,
             'character': CharacterCommand,
@@ -51,7 +55,11 @@ class DreamcraftHandler():
         else:
             messages = [f'Unknown command: {self.command}']  
         # Concatenate messages and send
-        await self.send('\n'.join(messages))
+        if self.command == 'cheat':
+            [await self.send(f'{m}\n') for m in messages]
+        else:
+            await self.send('\n'.join(messages))
 
     async def send(self, message):
-        await self.ctx.send(message)
+        if message:
+            await self.ctx.send(message)

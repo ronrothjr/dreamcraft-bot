@@ -1,7 +1,7 @@
 # config.py
 
 class Setup():
-    help = 'Dreamcraft Bot:\n\.d - display these instructions\n.d cheat - display condensed game instructions\n\
+    help = 'Dreamcraft Bot:\n\.d - display these instructions\n.d cheat {search} - display condensed game instructions\n\
             \nCharacter Setup:\n\
             .d (c)haracter - display active character\n\
             .d c help - display character help\n\
@@ -187,8 +187,8 @@ class Setup():
         -1  Poor\n\
         -2  Terrible\n\
         -3  Catastrophic\n\
-        -4  Horrifying\n\n\
-***SETTING DIFFICULTY***\n\
+        -4  Horrifying',
+        'SETTING DIFFICULTY': '\n\
         **Low** = below relevant PC skill\n\
         **Medium** =  close to PC skill\n\
         **High** = higher than PC skill\n\

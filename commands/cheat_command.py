@@ -1,4 +1,4 @@
-# cheack_command.py
+# cheat_command.py
 
 from config.setup import Setup
 

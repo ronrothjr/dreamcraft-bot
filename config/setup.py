@@ -2,6 +2,9 @@
 
 class Setup():
     help = 'Dreamcraft Bot:\n\.d - display these instructions\n.d cheat {search} - display condensed game instructions\n\
+            \nUser Setup:\n\
+            .d (u)ser - display user info\n\
+            .d u help - display user help\n\
             \nCharacter Setup:\n\
             .d (c)haracter - display active character\n\
             .d c help - display character help\n\
@@ -17,6 +20,12 @@ class Setup():
             .d (av)ailable - display invocable/compelable aspects\n\
             .d (i)nvoke {aspect} (+2|reroll) [...(i)invoke {aspect} (+2|reroll)] - invokes an aspect and uses the active character\'s fate point(s)\n\
             .d compel {aspect} [...(c)compel {aspect}] - compels aspect(s) and grants the active character a fate point'
+
+    user_help = '.d u help - display user help\n\
+            \nUser Setup:\n\
+            .d (u)ser - display user info\n\
+            .d u tz {timezone} - set user time zone\n\
+            .d u tz (l)ist {search} - search the list of time zones\n'
 
     character_help = '.d c help - display these instructions\nCharacter Help:\n\
             .d (c)haracter - display active character\n\

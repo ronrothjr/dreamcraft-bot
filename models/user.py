@@ -6,6 +6,7 @@ class User(Document):
     name = StringField(required=True)
     guild = StringField(required=True)
     active_character = StringField()
+    time_zone = StringField()
     created = DateTimeField(required=True)
     updated = DateTimeField(required=True)
 
@@ -36,5 +37,6 @@ class User(Document):
         self.save()
 
     def get_string(self):
-        return f'Player: {self.name}'
+        tz = self.time_zone if self.time_zone else '_None_'
+        return f'Player: {self.name}\nTimezone: {tz}'
         

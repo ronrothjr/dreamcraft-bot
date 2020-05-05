@@ -8,7 +8,7 @@ class Aspect(Document):
     parent_id = StringField(required=True)
     char_id = StringField()
     is_boost = BooleanField()
-    stress = ListField(StringField())
+    stress = DynamicField()
     created = DateTimeField(required=True)
     updated = DateTimeField(required=True)
 

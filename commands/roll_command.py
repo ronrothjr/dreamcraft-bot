@@ -16,74 +16,93 @@ class RollCommand():
         self.char = Character().get_by_id(self.user.active_character) if self.user and self.user.active_character else None
 
     def run(self):
-        messages =[]
+        messages = []
+        errors = []
         last_roll = None
         invokes = self.get_invokes()
-        errors = [i[1] for i in invokes if i[0] == 'error']
+        errors.extend([i[1] for i in invokes if i[0] == 'error'])
+        compels = self.get_compels()
+        errors.extend([c[1] for c in compels if c[0] == 'error'])
+        if self.invoke_index and self.compel_index:
+            errors.append('You cannot invoke and compel on the same roll')
         if errors:
             return [e for e in errors]
-        compels = self.get_compels()
         if self.command in ['available', 'avail', 'av']:
             return self.available_aspects()
         if self.command in ['roll', 'r']:
             skill = self.args[1] if len(self.args) > 1 else ''
             last_roll = Roll(self.char).roll(skill, invokes)
             self.char.last_roll = last_roll
+            messages.append(self.char.last_roll['roll_text'])
         elif self.command in ['reroll', 're']:
             if not invokes:
                 return ['You did not include an invoke for the reroll']
             else:
                 last_roll = Roll(self.char).reroll(invokes)
                 self.char.last_roll = last_roll
-        elif self.command in ['invoke', 'i']:
-            last_roll = Roll(self.char).invoke(invokes)
-            self.char.last_roll = last_roll
+                messages.append(self.char.last_roll['roll_text'])
         if invokes:
             if len(invokes) < self.char.fate_points+1:
                 self.char.fate_points -= len(invokes)
+                messages.append(''.join([f'\nInvoked "{i[0]}" and used 1 fate point' for i in invokes]))
             else:
-                return ['You do not have enough fate points']
+                return [f'{self.char.name} does not have enough fate points']
         if compels:
             if len(compels) + self.char.fate_points <= 5:
                 self.char.fate_points += len(compels)
-                messages.append(''.join([f'\nCompeled "{i}" and added 1 fate point' for i in compels]))
+                messages.append(''.join([f'\nCompeled "{c}" and added 1 fate point' for c in compels]))
             else:
-                return ['Your compel(s) would exceed maximum fate points']
+                return [f'{self.char.name} already has the maximum fate points (5)']
         if (not self.char.created):
             self.char.created = datetime.datetime.utcnow()
         self.char.updated = datetime.datetime.utcnow()
         self.char.save()
-        return [self.char.last_roll['roll_text']]
+        return messages
 
 
     def get_invokes(self):
         invokes = []
         for i in self.invoke_index:
+            if len(self.args) < i+1:
+                invokes.append(['error', f'An invoke is mssing an aspect'])
+                continue
             aspect = self.find_aspect(self.args[i+1])
-            if aspect and i+2 < len(self.args) and self.args[i+2] in ['+2', 're', 'reroll']:
-                check_invokes = []
-                check_invokes.extend(invokes)
-                if self.command in ['reroll', 're']:
-                    check_invokes.extend(self.char.last_roll['invokes'])
-                duplicate_invokes = [dup for dup in check_invokes if aspect == dup[0]]
-                if duplicate_invokes:
-                    invokes.append(['error', f'{aspect} was already invoked'])
-                else:
-                    invokes.append([aspect, 'reroll' if self.args[i+2] in ['re', 'reroll'] else '+2 bonus'])
+            if not aspect:
+                invokes.append(['error', f'{self.args[i+1]} not found in availabe aspects'])
+                continue
+            if self.command in ['reroll', 're'] and len(self.args) <= i+2:
+                invokes.append(['error', f'Reroll invoke on {aspect} is missing +2 or (re)roll'])
+                continue
+            if self.command in ['reroll', 're'] and len(self.args) > i+2 and self.args[i+2] not in ['+2', 're', 'reroll']:
+                invokes.append(['error', f'Reroll invoke on {aspect} is missing +2 or (re)roll'])
+                continue
+            check_invokes = []
+            check_invokes.extend(invokes)
+            if self.command in ['reroll', 're']:
+                check_invokes.extend(self.char.last_roll['invokes'])
+            if [dup for dup in check_invokes if aspect == dup[0]]:
+                invokes.append(['error', f'{aspect} cannot be invoked more than once on the same roll'])
+                continue
+            if self.command in ['reroll', 're']:
+                invokes.append([aspect, '+2 bonus' if self.args[i+2] == '+2' else 'reroll'])
             else:
-                invokes.append(['error', f'{self.args[i+1]} not found or invoke missing +2 or (re)roll'])
+                invokes.append([aspect, '+2 bonus'])
         return invokes
 
     def get_compels(self):
         compels = []
         for i in self.compel_index:
             aspect = self.find_aspect(self.args[i+1])
-            if aspect:
-                duplicate_aspect = [dup for dup in self.char.last_roll['invokes'] if aspect == dup[0]]
-                if duplicate_aspect:
-                    compels.append(['error', f'{aspect} was already invoked'])
-                else:
-                    compels.append(aspect)
+            if len(self.args) < i+1:
+                compels.append(['error', f'Mssing aspect'])
+                continue
+            if not aspect:
+                compels.append(['error', f'{self.args[i+1]} not found in availabe aspects'])
+                continue
+            if [dup for dup in compels if aspect == dup]:
+                compels.append(['error', f'{aspect} cannot be compeled more than once on the same roll'])
+                continue
+            compels.append(aspect)
         return compels
 
     def available_aspects(self):

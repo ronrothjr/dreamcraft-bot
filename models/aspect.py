@@ -5,7 +5,8 @@ from mongoengine import *
 class Aspect(Document):
 
     name = StringField(required=True)
-    char_id = StringField(required=True)
+    parent_id = StringField(required=True)
+    char_id = StringField()
     is_boost = BooleanField()
     stress = ListField(StringField())
     created = DateTimeField(required=True)

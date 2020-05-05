@@ -69,6 +69,3 @@ class Roll():
     def reroll(self, invokes=[]):
         self.character.last_roll['invokes'].extend(invokes)
         return self.roll(self.character.last_roll['skill'], self.character.last_roll['invokes'])
-
-    def invoke(self, invokes=[]):
-        return self.roll(self.character.last_roll['skill'])

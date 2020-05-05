@@ -60,7 +60,7 @@ class CharacterCommand():
     def name(self):
         if len(self.args) == 0:
             if not self.char:
-                return 'No active character or name provided'
+                return ['No active character or name provided']
         else:
             char_name = ' '.join(self.args[1:])
             self.char = Character().get_or_create(self.user, char_name, self.ctx.guild.name)
@@ -174,10 +174,9 @@ class CharacterCommand():
         else:
             aspect = ' '.join(self.args[1:])
             Aspect().get_or_create(aspect, self.char.id)
-            aspects = ''.join([a.get_string() for a in Aspect().get_by_parent_id(self.char.id)])
             return [
                 f'Added {aspect} to aspects',
-                f'    **Aspects:** {aspects}'
+                self.char.get_string_aspects()
             ]
 
     def approach(self):

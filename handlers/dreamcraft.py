@@ -33,7 +33,11 @@ class DreamcraftHandler():
             're': RollCommand,
             'invoke': RollCommand,
             'i': RollCommand,
-            'compel': RollCommand
+            'compel': RollCommand,
+            'available': RollCommand,
+            'av': RollCommand,
+            # 'combine': RollCommand,
+            # 'concede': RollCommand
         }
         # shortcut for updating approaches on a character (must enter full name)
         approach = [s for s in APPROACHES if self.args[0].lower() == s.lower()] if len(self.args) > 0 else None

@@ -2,6 +2,7 @@
 from mongoengine import *
 
 from models.user import User
+from models.aspect import Aspect
 
 class Character(Document):
     user = ReferenceField(User)
@@ -10,7 +11,6 @@ class Character(Document):
     description = StringField()
     high_concept = StringField()
     trouble = StringField()
-    aspects = ListField(StringField())
     stunts = ListField(StringField())
     active_stunt = StringField()
     skills = DictField()
@@ -49,58 +49,50 @@ class Character(Document):
         return characters
 
     def get_string_aspects(self):
-        return f'Aspects:\n        ' + ('\n        '.join(self.aspects))
+        return f'**Aspects:**\n        ' + ('\n        '.join([a.get_string() for a in Aspect().get_by_parent_id(self.id)]))
 
     def get_string_stunts(self):
-        return f'Stunts:\n        ' + ('\n        '.join(self.stunts))
+        return f'**Stunts:**\n        ' + ('\n        '.join(self.stunts))
 
     def get_string_skills(self):
         title = 'Approaches' if self.use_approaches else 'Skills'
-        return f'{title}:\n        ' + ('\n        '.join([f'{key}: {self.skills[key]}' for key in self.skills]))
+        return f'**{title}:**\n        ' + ('\n        '.join([f'{key}: {self.skills[key]}' for key in self.skills]))
 
     def get_string(self, user):
         active = ''
         if str(self.id) == user.active_character:
             active = ' (Active)'
-        fate_points = f'Fate Points: {self.fate_points} (Refresh: {self.refresh})\n'
+        fate_points = f'**Fate Points:** {self.fate_points} (_Refresh:_ {self.refresh})\n'
         description = ''
         if self.description:
             description = f'"{self.description}"\n'
         high_concept = ''
         if self.high_concept:
-            high_concept = f'High Concept: {self.high_concept}\n'
+            high_concept = f'**High Concept:** {self.high_concept}\n'
         trouble = ''
         if self.trouble:
-            trouble = f'Trouble: {self.trouble}\n'
-        aspects = ''
-        if self.aspects:
-            aspects = f'{self.get_string_aspects()}\n'
+            trouble = f'**Trouble:** {self.trouble}\n'
+        aspects = f'{self.get_string_aspects()}\n'
         stunts = ''
         if self.stunts:
             stunts = f'{self.get_string_stunts()}\n'
         skills = ''
         if self.skills:
             skills = f'{self.get_string_skills()}\n'
-        return f'{self.name}{active}\n{description}{high_concept}{trouble}{fate_points}{skills}{aspects}{stunts}'
+        return f'***{self.name}***_{active}_\n{description}{high_concept}{trouble}{fate_points}{skills}{aspects}{stunts}'
 
     def get_short_string(self, user):
         active = ''
         if str(self.id) == user.active_character:
-            active = ' (Active)'
-        fate_points = f'Fate Points: {self.fate_points} (Refresh: {self.refresh})\n'
+            active = ' _(Active)_'
+        fate_points = f'**Fate Points:** {self.fate_points} (Refresh: {self.refresh})\n'
         high_concept = ''
         if self.high_concept:
-            high_concept = f'High Concept: {self.high_concept}\n'
+            high_concept = f'**High Concept:** {self.high_concept}\n'
         trouble = ''
         if self.trouble:
-            trouble = f'Trouble: {self.trouble}\n'
-        aspects = ''
-        if self.aspects:
-            aspects = f'{self.get_string_aspects()}\n'
-        stunts = ''
-        if self.stunts:
-            stunts = f'{self.get_string_stunts()}\n'
+            trouble = f'**Trouble:** {self.trouble}\n'
         skills = ''
         if self.skills:
             skills = f'{self.get_string_skills()}\n'
-        return f'{self.name}{active}\n{fate_points}{aspects}'
+        return f'***{self.name}***{active}\n{high_concept}{trouble}{fate_points}'

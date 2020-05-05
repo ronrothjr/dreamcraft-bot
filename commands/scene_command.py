@@ -4,6 +4,7 @@ from models.channel import Channel
 from models.scene import Scene
 from models.character import Character
 from models.user import User
+from models.aspect import Aspect
 from config.setup import Setup
 
 SETUP = Setup()
@@ -85,24 +86,25 @@ class SceneCommand():
         if len(self.args) == 1:
             return ['No aspect provided']
         if not self.sc:
-            return ['You don\'t have an active scene.\nTry this: ".d s name {name}"']
+            return ['You don\'t have an active scene.\nTry this: ".d s n {name}']
         elif self.args[1].lower() == 'list':
+            aspects = Aspect().get_by_parent_id(self.char.id)
             return [self.sc.get_string_aspects()]
         elif self.args[1].lower() == 'delete' or self.args[1].lower() == 'd':
             aspect = ' '.join(self.args[2:])
-            [self.sc.aspects.remove(s) for s in self.sc.aspects if aspect.lower() in s.lower()]
-            self.sc.save()
+            [a.delete() for a in Aspect().get_by_parent_id(self.sc.id, aspect)]
+            aspects = ''.join([a.get_string() for a in Aspect().get_by_parent_id(self.sc.id)])
             return [
-                f'{aspect} removed from scene aspects',
-                self.sc.get_string_aspects()
+                f'{aspect} removed from aspects',
+                f'    **Aspects:** {aspects}'
             ]
         else:
             aspect = ' '.join(self.args[1:])
-            self.sc.aspects.append(aspect)
-            self.sc.save()
+            Aspect().get_or_create(aspect, self.sc.id)
+            aspects = ''.join([a.get_string() for a in Aspect().get_by_parent_id(self.sc.id)])
             return [
-                f'Added {aspect} to scene aspects',
-                self.sc.get_string_aspects()
+                f'Added {aspect} to aspects',
+                f'    **Aspects:** {aspects}'
             ]
 
     def character(self):

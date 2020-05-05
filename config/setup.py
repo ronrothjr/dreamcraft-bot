@@ -10,10 +10,12 @@ class Setup():
             .d s help - display scene help\n\
             \nRoll Fate Dice\n\
             .d r - roll fate dice\n\
+            .d r (i)nvoke {aspect} (+2|reroll) [...(i)nvoke {aspect} (+2|reroll)] - roll fate dice\n\
             .d r {approach|skill} - roll fate dice with active character\'s stat bonus\n\
-            .d r {approach|skill} (i)nvoke {aspect} [...(i)nvoke {aspect}] - roll fate dice with active character\'s stat bonus\n\
-            .d r compel {aspect} - compels an aspect and grants the active character a fate point\n\
-            .d re - reroll the character\'s last roll'
+            .d r {approach|skill} (i)nvoke {aspect} (+2|reroll) [...(i)nvoke {aspect} (+2|reroll)] - roll fate dice with active character\'s stat bonus\n\
+            .d r compel {aspect} [...(c)compel {aspect}] - compels an aspect and grants the active character a fate point\n\
+            .d re (i)nvoke {aspect} (+2|reroll) [...(i)nvoke {aspect} (+2|reroll)] - reroll the character\'s last roll\n\
+            .d (av)ailable - display invocable aspects'
 
     character_help = '.d c help - display these instructions\nCharacter Help:\n\
             .d (c)haracter - display active character\n\

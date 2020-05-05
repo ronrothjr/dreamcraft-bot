@@ -1,6 +1,6 @@
 # character_command.py
 
-from models import User, Character
+from models import User, Character, Aspect
 from config.setup import Setup
 
 SETUP = Setup()
@@ -72,13 +72,13 @@ class CharacterCommand():
         if len(characters) == 0:
             return ['You don\'t have any characters.\nTry this: ".d c n Name"']
         else:
-            return [f'___________________\n{c.get_string(self.user)}' for c in characters]
+            return [f'{c.get_short_string(self.user)}' for c in characters]
 
     def delete_character(self):
         if len(self.args) == 1:
             return ['No character provided for deletion']
         search = ' '.join(self.args[1:])
-        self.char = Character().find(self.user, search)
+        self.char = Character().find(self.user, search, self.ctx.guild.name)
         if not self.char:
             return [f'{search} was not found. No changes made.\nTry this: ".d c n Name"']
         else:
@@ -151,29 +151,30 @@ class CharacterCommand():
         if not self.char:
             return ['You don\'t have an active character.\nTry this: ".d c n Name']
         elif self.args[1].lower() == 'list':
+            aspects = Aspect().get_by_parent_id(self.char.id)
             return [self.char.get_string_aspects()]
         elif self.args[1].lower() == 'delete' or self.args[1].lower() == 'd':
             aspect = ' '.join(self.args[2:])
-            [self.char.aspects.remove(s) for s in self.char.aspects if aspect.lower() in s.lower()]
-            self.char.save()
+            [a.delete() for a in Aspect().get_by_parent_id(self.char.id, aspect)]
+            aspects = ''.join([a.get_string() for a in Aspect().get_by_parent_id(self.char.id)])
             return [
                 f'{aspect} removed from aspects',
-                self.char.get_string_aspects()
+                f'    **Aspects:** {aspects}'
             ]
         else:
             aspect = ' '.join(self.args[1:])
-            self.char.aspects.append(aspect)
-            self.char.save()
+            Aspect().get_or_create(aspect, self.char.id)
+            aspects = ''.join([a.get_string() for a in Aspect().get_by_parent_id(self.char.id)])
             return [
                 f'Added {aspect} to aspects',
-                self.char.get_string_aspects()
+                f'    **Aspects:** {aspects}'
             ]
 
     def approach(self):
         messages = []
         if self.args[1].lower() == 'help':
             app_str = '\n        '.join(APPROACHES)
-            messages.append(f'Approaches:\n        {app_str}')
+            messages.append(f'**Approaches:**\n        {app_str}')
         elif len(self.args) != 3 and len(self.args) != 2:
             messages.append('Approach syntax: .d (app)roach {approach} {bonus}')
         else:
@@ -205,7 +206,7 @@ class CharacterCommand():
         messages = []
         if self.args[1].lower() == 'help':
             sk_str = '\n        '.join(SKILLS)
-            messages.append(f'Skills:\n        {sk_str}')
+            messages.append(f'**Skills:**\n        {sk_str}')
         elif len(self.args) != 3 and len(self.args) != 2:
             messages.append('Skill syntax: .d (sk)ill {skill} {bonus}')
         else:

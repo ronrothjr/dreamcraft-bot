@@ -12,7 +12,7 @@ class Roll():
     def __init__(self, character):
         self.character = character
 
-    def get_skill_bonus(self, skill='', invokes=[]):
+    def get_skill_bonus(self, skill=''):
         skill_str = ''
         bonus = 0
         if skill !='':
@@ -21,9 +21,8 @@ class Roll():
             else:
                 skill_name = [s for s in SKILLS if skill[0:2].lower() == s[0:2].lower()]
             skill = skill_name[0].split(' - ')[0] if skill_name else skill
-            skill_str = self.character.skills[skill] if skill in self.character.skills else ''
+            skill_str = ' ' + self.character.skills[skill] if skill in self.character.skills else ''
             bonus = int(skill_str) if skill_str else 0
-        bonus += len(invokes) * 2 if invokes else 0
         return skill, skill_str, bonus
 
     def roll_dice(self):
@@ -37,14 +36,20 @@ class Roll():
         }
 
     def roll(self, skill='', invokes=[]):
-        skill, skill_str, bonus = self.get_skill_bonus(skill, invokes)
+        bonus_invokes = [arr for arr in invokes if arr[1] == '+2 bonus']
+        bonus_invokes_total = len(bonus_invokes) * 2
+        invokes_bonus_string = f' + (Invokes bonus = {bonus_invokes_total})' if invokes else ''
+        invoke_string = ''.join([f'\nInvoked "{arr[0]}" for {arr[1]} (cost 1 fate point)' for arr in invokes]) if invokes else ''
+        if skill:
+            skill, skill_str, bonus = self.get_skill_bonus(skill)
+        else:
+            skill_str, bonus = '', 0 + bonus_invokes_total
         dice_roll = self.roll_dice()
         final_roll = dice_roll['rolled'] + bonus
-        skill_bonus_str = f' + ({skill} {skill_str}) = {final_roll}' if skill_str else ''
+        skill_bonus_str = f' + ({skill}{skill_str})' if skill_str else ''
+        skill_bonus_str += f' = {final_roll}' if skill_bonus_str or bonus_invokes else ''
         rolled = dice_roll['rolled']
         fate_roll_string = dice_roll['fate_roll_string']
-        invokes_bonus_string = f' + (Invokes bonus = {len(invokes) * 2})' if invokes else ''
-        invoke_string = ''.join([f'\nInvoked "{i}" for +2 bonus (cost 1 fate point)' for i in invokes]) if invokes else ''
         return {
             'roll_text': f'{self.character.name} rolled: {fate_roll_string} = {rolled}{invokes_bonus_string}{skill_bonus_str}{invoke_string}',
             'roll': dice_roll['rolled'],
@@ -56,12 +61,14 @@ class Roll():
             'dice': dice_roll['dice'],
             'final_roll': final_roll,
             'invokes': invokes,
+            'invokes_bonus': bonus_invokes_total,
             'invokes_bonus_string': invokes_bonus_string,
             'invoke_string': invoke_string
         }
 
-    def reroll(self):
-        return self.roll(self.character.last_roll['skill'])
+    def reroll(self, invokes=[]):
+        self.character.last_roll['invokes'].extend(invokes)
+        return self.roll(self.character.last_roll['skill'], self.character.last_roll['invokes'])
 
     def invoke(self, invokes=[]):
         return self.roll(self.character.last_roll['skill'])

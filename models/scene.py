@@ -8,6 +8,7 @@ class Scene(Document):
     name = StringField(required=True)
     description = StringField()
     channel = ReferenceField(Channel)
+    char_id = StringField()
     active_user = StringField()
     characters = ListField(StringField())
 

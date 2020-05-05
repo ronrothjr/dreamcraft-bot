@@ -189,8 +189,8 @@ class Setup():
         -1  Poor\n\
         -2  Terrible\n\
         -3  Catastrophic\n\
-        -4  Horrifying\n\n\
-***SETTING DIFFICULTY***\n\
+        -4  Horrifying',
+        'SETTING DIFFICULTY': '\n\
         **Low** = below relevant PC skill\n\
         **Medium** =  close to PC skill\n\
         **High** = higher than PC skill\n\

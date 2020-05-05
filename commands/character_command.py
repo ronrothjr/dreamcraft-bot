@@ -50,7 +50,11 @@ class CharacterCommand():
             # Execute the function
             messages = func()
         else:
-            messages = [f'Unknown command: {self.command}']
+            self.args = ('n',) + self.args
+            self.command = 'n'
+            func = self.name
+            # Execute the function
+            messages = func()
         # Send messages
         return messages
 
@@ -72,7 +76,7 @@ class CharacterCommand():
         if len(characters) == 0:
             return ['You don\'t have any characters.\nTry this: ".d c n Name"']
         else:
-            return [f'{c.get_short_string(self.user)}' for c in characters]
+            return [f'{c.get_short_string(self.user)}\n' for c in characters]
 
     def delete_character(self):
         if len(self.args) == 1:
@@ -82,6 +86,8 @@ class CharacterCommand():
         if not self.char:
             return [f'{search} was not found. No changes made.\nTry this: ".d c n Name"']
         else:
+            search = self.char.name
+            [a.delete() for a in Aspect().get_by_parent_id(self.char.id)]
             self.char.delete()
             return [f'{search} removed']
 
@@ -99,7 +105,7 @@ class CharacterCommand():
             self.char.save()
             return [
                 f'Description updated to {description}',
-                self.char.get_string(self.user)
+                self.char.get_string_short(self.user)
             ]
 
     def high_concept(self):
@@ -120,7 +126,7 @@ class CharacterCommand():
             self.char.save()
             return [
                 f'High Concept updated to {hc}',
-                self.char.get_string(self.user)
+                self.char.get_string_short(self.user)
             ]
 
     def trouble(self):
@@ -137,7 +143,7 @@ class CharacterCommand():
             self.char.save()
             return [
                 f'Trouble updated to {trouble}',
-                self.char.get_string(self.user)
+                self.char.get_short_string(self.user)
             ]
 
     def fate(self):
@@ -169,7 +175,7 @@ class CharacterCommand():
             aspects = ''.join([a.get_string() for a in Aspect().get_by_parent_id(self.char.id)])
             return [
                 f'{aspect} removed from aspects',
-                f'    **Aspects:** {aspects}'
+                self.char.get_string_aspects()
             ]
         else:
             aspect = ' '.join(self.args[1:])
@@ -203,7 +209,7 @@ class CharacterCommand():
                         self.char.created = datetime.datetime.utcnow()
                     self.char.updated = datetime.datetime.utcnow()
                     self.char.save()
-                    messages.append(f'Removed {skill} approach') 
+                    messages.append(f'Removed {skill}') 
                 else:
                     skill = [s for s in APPROACHES if self.args[1][0:2].lower() == s[0:2].lower()]
                     skill = skill[0].split(' - ')[0] if skill else self.args[1]

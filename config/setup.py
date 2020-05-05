@@ -21,7 +21,7 @@ class Setup():
     character_help = '.d c help - display these instructions\nCharacter Help:\n\
             .d (c)haracter - display active character\n\
             .d c help - display character help\n\
-            .d c (n)ame \{name\} - display/set active character\n\
+            .d c \{name\} - display/set active character\n\
             .d c (l)ist - display list of characters\n\
             .d c (desc)ription \{description\} - set the description for the active character\n\
             .d c (high/hc) concept \{high concept\} - set the high concept for the active character\n\

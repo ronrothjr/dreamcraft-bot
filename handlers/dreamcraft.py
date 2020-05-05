@@ -39,13 +39,14 @@ class DreamcraftHandler():
             # 'combine': RollCommand,
             # 'concede': RollCommand
         }
+        search = str(self.args[0])
         # shortcut for updating approaches on a character (must enter full name)
-        approach = [s for s in APPROACHES if self.args[0].lower() == s.lower()] if len(self.args) > 0 else None
+        approach = [s for s in APPROACHES if search.lower() == s.split(' - ')[0].lower()] if len(self.args) > 0 else None
         if approach:
             self.command = 'c'
             self.args = ('c', 'app', approach[0], self.args[1])
         # shortcut for updating skills on a character (must enter full name)
-        skill = [s for s in SKILLS if self.args[0].lower() == s.lower()] if len(self.args) > 0 else None
+        skill = [s for s in SKILLS if search.lower() == s.split(' - ')[0].lower()] if len(self.args) > 0 else None
         if skill:
             self.command = 'c'
             self.args = ('c', 'sk', skill[0], self.args[1])

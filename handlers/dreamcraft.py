@@ -20,6 +20,8 @@ class DreamcraftHandler():
     async def handle(self):
         switcher = {
             'cheat': CheatCommand,
+            'user': UserCommand,
+            'u': UserCommand,
             'channel': ChannelCommand,
             'chan': ChannelCommand,
             'character': CharacterCommand,

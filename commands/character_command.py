@@ -1,5 +1,5 @@
 # character_command.py
-
+import datetime
 from models import User, Character, Aspect
 from config.setup import Setup
 
@@ -50,7 +50,11 @@ class CharacterCommand():
             # Execute the function
             messages = func()
         else:
-            messages = [f'Unknown command: {self.command}']
+            self.args = ('n',) + self.args
+            self.command = 'n'
+            func = self.name
+            # Execute the function
+            messages = func()
         # Send messages
         return messages
 
@@ -60,7 +64,7 @@ class CharacterCommand():
     def name(self):
         if len(self.args) == 0:
             if not self.char:
-                return 'No active character or name provided'
+                return ['No active character or name provided']
         else:
             char_name = ' '.join(self.args[1:])
             self.char = Character().get_or_create(self.user, char_name, self.ctx.guild.name)
@@ -72,7 +76,7 @@ class CharacterCommand():
         if len(characters) == 0:
             return ['You don\'t have any characters.\nTry this: ".d c n Name"']
         else:
-            return [f'{c.get_short_string(self.user)}' for c in characters]
+            return [f'{c.get_short_string(self.user)}\n' for c in characters]
 
     def delete_character(self):
         if len(self.args) == 1:
@@ -82,6 +86,8 @@ class CharacterCommand():
         if not self.char:
             return [f'{search} was not found. No changes made.\nTry this: ".d c n Name"']
         else:
+            search = self.char.name
+            [a.delete() for a in Aspect().get_by_parent_id(self.char.id)]
             self.char.delete()
             return [f'{search} removed']
 
@@ -93,10 +99,13 @@ class CharacterCommand():
         else:
             description = ' '.join(self.args[1:])
             self.char.description = description
+            if (not self.char.created):
+                self.char.created = datetime.datetime.utcnow()
+            self.char.updated = datetime.datetime.utcnow()
             self.char.save()
             return [
                 f'Description updated to {description}',
-                self.char.get_string(self.user)
+                self.char.get_string_short(self.user)
             ]
 
     def high_concept(self):
@@ -111,10 +120,13 @@ class CharacterCommand():
             else:
                 hc = ' '.join(self.args[1:])
             self.char.high_concept = hc
+            if (not self.char.created):
+                self.char.created = datetime.datetime.utcnow()
+            self.char.updated = datetime.datetime.utcnow()
             self.char.save()
             return [
                 f'High Concept updated to {hc}',
-                self.char.get_string(self.user)
+                self.char.get_string_short(self.user)
             ]
 
     def trouble(self):
@@ -125,10 +137,13 @@ class CharacterCommand():
         else:
             trouble = ' '.join(self.args[1:])
             self.char.trouble = trouble
+            if (not self.char.created):
+                self.char.created = datetime.datetime.utcnow()
+            self.char.updated = datetime.datetime.utcnow()
             self.char.save()
             return [
                 f'Trouble updated to {trouble}',
-                self.char.get_string(self.user)
+                self.char.get_short_string(self.user)
             ]
 
     def fate(self):
@@ -136,13 +151,14 @@ class CharacterCommand():
             return ['You don\'t have an active character.\nTry this: ".d c n Name"']
         elif len(self.args) == 2 and (self.args[1] == 'refresh' or self.args[1] == 'r'):
             self.char.fate_points = self.char.refresh
-            self.char.save()
         elif len(self.args) == 2 and self.args[1] == '+':
             self.char.fate_points += 1 if self.char.fate_points < 5 else 0
-            self.char.save()
         elif len(self.args) == 2 and self.args[1] == '-':
             self.char.fate_points -= 1 if self.char.fate_points > 0 else 0
-            self.char.save()
+        if (not self.char.created):
+            self.char.created = datetime.datetime.utcnow()
+        self.char.updated = datetime.datetime.utcnow()
+        self.char.save()
         return [f'Fate Points: {self.char.fate_points}']
 
     def aspect(self):
@@ -159,15 +175,14 @@ class CharacterCommand():
             aspects = ''.join([a.get_string() for a in Aspect().get_by_parent_id(self.char.id)])
             return [
                 f'{aspect} removed from aspects',
-                f'    **Aspects:** {aspects}'
+                self.char.get_string_aspects()
             ]
         else:
             aspect = ' '.join(self.args[1:])
             Aspect().get_or_create(aspect, self.char.id)
-            aspects = ''.join([a.get_string() for a in Aspect().get_by_parent_id(self.char.id)])
             return [
                 f'Added {aspect} to aspects',
-                f'    **Aspects:** {aspects}'
+                self.char.get_string_aspects()
             ]
 
     def approach(self):
@@ -190,13 +205,19 @@ class CharacterCommand():
                             if key != skill:
                                 new_skills[key] = self.char.skills[key]
                         self.char.skills = new_skills
+                    if (not self.char.created):
+                        self.char.created = datetime.datetime.utcnow()
+                    self.char.updated = datetime.datetime.utcnow()
                     self.char.save()
-                    messages.append(f'Removed {skill} approach') 
+                    messages.append(f'Removed {skill}') 
                 else:
                     skill = [s for s in APPROACHES if self.args[1][0:2].lower() == s[0:2].lower()]
                     skill = skill[0].split(' - ')[0] if skill else self.args[1]
                     self.char.skills[skill] = self.args[2]
                     self.char.use_approaches = True
+                    if (not self.char.created):
+                        self.char.created = datetime.datetime.utcnow()
+                    self.char.updated = datetime.datetime.utcnow()
                     self.char.save()
                     messages.append(f'Updated {skill} to {self.args[2]}')
                 messages.append(self.char.get_string_skills())
@@ -222,6 +243,9 @@ class CharacterCommand():
                             if key != skill:
                                 new_skills[key] = self.char.skills[key]
                         self.char.skills = new_skills
+                    if (not self.char.created):
+                        self.char.created = datetime.datetime.utcnow()
+                    self.char.updated = datetime.datetime.utcnow()
                     self.char.save()
                     messages.append(f'Removed {skill} skill') 
                 else:
@@ -229,6 +253,9 @@ class CharacterCommand():
                     skill = skill[0].split(' - ')[0] if skill else self.args[1]
                     self.char.skills[skill] = self.args[2]
                     self.char.use_approaches = False
+                    if (not self.char.created):
+                        self.char.created = datetime.datetime.utcnow()
+                    self.char.updated = datetime.datetime.utcnow()
                     self.char.save()
                     messages.append(f'Updated {skill} to {self.args[2]}')                
                 messages.append(self.char.get_string_skills())
@@ -244,6 +271,9 @@ class CharacterCommand():
             description = ' '.join(self.args[2:])
             stunt = f'{self.char.active_stunt} - {description}'
             self.char.stunts = [(f'{self.char.active_stunt} - {description}' if s.split(' - ')[0].lower() == self.char.active_stunt.lower() else s) for s in self.char.stunts]
+            if (not self.char.created):
+                self.char.created = datetime.datetime.utcnow()
+            self.char.updated = datetime.datetime.utcnow()
             self.char.save()
             messages.append(self.char.get_string_stunts())
         elif self.args[1].lower() == 'list':
@@ -251,6 +281,9 @@ class CharacterCommand():
         elif self.args[1].lower() == 'delete' or self.args[1].lower() == 'd':
             stunt = ' '.join(self.args[2:])
             [self.char.stunts.remove(s) for s in self.char.stunts if stunt.lower() in s.split(' - ')[0].lower()]
+            if (not self.char.created):
+                self.char.created = datetime.datetime.utcnow()
+            self.char.updated = datetime.datetime.utcnow()
             self.char.save()
             messages.append(f'{stunt} removed from stunts')
             messages.append(self.char.get_string_stunts())
@@ -259,11 +292,17 @@ class CharacterCommand():
             match = [s for s in self.char.stunts if s.split(' - ')[0].lower() == stunt.lower()]
             if match:
                 self.char.active_stunt = stunt
+                if (not self.char.created):
+                    self.char.created = datetime.datetime.utcnow()
+                self.char.updated = datetime.datetime.utcnow()
                 self.char.save()
                 messages.append(f'{self.char.name} already has that stunt')
             else:
                 self.char.stunts.append(stunt)
                 self.char.active_stunt = stunt
+                if (not self.char.created):
+                    self.char.created = datetime.datetime.utcnow()
+                self.char.updated = datetime.datetime.utcnow()
                 self.char.save()
                 messages.append(f'Added {stunt} to stunts')
                 messages.append(self.char.get_string_stunts())

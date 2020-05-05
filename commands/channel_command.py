@@ -1,5 +1,5 @@
 # channel_command
-
+import datetime
 from models import Channel, User, Character, Scene
 
 class ChannelCommand():
@@ -11,6 +11,9 @@ class ChannelCommand():
         self.user = User().get_or_create(self.ctx.author.name, self.ctx.guild.name)
         if self.user.name not in self.channel.users:
             self.channel.users.append(self.user.name)
+            if (not self.channel.created):
+                self.channel.created = datetime.datetime.utcnow()
+            self.channel.updated = datetime.datetime.utcnow()
             self.channel.save()
         self.char = Character().get_by_id(self.user.active_character) if self.user and self.user.active_character else None
 

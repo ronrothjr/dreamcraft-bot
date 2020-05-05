@@ -1,4 +1,5 @@
 # channel.py
+import datetime
 from mongoengine import *
 
 class Channel(Document):
@@ -6,10 +7,14 @@ class Channel(Document):
     guild = StringField(required=True)
     active_scene = StringField()
     users = ListField(StringField())
+    created = DateTimeField(required=True)
+    updated = DateTimeField(required=True)
 
     def create_new(self, name, guild):
         self.name = name
         self.guild = guild
+        self.created = datetime.datetime.utcnow()
+        self.updated = datetime.datetime.utcnow()
         self.save()
         return self
 
@@ -24,6 +29,9 @@ class Channel(Document):
 
     def set_active_scene(self, scene):
         self.active_scene = str(scene.id)
+        if (not self.created):
+            self.created = datetime.datetime.utcnow()
+        self.updated = datetime.datetime.utcnow()
         self.save()
 
     def get_users_string(self):

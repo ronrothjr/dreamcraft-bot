@@ -1,14 +1,19 @@
 # user.py
+import datetime
 from mongoengine import *
 
 class User(Document):
     name = StringField(required=True)
     guild = StringField(required=True)
     active_character = StringField()
+    created = DateTimeField(required=True)
+    updated = DateTimeField(required=True)
 
     def create_new(self, name, guild):
         self.guild = guild
         self.name = name
+        self.created = datetime.datetime.utcnow()
+        self.updated = datetime.datetime.utcnow()
         self.save()
         return self
 
@@ -25,6 +30,9 @@ class User(Document):
 
     def set_active_character(self, character):
         self.active_character = str(character.id)
+        if (not self.created):
+            self.created = datetime.datetime.utcnow()
+        self.updated = datetime.datetime.utcnow()
         self.save()
 
     def get_string(self):

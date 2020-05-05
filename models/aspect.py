@@ -1,4 +1,5 @@
 # aspect.py
+import datetime
 from mongoengine import *
 
 class Aspect(Document):
@@ -7,10 +8,14 @@ class Aspect(Document):
     parent_id = StringField(required=True)
     is_boost = BooleanField()
     stress = ListField(StringField())
+    created = DateTimeField(required=True)
+    updated = DateTimeField(required=True)
 
     def create_new(self, name, parent_id):
         self.name = name
         self.parent_id = parent_id
+        self.created = datetime.datetime.utcnow()
+        self.updated = datetime.datetime.utcnow()
         self.save()
         return self
 

@@ -1,4 +1,5 @@
 # scene.py
+import datetime
 from mongoengine import *
 from models.channel import Channel
 from models.character import Character
@@ -10,10 +11,14 @@ class Scene(Document):
     channel = ReferenceField(Channel)
     active_user = StringField()
     characters = ListField(StringField())
+    created = DateTimeField(required=True)
+    updated = DateTimeField(required=True)
 
     def create_new(self, channel, name):
         self.name = name
         self.channel = channel.id
+        self.created = datetime.datetime.utcnow()
+        self.updated = datetime.datetime.utcnow()
         self.save()
         return self
 
@@ -34,6 +39,9 @@ class Scene(Document):
 
     def set_active_user(self, user):
         self.active_user = str(user.id)
+        if (not self.created):
+            self.created = datetime.datetime.utcnow()
+        self.updated = datetime.datetime.utcnow()
         self.save()
 
     def get_by_channel(self, channel):

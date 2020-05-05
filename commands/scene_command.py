@@ -1,5 +1,5 @@
 # scene_command
-
+import datetime
 from models.channel import Channel
 from models.scene import Scene
 from models.character import Character
@@ -76,6 +76,9 @@ class SceneCommand():
         else:
             description = ' '.join(self.args[1:])
             self.sc.description = description
+            if (not self.sc.created):
+                self.sc.created = datetime.datetime.utcnow()
+            self.sc.updated = datetime.datetime.utcnow()
             self.sc.save()
             return [
                 f'Description updated to {description}',
@@ -117,6 +120,9 @@ class SceneCommand():
         elif self.args[1].lower() == 'delete' or self.args[1].lower() == 'd':
             char = ' '.join(self.args[2:])
             [self.sc.characters.remove(s) for s in self.sc.characters if char.lower() in s.lower()]
+            if (not self.sc.created):
+                self.sc.created = datetime.datetime.utcnow()
+            self.sc.updated = datetime.datetime.utcnow()
             self.sc.save()
             return [
                 f'{char} removed from scene characters',
@@ -126,6 +132,9 @@ class SceneCommand():
             search = ' '.join(self.args[1:])
             char = Character().find(self.user, search, self.channel.guild)
             self.sc.characters.append(char.name)
+            if (not self.sc.created):
+                self.sc.created = datetime.datetime.utcnow()
+            self.sc.updated = datetime.datetime.utcnow()
             self.sc.save()
             return [
                 f'Added {char.name} to scene characters',

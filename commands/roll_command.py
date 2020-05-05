@@ -1,5 +1,5 @@
 # roll_command.py
-
+import datetime
 from models import Channel, Scene, User, Character, Aspect
 from utils import Roll
 
@@ -49,6 +49,9 @@ class RollCommand():
                 messages.append(''.join([f'\nCompeled "{i}" and added 1 fate point' for i in compels]))
             else:
                 return ['Your compel(s) would exceed maximum fate points']
+        if (not self.char.created):
+            self.char.created = datetime.datetime.utcnow()
+        self.char.updated = datetime.datetime.utcnow()
         self.char.save()
         return [self.char.last_roll['roll_text']]
 

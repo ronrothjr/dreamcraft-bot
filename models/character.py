@@ -1,4 +1,5 @@
 # character.py
+import datetime
 from mongoengine import *
 
 from models.user import User
@@ -20,6 +21,8 @@ class Character(Document):
     last_roll = DynamicField()
     stress = DictField()
     consequences = DictField()
+    created = DateTimeField(required=True)
+    updated = DateTimeField(required=True)
 
     def create_new(self, user, name, guild):
         self.user = user
@@ -27,6 +30,8 @@ class Character(Document):
         self.guild = guild
         self.refresh = 3
         self.fate_points = 3
+        self.created = datetime.datetime.utcnow()
+        self.updated = datetime.datetime.utcnow()
         self.save()
         return self
 

@@ -2,13 +2,13 @@
 from mongoengine import *
 from models.channel import Channel
 from models.character import Character
+from models.aspect import Aspect
 
 class Scene(Document):
     name = StringField(required=True)
     description = StringField()
     channel = ReferenceField(Channel)
     active_user = StringField()
-    aspects = ListField(StringField())
     characters = ListField(StringField())
 
     def create_new(self, channel, name):
@@ -41,7 +41,7 @@ class Scene(Document):
         return scenes
 
     def get_string_aspects(self):
-        return f'\n            Aspects:\n                ' + ('\n                '.join(self.aspects))
+        return f'\n            Aspects:\n                ' + ('\n                '.join([a.get_string() for a in Aspect().get_by_parent_id(self.id)]))
 
     def get_string_characters(self):
         return f'\n            Characters:\n                ' + ('\n                '.join(self.characters))
@@ -53,9 +53,7 @@ class Scene(Document):
         description = ''
         if self.description:
             description = f' - "{self.description}"'
-        aspects = ''
-        if self.aspects:
-            aspects = f'{self.get_string_aspects()}'
+        aspects = f'{self.get_string_aspects()}'
         characters = ''
         if self.characters:
             characters = f'{self.get_string_characters()}'

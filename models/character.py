@@ -4,6 +4,7 @@ from mongoengine import *
 
 from models.user import User
 from models.aspect import Aspect
+from models.stunt import Stunt
 from config.setup import Setup
 
 SETUP = Setup()
@@ -19,6 +20,7 @@ class Character(Document):
     trouble = StringField()
     stunts = ListField(StringField())
     active_stunt = StringField()
+    active_aspect = StringField()
     skills = DictField()
     use_approaches = BooleanField()
     fate_points = IntField()
@@ -71,11 +73,13 @@ class Character(Document):
         
     def get_string_aspects(self):
         aspects = Aspect().get_by_parent_id(self.id)
-        aspects_string = '\n        '.join([a.get_string() for a in aspects]) if aspects else '_None_'
+        aspects_string = '\n        '.join([a.get_string(self) for a in aspects]) if aspects else '_None_'
         return f'\n**Aspects:**\n        {aspects_string}'
 
     def get_string_stunts(self):
-        return f'\n**Stunts:**\n        ' + ('\n        '.join(self.stunts))
+        stunts = Stunt().get_by_parent_id(self.id)
+        stunts_string = '\n        '.join([s.get_string(self) for s in stunts]) if stunts else '_None_'
+        return f'\n**Stunts:**\n        {stunts_string}'
 
     def get_string_skills(self):
         title = 'Approaches' if self.use_approaches else 'Skills'
@@ -105,7 +109,7 @@ class Character(Document):
         high_concept = f'\n**High Concept:** {self.high_concept}' if self.high_concept else ''
         trouble = f'\n**Trouble:** {self.trouble}' if self.trouble else ''
         aspects = f'{self.get_string_aspects()}'
-        stunts = f'{self.get_string_stunts()}' if self.stunts else ''
+        stunts = f'{self.get_string_stunts()}'
         skills = f'{self.get_string_skills()}' if self.skills else ''
         stress = self.get_string_stress()
         consequenses = self.get_string_consequences()

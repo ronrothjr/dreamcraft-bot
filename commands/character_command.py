@@ -1,7 +1,7 @@
 # character_command.py
 import datetime
 import copy
-from models import User, Character, Aspect
+from models import User, Character, Aspect, Stunt
 from config.setup import Setup
 
 SETUP = Setup()
@@ -21,6 +21,8 @@ class CharacterCommand():
         self.command = self.args[0].lower() if len(self.args) > 0 else 'n'
         self.user = User().get_or_create(ctx.author.name, ctx.guild.name)
         self.char = Character().get_by_id(self.user.active_character) if self.user and self.user.active_character else None
+        self.asp = Aspect().get_by_id(self.char.active_aspect) if self.char and self.char.active_aspect else None
+        self.stu = Stunt().get_by_id(self.char.active_stunt) if self.char and self.char.active_stunt else None
 
     def run(self):
         switcher = {
@@ -98,6 +100,7 @@ class CharacterCommand():
         else:
             search = self.char.name
             [a.delete() for a in Aspect().get_by_parent_id(self.char.id)]
+            [s.delete() for s in Stunt().get_by_parent_id(self.char.id)]
             self.char.delete()
             return [f'{search} removed']
 
@@ -173,9 +176,11 @@ class CharacterCommand():
 
     def aspect(self, args):
         if len(args) == 1:
-            return ['No aspect provided']
+            if not self.asp:
+                return ['You don\'t have an active aspect.\nTry this: ".d c a {aspect}"']
+            return [f'{self.asp.get_string(self.char)}']
         if not self.char:
-            return ['You don\'t have an active character.\nTry this: ".d c n Name']
+            return ['You don\'t have an active character.\nTry this: ".d c n Name"']
         elif args[1].lower() == 'list':
             return [self.char.get_string_aspects()]
         elif args[1].lower() == 'delete' or args[1].lower() == 'd':
@@ -185,13 +190,23 @@ class CharacterCommand():
                 f'"{aspect}" removed from aspects',
                 self.char.get_string_aspects()
             ]
+        elif args[1].lower() == 'desc' or args[1].lower() == 'description':
+            description = ' '.join(args[2:])
+            self.asp.description = description
+            if (not self.asp.created):
+                self.asp.created = datetime.datetime.utcnow()
+            self.asp.updated = datetime.datetime.utcnow()
+            self.asp.save()
+            messages.append(self.char.get_string_aspects())
         else:
             aspect = ' '.join(args[1:])
-            Aspect().get_or_create(aspect, self.char.id)
-            return [
-                f'Added "{aspect}" to aspects',
-                self.char.get_string_aspects()
-            ]
+            self.asp = Aspect().get_or_create(aspect, self.char.id)
+            self.char.active_aspect = str(self.asp.id)
+            if (not self.char.created):
+                self.char.created = datetime.datetime.utcnow()
+            self.char.updated = datetime.datetime.utcnow()
+            self.char.save()
+            return [self.char.get_string_aspects()]
 
     def approach(self, args):
         messages = []
@@ -272,48 +287,37 @@ class CharacterCommand():
     def stunt(self, args):
         messages = []
         if len(args) == 1:
-            messages.append('No stunt provided')
+            if not self.stu:
+                return ['You don\'t have an active stunt.\nTry this: ".d c s {stunt}"']
+            return [f'{self.stu.get_string(self.char)}']
         if not self.char:
-            messages.append('You don\'t have an active character.\nTry this: ".d c n Name"')
-        elif args[1].lower() == 'desc' or args[1].lower() == 'description':
-            description = ' '.join(args[2:])
-            stunt = f'{self.char.active_stunt} - {description}'
-            self.char.stunts = [(f'{self.char.active_stunt} - {description}' if s.split(' - ')[0].lower() == self.char.active_stunt.lower() else s) for s in self.char.stunts]
-            if (not self.char.created):
-                self.char.created = datetime.datetime.utcnow()
-            self.char.updated = datetime.datetime.utcnow()
-            self.char.save()
-            messages.append(self.char.get_string_stunts())
+            return ['You don\'t have an active character.\nTry this: ".d c n Name']
         elif args[1].lower() == 'list':
-            messages.append(self.char.get_string_stunts())
+            return [self.char.get_string_stunts()]
         elif args[1].lower() == 'delete' or args[1].lower() == 'd':
             stunt = ' '.join(args[2:])
-            [self.char.stunts.remove(s) for s in self.char.stunts if stunt.lower() in s.split(' - ')[0].lower()]
-            if (not self.char.created):
-                self.char.created = datetime.datetime.utcnow()
-            self.char.updated = datetime.datetime.utcnow()
-            self.char.save()
-            messages.append(f'{stunt} removed from stunts')
+            [s.delete() for s in Stunt().get_by_parent_id(self.char.id, stunt)]
+            return [
+                f'"{stunt}" removed from stunts',
+                self.char.get_string_stunts()
+            ]
+        elif args[1].lower() == 'desc' or args[1].lower() == 'description':
+            description = ' '.join(args[2:])
+            self.stu.description = description
+            if (not self.stu.created):
+                self.stu.created = datetime.datetime.utcnow()
+            self.stu.updated = datetime.datetime.utcnow()
+            self.stu.save()
             messages.append(self.char.get_string_stunts())
         else:
             stunt = ' '.join(args[1:])
-            match = [s for s in self.char.stunts if s.split(' - ')[0].lower() == stunt.lower()]
-            if match:
-                self.char.active_stunt = stunt
-                if (not self.char.created):
-                    self.char.created = datetime.datetime.utcnow()
-                self.char.updated = datetime.datetime.utcnow()
-                self.char.save()
-                messages.append(f'***{self.char.name}*** already has that stunt')
-            else:
-                self.char.stunts.append(stunt)
-                self.char.active_stunt = stunt
-                if (not self.char.created):
-                    self.char.created = datetime.datetime.utcnow()
-                self.char.updated = datetime.datetime.utcnow()
-                self.char.save()
-                messages.append(f'Added {stunt} to stunts')
-                messages.append(self.char.get_string_stunts())
+            self.stu = Stunt().get_or_create(stunt, self.char.id)
+            self.char.active_stunt = str(self.stu.id)
+            if (not self.char.created):
+                self.char.created = datetime.datetime.utcnow()
+            self.char.updated = datetime.datetime.utcnow()
+            self.char.save()
+            return [self.char.get_string_stunts()]
         return messages
     
     def get_available_stress(self, stress_type):

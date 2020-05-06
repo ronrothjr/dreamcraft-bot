@@ -64,7 +64,7 @@ class CharacterCommand():
             self.command = 'n'
             func = self.name
             # Execute the function
-            messages = func()
+            messages = func(self.args)
         # Send messages
         return messages
 

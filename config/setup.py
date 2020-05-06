@@ -42,7 +42,11 @@ class Setup():
             .d c (app)roach [(d)elete] \{approach\} \{bonus\} - add/remove approach bonuses\n\
             .d c (app)roach help - display a list of approach descriptions\n\
             .d c (sk)ill [(d)elete] \{skill\} \{bonus\} - set/remove bonuses\n\
-            .d c (sk)ill help - display a list of skill descriptions'
+            .d c (sk)ill help - display a list of skill descriptions\n\
+            .d c (st)ress (m)ental|(p)hysical {1,2,3}\n\
+            .d c (st)ress (d)elete (m)ental|(p)hysical {1,2,3}\n\
+            .d c (con)sequence (mi)ld|(mo)derate|(s)evere {aspect}\n\
+            .d c (con)sequence (d)elete (mi)ld|(mo)derate|(s)evere'
 
     scene_help = '.d s help - display these instructions\nScene Help:\n\
             .d (s)cene - display active scene\n\
@@ -254,3 +258,8 @@ class Setup():
     }
 
     fate_dice = {'-1': '-', '0': 'b', '1': '+'}
+    x = '[X]'
+    o = '[   ]'
+    stress = ['Physical', 'Mental']
+    consequences = ['Mild', 'Moderate', 'Severe']
+    consequence_shifts = ['2', '4', '6']

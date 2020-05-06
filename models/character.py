@@ -4,6 +4,11 @@ from mongoengine import *
 
 from models.user import User
 from models.aspect import Aspect
+from config.setup import Setup
+
+SETUP = Setup()
+X = SETUP.x
+O = SETUP.o
 
 class Character(Document):
     user = ReferenceField(User)
@@ -30,8 +35,8 @@ class Character(Document):
         self.guild = guild
         self.refresh = 3
         self.fate_points = 3
-        self.stress = [[['1', ''],['1', ''],['1', '']],[['1', ''],['1', ''],['1', '']]]
-        self.consequences = [['2', ''],['4', ''],['6', '']]
+        self.stress = [[['1', O],['1', O],['1', O]],[['1', O],['1', O],['1', O]]]
+        self.consequences = [['2', O],['4', O],['6', O]]
         self.created = datetime.datetime.utcnow()
         self.updated = datetime.datetime.utcnow()
         self.save()
@@ -80,13 +85,13 @@ class Character(Document):
         stress = ['_Physical:_ ', '_Mental:_   ']
         for t in range(0, len(self.stress)):
             for s in range(0, len(self.stress[t])):
-                stress[t] += ' [X]' if self.stress[t][s][1] else ' [   ]'
+                stress[t] += ' '+ self.stress[t][s][1]
         return f'\n**Stress:**\n        ' + ('\n        '.join(stress))
 
-    def get_string_consequenses(self):
+    def get_string_consequences(self):
         consequences = ['_Mild:_           ', '_Moderate:_ ', '_Severe:_       ']
         for c in range(0, len(self.consequences)):
-            check = ' [X]' if self.consequences[c][1] else ' [   ]'
+            check = ' '+ self.consequences[c][1]
             description = ''
             if self.consequences[c][1] and len(self.consequences[c]) == 3:
                 description = f' - {self.consequences[c][2]}'
@@ -103,15 +108,13 @@ class Character(Document):
         stunts = f'{self.get_string_stunts()}' if self.stunts else ''
         skills = f'{self.get_string_skills()}' if self.skills else ''
         stress = self.get_string_stress()
-        consequenses = self.get_string_consequenses()
+        consequenses = self.get_string_consequences()
         return f'{name}{description}{high_concept}{trouble}{fate_points}{skills}{aspects}{stunts}{stress}{consequenses}'
 
     def get_short_string(self, user):
         name = self.get_string_name(user)
-        if str(self.id) == user.active_character:
-            active = ' _(Active)_'
         fate_points = self.get_string_fate(user)
         description = f'\n"{self.description}"' if self.description else ''
         high_concept = f'\n**High Concept:** {self.high_concept}' if self.high_concept else ''
         trouble = f'\n**Trouble:** {self.trouble}' if self.trouble else ''
-        return f'{name}{active}{description}{high_concept}{trouble}{fate_points}'
+        return f'{name}{description}{high_concept}{trouble}{fate_points}'

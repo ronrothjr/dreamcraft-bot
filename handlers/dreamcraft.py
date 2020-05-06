@@ -38,6 +38,10 @@ class DreamcraftHandler():
             'compel': RollCommand,
             'available': RollCommand,
             'av': RollCommand,
+            'stress': CharacterCommand,
+            'st': CharacterCommand,
+            'consequence': CharacterCommand,
+            'con': CharacterCommand
             # 'combine': RollCommand,
             # 'concede': RollCommand
         }

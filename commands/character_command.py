@@ -42,7 +42,11 @@ class CharacterCommand():
             'skill': self.skill,
             'sk': self.skill,
             'stunt': self.stunt,
-            's': self.stunt
+            's': self.stunt,
+            'stress': self.stress,
+            'st': self.stress,
+            'consequence': self.consequence,
+            'con': self.consequence
         }
         # Get the function from switcher dictionary
         if self.command in switcher:
@@ -307,3 +311,17 @@ class CharacterCommand():
                 messages.append(f'Added {stunt} to stunts')
                 messages.append(self.char.get_string_stunts())
         return messages
+
+    def stress(self):
+        messages = []
+        # if len(self.args) == 1:
+        #     messages.append('No stress type provided - (m)mental or (p)hysical')
+        # if len(self.args) == 2
+        #     messages.append('No stress shift number - 1,2,3')
+        # if self.args[1] in ['mental', 'm']:
+        #     shift = int(self.args[2])
+        #     stress = [s for s in self.char.stress[1]) if self.char.stress[1][s][1]]
+        return messages
+
+    def consequence(self):
+        pass

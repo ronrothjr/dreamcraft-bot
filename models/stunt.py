@@ -1,15 +1,13 @@
-# aspect.py
+# stunt.py
 import datetime
 from mongoengine import *
 
-class Aspect(Document):
+class Stunt(Document):
 
     name = StringField(required=True)
     description = StringField()
     parent_id = StringField(required=True)
     char_id = StringField()
-    is_boost = BooleanField()
-    stress = DynamicField()
     created = DateTimeField(required=True)
     updated = DateTimeField(required=True)
 
@@ -22,31 +20,31 @@ class Aspect(Document):
         return self
 
     def find(self, name, parent_id):
-        filter = Aspect.objects(name=name, parent_id=parent_id)
-        aspect = filter.first()
-        return aspect
+        filter = Stunt.objects(name=name, parent_id=parent_id)
+        stunt = filter.first()
+        return stunt
 
     def get_or_create(self, name, parent_id):
-        aspect = self.find(name, str(parent_id))
-        if aspect is None:
-            aspect = self.create_new(name, str(parent_id))
-        return aspect
+        stunt = self.find(name, str(parent_id))
+        if stunt is None:
+            stunt = self.create_new(name, str(parent_id))
+        return stunt
 
     def get_by_id(self, id):
-        aspect = Aspect.objects(id=id).first()
-        return aspect
+        stunt = Stunt.objects(id=id).first()
+        return stunt
 
     def get_by_parent_id(self, parent_id, name=''):
-        aspects = []
+        stunts = []
         if name:
-            aspect = Aspect.objects(parent_id=str(parent_id), name__icontains=name).first()
-            aspects = [aspect] if aspect else []
+            stunt = Stunt.objects(parent_id=str(parent_id), name__icontains=name).first()
+            stunts = [stunt] if stunt else []
         else:
-            aspects = Aspect.objects(parent_id=str(parent_id)).all()
-        return aspects
+            stunts = Stunt.objects(parent_id=str(parent_id)).all()
+        return stunts
 
     def get_string(self, char):
-        active = ' _(Active)_' if str(self.id) == char.active_aspect else ''
+        active = ' _(Active)_' if str(self.id) == char.active_stunt else ''
         description = f' - {self.description}' if self.description else ''
         return f'{self.name}{active}{description}'
         

@@ -181,16 +181,15 @@ class CharacterCommand():
         elif args[1].lower() == 'delete' or args[1].lower() == 'd':
             aspect = ' '.join(args[2:])
             [a.delete() for a in Aspect().get_by_parent_id(self.char.id, aspect)]
-            aspects = ''.join([a.get_string() for a in Aspect().get_by_parent_id(self.char.id)])
             return [
-                f'{aspect} removed from aspects',
+                f'"{aspect}" removed from aspects',
                 self.char.get_string_aspects()
             ]
         else:
             aspect = ' '.join(args[1:])
             Aspect().get_or_create(aspect, self.char.id)
             return [
-                f'Added {aspect} to aspects',
+                f'Added "{aspect}" to aspects',
                 self.char.get_string_aspects()
             ]
 
@@ -352,7 +351,7 @@ class CharacterCommand():
                     if shift_int > 0 and self.char.stress[stress_type][s][1] == X:
                         shift_int -= 1
                         modified[stress_type][s][1] = O
-                messages.append(f'Removed {shift} of ***{self.char.name}***\'s _{stress_type_name}_ stress')
+                messages.append(f'Removed {shift} of ***{self.char.name}\'s*** _{stress_type_name}_ stress')
         else:
             if len(args) == 2:
                 if args[1].lower() not in ['m', 'mental', 'p', 'physical']:
@@ -407,8 +406,8 @@ class CharacterCommand():
             previous = copy.deepcopy(self.char.consequences)
             modified = copy.deepcopy(self.char.consequences)
             modified[severity] = [severity_shift, O]
-            self.aspect(['a', 'd', previous[severity][2]])
-            messages.append(f'Removed ***{self.char.name}***\'s _{severity_name}_ consequence ("{previous[severity][2]}")')            
+            messages.append(f'Removed ***{self.char.name}\'s*** _{severity_name}_ consequence ("{previous[severity][2]}")')
+            messages.extend(self.aspect(['a', 'd', previous[severity][2]]))
         else:
             if len(args) == 2:
                 if args[1].lower() not in ['mi', 'mild', 'mo', 'moderate', 's', 'severe']:
@@ -425,8 +424,8 @@ class CharacterCommand():
             aspect = ' '.join(args[2:])
             modified = copy.deepcopy(self.char.consequences)
             modified[severity] = [severity_shift, X, aspect]
-            self.aspect(['a', aspect])
             messages.append(f'***{self.char.name}*** absorbed {severity_shift} shift for a {severity_name} consequence')
+            messages.extend(self.aspect(['a', aspect]))
         if modified:
             self.char.consequences = modified
             if (not self.char.created):

@@ -10,6 +10,11 @@ from config.setup import Setup
 SETUP = Setup()
 X = SETUP.x
 O = SETUP.o
+STRESS = SETUP.stress
+STRESS_TITLES = SETUP.stress_titles
+CONSEQUENCES = SETUP.consequences
+CONSEQUENCES_TITLES = SETUP.consequences_titles
+CONSEQUENCES_SHIFTS = SETUP.consequence_shifts
 
 class Character(Document):
     name = StringField(required=True)
@@ -83,8 +88,8 @@ class Character(Document):
         if category == 'Character':
             self.refresh = 3
             self.fate_points = 3
-            self.stress = [[['1', O],['1', O],['1', O]],[['1', O],['1', O],['1', O]]]
-            self.consequences = [['2', O],['4', O],['6', O]]
+            self.stress = STRESS
+            self.consequences = CONSEQUENCES
         if parent_id:
             self.parent_id = parent_id
         self.created = datetime.datetime.utcnow()

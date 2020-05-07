@@ -12,7 +12,7 @@ X = SETUP.x
 O = SETUP.o
 STRESS = SETUP.stress
 STRESS_TITLES = SETUP.stress_titles
-CONSEQUENCE = SETUP.consequences
+CONSEQUENCES = SETUP.consequences
 CONSEQUENCES_TITLES = SETUP.consequences_titles
 CONSEQUENCES_SHIFTS = SETUP.consequence_shifts
 
@@ -75,6 +75,13 @@ class CharacterCommand():
     def help(self, args):
         return [CHARACTER_HELP]
 
+    def save(self):
+        if self.char:
+            if (not self.char.created):
+                self.char.created = datetime.datetime.utcnow()
+            self.char.updated = datetime.datetime.utcnow()
+            self.char.save()
+
     def name(self, args):
         if len(args) == 0:
             if not self.char:
@@ -114,10 +121,7 @@ class CharacterCommand():
         else:
             description = ' '.join(args[1:])
             self.char.description = description
-            if (not self.char.created):
-                self.char.created = datetime.datetime.utcnow()
-            self.char.updated = datetime.datetime.utcnow()
-            self.char.save()
+            self.save()
             return [
                 f'Description updated to {description}',
                 self.char.get_string_short(self.user)
@@ -135,10 +139,7 @@ class CharacterCommand():
             else:
                 hc = ' '.join(args[1:])
             self.char.high_concept = hc
-            if (not self.char.created):
-                self.char.created = datetime.datetime.utcnow()
-            self.char.updated = datetime.datetime.utcnow()
-            self.char.save()
+            self.save()
             return [
                 f'High Concept updated to {hc}',
                 self.char.get_string_short(self.user)
@@ -152,10 +153,7 @@ class CharacterCommand():
         else:
             trouble = ' '.join(args[1:])
             self.char.trouble = trouble
-            if (not self.char.created):
-                self.char.created = datetime.datetime.utcnow()
-            self.char.updated = datetime.datetime.utcnow()
-            self.char.save()
+            self.save()
             return [
                 f'Trouble updated to {trouble}',
                 self.char.get_short_string(self.user)
@@ -170,10 +168,7 @@ class CharacterCommand():
             self.char.fate_points += 1 if self.char.fate_points < 5 else 0
         elif len(args) == 2 and args[1] == '-':
             self.char.fate_points -= 1 if self.char.fate_points > 0 else 0
-        if (not self.char.created):
-            self.char.created = datetime.datetime.utcnow()
-        self.char.updated = datetime.datetime.utcnow()
-        self.char.save()
+        self.save()
         return [f'Fate Points: {self.char.fate_points}']
 
     def aspect(self, args):
@@ -204,10 +199,7 @@ class CharacterCommand():
             aspect = ' '.join(args[1:])
             self.asp = Character().get_or_create(self.user, aspect, self.ctx.guild.name, self.char, 'Aspect')
             self.char.active_aspect = str(self.asp.id)
-            if (not self.char.created):
-                self.char.created = datetime.datetime.utcnow()
-            self.char.updated = datetime.datetime.utcnow()
-            self.char.save()
+            self.save()
             return [self.char.get_string_aspects(self.user)]
 
     def approach(self, args):
@@ -230,20 +222,14 @@ class CharacterCommand():
                             if key != skill:
                                 new_skills[key] = self.char.skills[key]
                         self.char.skills = new_skills
-                    if (not self.char.created):
-                        self.char.created = datetime.datetime.utcnow()
-                    self.char.updated = datetime.datetime.utcnow()
-                    self.char.save()
+                    self.save()
                     messages.append(f'Removed {skill}') 
                 else:
                     skill = [s for s in APPROACHES if args[1][0:2].lower() == s[0:2].lower()]
                     skill = skill[0].split(' - ')[0] if skill else args[1]
                     self.char.skills[skill] = args[2]
                     self.char.use_approaches = True
-                    if (not self.char.created):
-                        self.char.created = datetime.datetime.utcnow()
-                    self.char.updated = datetime.datetime.utcnow()
-                    self.char.save()
+                    self.save()
                     messages.append(f'Updated {skill} to {args[2]}')
                 messages.append(self.char.get_string_skills())
         return messages
@@ -268,20 +254,14 @@ class CharacterCommand():
                             if key != skill:
                                 new_skills[key] = self.char.skills[key]
                         self.char.skills = new_skills
-                    if (not self.char.created):
-                        self.char.created = datetime.datetime.utcnow()
-                    self.char.updated = datetime.datetime.utcnow()
-                    self.char.save()
+                    self.save()
                     messages.append(f'Removed {skill} skill') 
                 else:
                     skill = [s for s in SKILLS if args[1][0:2].lower() == s[0:2].lower()]
                     skill = skill[0].split(' - ')[0] if skill else args[1]
                     self.char.skills[skill] = args[2]
                     self.char.use_approaches = False
-                    if (not self.char.created):
-                        self.char.created = datetime.datetime.utcnow()
-                    self.char.updated = datetime.datetime.utcnow()
-                    self.char.save()
+                    self.save()
                     messages.append(f'Updated {skill} to {args[2]}')                
                 messages.append(self.char.get_string_skills())
         return messages
@@ -315,10 +295,7 @@ class CharacterCommand():
             stunt = ' '.join(args[1:])
             self.stu = Stunt().get_or_create(stunt, self.char.id)
             self.char.active_stunt = str(self.stu.id)
-            if (not self.char.created):
-                self.char.created = datetime.datetime.utcnow()
-            self.char.updated = datetime.datetime.utcnow()
-            self.char.save()
+            self.save()
             return [self.char.get_string_stunts()]
         return messages
     
@@ -362,10 +339,6 @@ class CharacterCommand():
                     self.char.stress_titles = titles if titles else None
                     messages.append(f'_{title}_ removed from stress titles')
                     self.char.stress = modified if modified else STRESS
-                    if (not self.char.created):
-                        self.char.created = datetime.datetime.utcnow()
-                    self.char.updated = datetime.datetime.utcnow()
-                    self.char.save()
                     messages.append(f'{self.char.get_string_stress()}')
             else:
                 total = args[2]
@@ -388,10 +361,6 @@ class CharacterCommand():
                     modified.append(stress_boxes)
                     messages.append(f'_{title}_ added to stress titles')
                 self.char.stress = modified
-                if (not self.char.created):
-                    self.char.created = datetime.datetime.utcnow()
-                self.char.updated = datetime.datetime.utcnow()
-                self.char.save()
                 messages.append(f'{self.char.get_string_stress()}')
         elif args[1] in ['delete', 'd']:
             if len(args) == 2:
@@ -423,10 +392,6 @@ class CharacterCommand():
                         modified[stress_type][s][1] = O
                 messages.append(f'Removed {shift} from ***{self.char.name}\'s*** _{stress_type_name}_ stress')
                 self.char.stress = modified
-                if (not self.char.created):
-                    self.char.created = datetime.datetime.utcnow()
-                self.char.updated = datetime.datetime.utcnow()
-                self.char.save()
                 messages.append(f'{self.char.get_string_stress()}')
         else:
             if len(args) == 2:
@@ -454,18 +419,14 @@ class CharacterCommand():
                     modified[stress_type][s][1] = X
             messages.append(f'***{self.char.name}*** absorbed {shift} {stress_type_name} stress')
             self.char.stress = modified
-            if (not self.char.created):
-                self.char.created = datetime.datetime.utcnow()
-            self.char.updated = datetime.datetime.utcnow()
-            self.char.save()
             messages.append(f'{self.char.get_string_stress()}')
+        self.save()
         return messages
 
     def consequence(self, args):
         messages = []
         modified = None
         consequences_titles = self.char.consequences_titles if self.char.consequences_titles else CONSEQUENCES_TITLES
-        consequences_shifts = self.char.consequences_shifts if self.char.consequences_shifts else CONSEQUENCES_SHIFTS
         consequences_shifts = self.char.consequences_shifts if self.char.consequences_shifts else CONSEQUENCES_SHIFTS
         consequences_checks = []
         [consequences_checks.append(t[0:2].lower()) for t in consequences_titles]
@@ -510,11 +471,7 @@ class CharacterCommand():
             modified[severity] = [severity_shift, X, aspect]
             messages.append(f'***{self.char.name}*** absorbed {severity_shift} shift for a {severity_name} consequence')
             messages.extend(self.aspect(['a', aspect]))
-        if modified:
-            self.char.consequences = modified
-            if (not self.char.created):
-                self.char.created = datetime.datetime.utcnow()
-            self.char.updated = datetime.datetime.utcnow()
-            self.char.save()
-            messages.append(f'{self.char.get_string_consequences()}')
+        self.char.consequences = modified
+        messages.append(f'{self.char.get_string_consequences()}')
+        self.save()
         return messages

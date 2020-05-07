@@ -124,14 +124,20 @@ class Character(Document):
         return f'\n**{title}:**\n        {skills_string}' if skills_string else ''
 
     def get_string_stress(self):
+        stress_name = 'Stress'
         stress_string = ''
         if self.stress:
-            stress = [f'_{s}:_ ' for s in self.stress_titles] if self.stress_titles else ['_Physical:_ ', '_Mental:_   ']
-            for t in range(0, len(self.stress)):
-                for s in range(0, len(self.stress[t])):
-                    stress[t] += f' {self.stress[t][s][1]}'
-            stress_string = '\n        '.join(stress)
-        return f'\n**Stress:**\n        {stress_string}' if stress_string else ''
+            if self.stress_titles and len(self.stress_titles) == 1:
+                stress_name = f'_{self.stress_titles[0]}:_ '
+                stress = '  '.join([self.stress[0][s][1] for s in range(0, len(self.stress[0]))])
+                stress_string = f' {stress}'
+            else:
+                stress = [f'_{s}:_ ' for s in self.stress_titles] if self.stress_titles else ['_Physical:_ ', '_Mental:_   ']
+                for t in range(0, len(self.stress)):
+                    for s in range(0, len(self.stress[t])):
+                        stress[t] += f' {self.stress[t][s][1]}'
+                stress_string = '\n        ' + '\n        '.join(stress)
+        return f'\n**{stress_name}:**{stress_string}' if stress_string else ''
 
     def get_string_consequences(self):
         consequences_string = ''

@@ -330,7 +330,7 @@ class CharacterCommand():
         modified = None
         stress_titles = self.char.stress_titles if self.char.stress_titles else STRESS_TITLES
         stress_checks = []
-        [stress_checks.append(t[0].lower()) for t in stress_titles]
+        [stress_checks.append(t[0:2].lower()) for t in stress_titles]
         [stress_checks.append(t.lower()) for t in stress_titles]
         stress_check_types = ' or '.join([f'({t[0].lower()}){t[1:].lower()}' for t in stress_titles])
         if not self.char:
@@ -397,9 +397,10 @@ class CharacterCommand():
             if len(args) == 2:
                 messages.append(f'No stress type provided - {stress_check_types}')
                 return messages
+            if args[2].lower() not in stress_checks:
+                messages.append(f'{args[2].lower()} is not a valid stress type - {stress_check_types}')
+                return messages
             if len(args) == 3:
-                if args[2].lower() not in stress_checks:
-                    messages.append(f'{args[2].lower()} is not a valid stress type - {stress_check_types}')
                 messages.append('Missing stress shift number - 1,2,3')
                 return messages
             if len(args) == 4:
@@ -409,7 +410,7 @@ class CharacterCommand():
                     return messages
                 shift_int = int(shift)
                 stress_type_str = args[2].lower()
-                stress_type = [i for i in range(0, len(stress_titles)) if 1 if stress_type_str in [stress_titles[i].lower()[0], stress_titles[i].lower()]][0]
+                stress_type = [i for i in range(0, len(stress_titles)) if stress_type_str in [stress_titles[i].lower()[0:2], stress_titles[i].lower()]][0]
                 stress_type_name = stress_titles[stress_type]
                 available = self.get_available_stress(stress_type)
                 if available == len(self.char.stress[stress_type]):
@@ -429,16 +430,17 @@ class CharacterCommand():
                 messages.append(f'{self.char.get_string_stress()}')
         else:
             if len(args) == 2:
-                if args[1].lower() not in stress_checks:
-                    messages.append(f'{args[1].lower()} is not a valid stress type - {stress_check_types}')
                 messages.append('Missing stress shift number - 1,2,3')
+                return messages
+            if args[1].lower() not in stress_checks:
+                messages.append(f'{args[1].lower()} is not a valid stress type - {stress_check_types}')
                 return messages
             shift = args[2]
             if not shift.isdigit():
                 messages.append('Stress shift must be a positive integer')
                 return messages
             stress_type_str = args[1].lower()
-            stress_type = [i for i in range(0, len(stress_titles)) if 1 if stress_type_str in [stress_titles[i].lower()[0], stress_titles[i].lower()]][0]
+            stress_type = [i for i in range(0, len(stress_titles)) if stress_type_str in [stress_titles[i].lower()[0:2], stress_titles[i].lower()]][0]
             stress_type_name = stress_titles[stress_type]
             shift_int = int(shift)
             available = self.get_available_stress(stress_type)

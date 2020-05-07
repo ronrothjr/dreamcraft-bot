@@ -30,8 +30,9 @@ class Character(Document):
     last_roll = DynamicField()
     stress = DynamicField()
     stress_titles = ListField()
-    consequences_titles = ListField()
     consequences = DynamicField()
+    consequences_titles = ListField()
+    consequences_shifts = ListField()
     is_boost = BooleanField()
     has_stress = BooleanField()
     archived = BooleanField(default=False)
@@ -78,6 +79,7 @@ class Character(Document):
         self.user = user
         self.name = name
         self.guild = guild
+        self.category = category
         if category == 'Character':
             self.refresh = 3
             self.fate_points = 3

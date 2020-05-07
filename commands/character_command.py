@@ -10,9 +10,11 @@ SKILLS = SETUP.skills
 CHARACTER_HELP = SETUP.character_help
 X = SETUP.x
 O = SETUP.o
-STRESS = SETUP.stress_titles
-CONSEQUENCES = SETUP.consequences_titles
-CONSEQUENCE_SHIFTS = SETUP.consequence_shifts
+STRESS = SETUP.stress
+STRESS_TITLES = SETUP.stress_titles
+CONSEQUENCE = SETUP.consequences
+CONSEQUENCES_TITLES = SETUP.consequences_titles
+CONSEQUENCES_SHIFTS = SETUP.consequence_shifts
 
 class CharacterCommand():
     def __init__(self, ctx, args):
@@ -326,7 +328,7 @@ class CharacterCommand():
     def stress(self, args):
         messages = []
         modified = None
-        stress_titles = self.char.stress_titles if self.char.stress_titles else STRESS
+        stress_titles = self.char.stress_titles if self.char.stress_titles else STRESS_TITLES
         stress_checks = []
         [stress_checks.append(t[0].lower()) for t in stress_titles]
         [stress_checks.append(t.lower()) for t in stress_titles]
@@ -345,18 +347,21 @@ class CharacterCommand():
             if self.char.stress_titles:
                 titles = copy.deepcopy(self.char.stress_titles)
             if args[2] in ['delete', 'd']:
+                if not titles:
+                    messages.append('You have not defined any custom stress titles')
+                    return messages
                 title = ' '.join(args[3:])
                 indeces = [i for i in range(0, len(titles)) if title.lower() in titles[i].lower()]
                 if not indeces:
-                    messages.append(f'_{title}_ not found in stress titles')
+                    messages.append(f'_{title}_ not found in custom stress titles')
                     return messages
                 else:
                     stress = copy.deepcopy(self.char.stress)
                     modified = [stress[i] for i in range(0, len(stress)) if title.lower() not in titles[i].lower()]
                     titles = [t for t in titles if title.lower() not in t.lower()]
-                    self.char.stress_titles = titles
+                    self.char.stress_titles = titles if titles else None
                     messages.append(f'_{title}_ removed from stress titles')
-                    self.char.stress = modified
+                    self.char.stress = modified if modified else STRESS
                     if (not self.char.created):
                         self.char.created = datetime.datetime.utcnow()
                     self.char.updated = datetime.datetime.utcnow()
@@ -457,19 +462,26 @@ class CharacterCommand():
     def consequence(self, args):
         messages = []
         modified = None
+        consequences_titles = self.char.consequences_titles if self.char.consequences_titles else CONSEQUENCES_TITLES
+        consequences_shifts = self.char.consequences_shifts if self.char.consequences_shifts else CONSEQUENCES_SHIFTS
+        consequences_shifts = self.char.consequences_shifts if self.char.consequences_shifts else CONSEQUENCES_SHIFTS
+        consequences_checks = []
+        [consequences_checks.append(t[0:2].lower()) for t in consequences_titles]
+        [consequences_checks.append(t.lower()) for t in consequences_titles]
+        consequences_check_types = ' or '.join([f'({t[0].lower()}){t[1:].lower()}' for t in consequences_titles])
         if len(args) == 1:
             messages.append(f'{self.char.get_string_name(self.user)}{self.char.get_string_consequences()}')
             return messages
         if args[1] in ['delete', 'd']:
             if len(args) == 2:
-                messages.append('No severity provided - (mi)ld, (mo)oderate or (s)evere')
-                if args[2].lower() not in ['mi', 'mild', 'mo', 'moderate', 's', 'severe']:
-                    messages.append(f'{args[2].lower()} is not a valid severity - (mi)ld, (mo)oderate or (s)evere')
+                messages.append(f'No severity provided - {consequences_check_types}')
+                if args[2].lower() not in consequences_checks:
+                    messages.append(f'{args[2].lower()} is not a valid severity - {consequences_check_types}')
                 return messages
             severity_str = args[2].lower()
-            severity = 1 if severity_str in ['mo', 'moderate'] else (0 if severity_str in ['mi', 'mild'] else 2)
-            severity_shift = CONSEQUENCE_SHIFTS[severity]
-            severity_name = CONSEQUENCES[severity]
+            severity = [i for i in range(0, len(consequences_titles)) if 1 if severity_str in [consequences_titles[i].lower()[0:2], consequences_titles[i].lower()]][0]
+            severity_shift = consequences_shifts[severity]
+            severity_name = consequences_titles[severity]
             if self.char.consequences[severity][1] == O:
                 messages.append(f'***{self.char.name}*** does not currently have a _{severity_name}_ consequence')
                 return messages
@@ -480,14 +492,14 @@ class CharacterCommand():
             messages.extend(self.aspect(['a', 'd', previous[severity][2]]))
         else:
             if len(args) == 2:
-                if args[1].lower() not in ['mi', 'mild', 'mo', 'moderate', 's', 'severe']:
-                    messages.append(f'{args[1].lower()} is not a valid severity - (mi)ld, (mo)oderate or (s)evere')
+                if args[1].lower() not in consequences_checks:
+                    messages.append(f'{args[1].lower()} is not a valid severity - {consequences_check_types}')
                 messages.append('Missing consequence aspect')
                 return messages
             severity_str = args[1].lower()
-            severity = 1 if severity_str in ['mo', 'moderate'] else (0 if severity_str in ['mi', 'mild'] else 2)
-            severity_shift = CONSEQUENCE_SHIFTS[severity]
-            severity_name = CONSEQUENCES[severity]
+            severity = [i for i in range(0, len(consequences_titles)) if 1 if severity_str in [consequences_titles[i].lower()[0:2], consequences_titles[i].lower()]][0]
+            severity_shift = consequences_shifts[severity]
+            severity_name = consequences_titles[severity]
             if self.char.consequences[severity][1] == X:
                 messages.append(f'***{self.char.name}*** already has a _{severity_name}_ consequence ("{self.char.consequences[severity][2]}")')
                 return messages

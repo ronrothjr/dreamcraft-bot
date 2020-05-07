@@ -44,14 +44,15 @@ class RollCommand():
         if invokes:
             if len(invokes) < self.char.fate_points+1:
                 self.char.fate_points -= len(invokes)
-                messages.append(''.join([f'Invoked "{i[0]}" and used 1 fate point' for i in invokes]))
+                if not last_roll:
+                    messages.append(''.join([f'Invoked "{i[0]}" and used 1 fate point' for i in invokes]))
                 messages.append(self.char.get_string_fate())
             else:
-                return [f'{self.char.name} does not have enough fate points']
+                return [f'***{self.char.name}*** does not have enough fate points']
         if compels:
             if len(compels) + self.char.fate_points <= 5:
                 self.char.fate_points += len(compels)
-                messages.append(''.join([f'Compeled "{c}" and added 1 fate point' for c in compels]))
+                messages.append(''.join([f'Compelled "{c}" and added 1 fate point' for c in compels]))
                 messages.append(self.char.get_string_fate())
             else:
                 return [f'{self.char.name} already has the maximum fate points (5)']

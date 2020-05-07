@@ -104,7 +104,7 @@ class Character(Document):
         return f'***{self.name}***{active}'
 
     def get_string_fate(self):
-        return f'\n**Fate Points:** {self.fate_points} (_Refresh:_ {self.refresh})' if self.fate_points else ''
+        return f'\n**Fate Points:** {self.fate_points} (_Refresh:_ {self.refresh})' if self.fate_points is not None else ''
         
     def get_string_aspects(self, user=None):
         aspects = Character().get_by_parent(self)

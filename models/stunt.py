@@ -24,23 +24,23 @@ class Stunt(Document):
         stunt = filter.first()
         return stunt
 
-    def get_or_create(self, name, parent_id):
-        stunt = self.find(name, str(parent_id))
+    def get_or_create(self, name, parent):
+        stunt = self.find(name, str(parent.id))
         if stunt is None:
-            stunt = self.create_new(name, str(parent_id))
+            stunt = self.create_new(name, str(parent.id))
         return stunt
 
     def get_by_id(self, id):
         stunt = Stunt.objects(id=id).first()
         return stunt
 
-    def get_by_parent_id(self, parent_id, name=''):
+    def get_by_parent(self, parent, name=''):
         stunts = []
         if name:
-            stunt = Stunt.objects(parent_id=str(parent_id), name__icontains=name).first()
+            stunt = Stunt.objects(parent_id=str(parent.id), name__icontains=name).first()
             stunts = [stunt] if stunt else []
         else:
-            stunts = Stunt.objects(parent_id=str(parent_id)).all()
+            stunts = Stunt.objects(parent_id=str(parent.id)).all()
         return stunts
 
     def get_string(self, char):

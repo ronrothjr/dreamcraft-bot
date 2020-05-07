@@ -3,20 +3,21 @@ import datetime
 from mongoengine import *
 from models.channel import Channel
 from models.character import Character
-from models.aspect import Aspect
 
 class Scene(Document):
     name = StringField(required=True)
     description = StringField()
     channel = ReferenceField(Channel)
-    char_id = StringField()
+    character = ReferenceField(Character)
+    has_stress = BooleanField()
     active_user = StringField()
     characters = ListField(StringField())
     created = DateTimeField(required=True)
     updated = DateTimeField(required=True)
 
-    def create_new(self, channel, name):
+    def create_new(self, user, channel, name):
         self.name = name
+        self.character = Character().get_or_create(user, name, channel.guild)
         self.channel = channel.id
         self.created = datetime.datetime.utcnow()
         self.updated = datetime.datetime.utcnow()
@@ -28,11 +29,11 @@ class Scene(Document):
         user = filter.first()
         return user
 
-    def get_or_create(self, channel, name):
-        user = self.find(channel, name)
-        if user is None:
-            user = self.create_new(channel, name)
-        return user
+    def get_or_create(self, user, channel, name):
+        scene = self.find(channel, name)
+        if scene is None:
+            scene = self.create_new(user, channel, name)
+        return scene
 
     def get_by_id(self, id):
         scene = Scene.objects(id=id).first()
@@ -49,22 +50,21 @@ class Scene(Document):
         scenes = Scene.objects(channel=channel.id).all()
         return scenes
 
-    def get_string_aspects(self):
-        return f'\n            Aspects:\n                ' + ('\n                '.join([a.get_string() for a in Aspect().get_by_parent_id(self.id)]))
-
     def get_string_characters(self):
-        return f'\n            Characters:\n                ' + ('\n                '.join(self.characters))
+        characters = '***\n                ***'.join(self.characters)
+        return f'\n            _Characters:_\n                ***{characters}***'
 
     def get_string(self, channel):
-        active = ''
-        if str(self.id) == channel.active_scene:
-            active = ' (Active)'
-        description = ''
-        if self.description:
-            description = f' - "{self.description}"'
-        aspects = f'{self.get_string_aspects()}'
-        characters = ''
-        if self.characters:
-            characters = f'{self.get_string_characters()}'
-        return f'\n        {self.name}{active}{description}{aspects}{characters}'
+        name = f'***{self.name}***'
+        active = active = ' _(Active Scene)_' if str(self.id) == channel.active_scene else ''
+        description = f' - "{self.description}"' if self.description else ''
+        characters = f'{self.get_string_characters()}' if self.characters else ''
+        aspects = ''
+        stress = ''
+        if self.character:
+            name = f'***{self.character.name}***' if self.character.name else name
+            description = f' - "{self.character.description}"' if self.character.description else description
+            aspects = self.character.get_string_aspects()
+            stress = self.character.get_string_stress() if self.character.has_stress else ''
+        return f'\n        {name}{active}{description}{characters}{aspects}{stress}'
         

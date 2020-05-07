@@ -1,7 +1,7 @@
 # character_command.py
 import datetime
 import copy
-from models import User, Character, Aspect, Stunt
+from models import User, Character, Stunt
 from config.setup import Setup
 
 SETUP = Setup()
@@ -10,8 +10,8 @@ SKILLS = SETUP.skills
 CHARACTER_HELP = SETUP.character_help
 X = SETUP.x
 O = SETUP.o
-STRESS = SETUP.stress
-CONSEQUENCES = SETUP.consequences
+STRESS = SETUP.stress_titles
+CONSEQUENCES = SETUP.consequences_titles
 CONSEQUENCE_SHIFTS = SETUP.consequence_shifts
 
 class CharacterCommand():
@@ -21,7 +21,7 @@ class CharacterCommand():
         self.command = self.args[0].lower() if len(self.args) > 0 else 'n'
         self.user = User().get_or_create(ctx.author.name, ctx.guild.name)
         self.char = Character().get_by_id(self.user.active_character) if self.user and self.user.active_character else None
-        self.asp = Aspect().get_by_id(self.char.active_aspect) if self.char and self.char.active_aspect else None
+        self.asp = Character().get_by_id(self.char.active_aspect) if self.char and self.char.active_aspect else None
         self.stu = Stunt().get_by_id(self.char.active_stunt) if self.char and self.char.active_stunt else None
 
     def run(self):
@@ -94,15 +94,15 @@ class CharacterCommand():
         if len(args) == 1:
             return ['No character provided for deletion']
         search = ' '.join(args[1:])
-        self.char = Character().find(self.user, search, self.ctx.guild.name)
+        self.char = Character().find(self.user, search, self.ctx.guild.name, None, 'Character', False)
         if not self.char:
             return [f'{search} was not found. No changes made.\nTry this: ".d c n Name"']
         else:
             search = self.char.name
-            [a.delete() for a in Aspect().get_by_parent_id(self.char.id)]
-            [s.delete() for s in Stunt().get_by_parent_id(self.char.id)]
+            [a.delete() for a in Character().get_by_parent(self.char)]
+            [s.delete() for s in Stunt().get_by_parent(self.char)]
             self.char.delete()
-            return [f'{search} removed']
+            return [f'***{search}*** removed']
 
     def description(self, args):
         if len(args) == 1:
@@ -182,13 +182,13 @@ class CharacterCommand():
         if not self.char:
             return ['You don\'t have an active character.\nTry this: ".d c n Name"']
         elif args[1].lower() == 'list':
-            return [self.char.get_string_aspects()]
+            return [self.char.get_string_aspects(self.user)]
         elif args[1].lower() == 'delete' or args[1].lower() == 'd':
             aspect = ' '.join(args[2:])
-            [a.delete() for a in Aspect().get_by_parent_id(self.char.id, aspect)]
+            [a.delete() for a in Character().get_by_parent(self.char, aspect)]
             return [
                 f'"{aspect}" removed from aspects',
-                self.char.get_string_aspects()
+                self.char.get_string_aspects(self.user)
             ]
         elif args[1].lower() == 'desc' or args[1].lower() == 'description':
             description = ' '.join(args[2:])
@@ -197,16 +197,16 @@ class CharacterCommand():
                 self.asp.created = datetime.datetime.utcnow()
             self.asp.updated = datetime.datetime.utcnow()
             self.asp.save()
-            messages.append(self.char.get_string_aspects())
+            return [self.char.get_string_aspects(self.user)]
         else:
             aspect = ' '.join(args[1:])
-            self.asp = Aspect().get_or_create(aspect, self.char.id)
+            self.asp = Character().get_or_create(self.user, aspect, self.ctx.guild.name, self.char, 'Aspect')
             self.char.active_aspect = str(self.asp.id)
             if (not self.char.created):
                 self.char.created = datetime.datetime.utcnow()
             self.char.updated = datetime.datetime.utcnow()
             self.char.save()
-            return [self.char.get_string_aspects()]
+            return [self.char.get_string_aspects(self.user)]
 
     def approach(self, args):
         messages = []
@@ -296,7 +296,7 @@ class CharacterCommand():
             return [self.char.get_string_stunts()]
         elif args[1].lower() == 'delete' or args[1].lower() == 'd':
             stunt = ' '.join(args[2:])
-            [s.delete() for s in Stunt().get_by_parent_id(self.char.id, stunt)]
+            [s.delete() for s in Stunt().get_by_parent(self.char, stunt)]
             return [
                 f'"{stunt}" removed from stunts',
                 self.char.get_string_stunts()
@@ -326,28 +326,88 @@ class CharacterCommand():
     def stress(self, args):
         messages = []
         modified = None
+        stress_titles = self.char.stress_titles if self.char.stress_titles else STRESS
+        stress_checks = []
+        [stress_checks.append(t[0].lower()) for t in stress_titles]
+        [stress_checks.append(t.lower()) for t in stress_titles]
+        stress_check_types = ' or '.join([f'({t[0].lower()}){t[1:].lower()}' for t in stress_titles])
+        if not self.char:
+            messages.append('You don\'t have an active character.\nTry this: ".d c n Name"')
+            return messages
         if len(args) == 1:
             messages.append(f'{self.char.get_string_name(self.user)}{self.char.get_string_stress()}')
             return messages
-        if args[1] in ['delete', 'd']:
+        if args[1] in ['title', 't']:
             if len(args) == 2:
-                messages.append('No stress type provided - (m)mental or (p)hysical')
+                messages.append('No stress title provided')
+                return messages
+            titles = []
+            if self.char.stress_titles:
+                titles = copy.deepcopy(self.char.stress_titles)
+            if args[2] in ['delete', 'd']:
+                title = ' '.join(args[3:])
+                indeces = [i for i in range(0, len(titles)) if title.lower() in titles[i].lower()]
+                if not indeces:
+                    messages.append(f'_{title}_ not found in stress titles')
+                    return messages
+                else:
+                    stress = copy.deepcopy(self.char.stress)
+                    modified = [stress[i] for i in range(0, len(stress)) if title.lower() not in titles[i].lower()]
+                    titles = [t for t in titles if title.lower() not in t.lower()]
+                    self.char.stress_titles = titles
+                    messages.append(f'_{title}_ removed from stress titles')
+                    self.char.stress = modified
+                    if (not self.char.created):
+                        self.char.created = datetime.datetime.utcnow()
+                    self.char.updated = datetime.datetime.utcnow()
+                    self.char.save()
+                    messages.append(f'{self.char.get_string_stress()}')
+            else:
+                total = args[2]
+                if not total.isdigit():
+                    messages.append('Stress shift must be a positive integer')
+                    return messages
+                title = ' '.join(args[3:])
+                stress_boxes = []
+                [stress_boxes.append(['1', O]) for i in range(0, int(total))]
+                matches = [t for t in titles if title.lower() in t.lower()]
+                modified = copy.deepcopy(self.char.stress)
+                if matches:
+                    for i in range(0, len(titles)):
+                        if title.lower() in titles[i].lower():
+                            modified[i] = stress_boxes
+                else:
+                    titles.append(title)
+                    self.char.stress_titles = titles
+                    modified = []
+                    modified.append(stress_boxes)
+                    messages.append(f'_{title}_ added to stress titles')
+                self.char.stress = modified
+                if (not self.char.created):
+                    self.char.created = datetime.datetime.utcnow()
+                self.char.updated = datetime.datetime.utcnow()
+                self.char.save()
+                messages.append(f'{self.char.get_string_stress()}')
+        elif args[1] in ['delete', 'd']:
+            if len(args) == 2:
+                messages.append(f'No stress type provided - {stress_check_types}')
                 return messages
             if len(args) == 3:
-                if args[2].lower() not in ['m', 'mental', 'p', 'physical']:
-                    messages.append(f'{args[2].lower()} is not a valid stress type - (m)mental or (p)hysical')
+                if args[2].lower() not in stress_checks:
+                    messages.append(f'{args[2].lower()} is not a valid stress type - {stress_check_types}')
                 messages.append('Missing stress shift number - 1,2,3')
                 return messages
             if len(args) == 4:
                 shift = args[3]
                 if not shift.isdigit():
-                    return messages.append('Stress shift must be a positive integer')
+                    messages.append('Stress shift must be a positive integer')
+                    return messages
                 shift_int = int(shift)
                 stress_type_str = args[2].lower()
-                stress_type = 1 if stress_type_str in ['m', 'mental'] else 0
-                stress_type_name = STRESS[stress_type]
+                stress_type = [i for i in range(0, len(stress_titles)) if 1 if stress_type_str in [stress_titles[i].lower()[0], stress_titles[i].lower()]][0]
+                stress_type_name = stress_titles[stress_type]
                 available = self.get_available_stress(stress_type)
-                if available == 3:
+                if available == len(self.char.stress[stress_type]):
                     messages.append(f'***{self.char.name}*** has no _{stress_type_name}_ stress to remove')
                     return messages
                 modified = copy.deepcopy(self.char.stress)
@@ -355,19 +415,26 @@ class CharacterCommand():
                     if shift_int > 0 and self.char.stress[stress_type][s][1] == X:
                         shift_int -= 1
                         modified[stress_type][s][1] = O
-                messages.append(f'Removed {shift} of ***{self.char.name}\'s*** _{stress_type_name}_ stress')
+                messages.append(f'Removed {shift} from ***{self.char.name}\'s*** _{stress_type_name}_ stress')
+                self.char.stress = modified
+                if (not self.char.created):
+                    self.char.created = datetime.datetime.utcnow()
+                self.char.updated = datetime.datetime.utcnow()
+                self.char.save()
+                messages.append(f'{self.char.get_string_stress()}')
         else:
             if len(args) == 2:
-                if args[1].lower() not in ['m', 'mental', 'p', 'physical']:
-                    messages.append(f'{args[1].lower()} is not a valid stress type - (m)mental or (p)hysical')
+                if args[1].lower() not in stress_checks:
+                    messages.append(f'{args[1].lower()} is not a valid stress type - {stress_check_types}')
                 messages.append('Missing stress shift number - 1,2,3')
                 return messages
             shift = args[2]
             if not shift.isdigit():
-                return messages.append('Stress shift must be a positive integer')
+                messages.append('Stress shift must be a positive integer')
+                return messages
             stress_type_str = args[1].lower()
-            stress_type = 1 if stress_type_str in ['m', 'mental'] else 0
-            stress_type_name = STRESS[stress_type]
+            stress_type = [i for i in range(0, len(stress_titles)) if 1 if stress_type_str in [stress_titles[i].lower()[0], stress_titles[i].lower()]][0]
+            stress_type_name = stress_titles[stress_type]
             shift_int = int(shift)
             available = self.get_available_stress(stress_type)
             if shift_int > available:
@@ -379,7 +446,6 @@ class CharacterCommand():
                     shift_int -= 1
                     modified[stress_type][s][1] = X
             messages.append(f'***{self.char.name}*** absorbed {shift} {stress_type_name} stress')
-        if modified:
             self.char.stress = modified
             if (not self.char.created):
                 self.char.created = datetime.datetime.utcnow()

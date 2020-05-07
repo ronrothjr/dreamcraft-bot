@@ -260,6 +260,6 @@ class Setup():
     fate_dice = {'-1': '-', '0': 'b', '1': '+'}
     x = '[X]'
     o = '[   ]'
-    stress = ['Physical', 'Mental']
-    consequences = ['Mild', 'Moderate', 'Severe']
+    stress_titles = ['Physical', 'Mental']
+    consequences_titles = ['Mild', 'Moderate', 'Severe']
     consequence_shifts = ['2', '4', '6']

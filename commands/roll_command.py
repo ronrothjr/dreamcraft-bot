@@ -1,6 +1,6 @@
 # roll_command.py
 import datetime
-from models import Channel, Scene, User, Character, Aspect
+from models import Channel, Scene, User, Character
 from utils import Roll
 
 class RollCommand():
@@ -45,14 +45,14 @@ class RollCommand():
             if len(invokes) < self.char.fate_points+1:
                 self.char.fate_points -= len(invokes)
                 messages.append(''.join([f'Invoked "{i[0]}" and used 1 fate point' for i in invokes]))
-                messages.append(self.char.get_string_fate(self.user))
+                messages.append(self.char.get_string_fate())
             else:
                 return [f'{self.char.name} does not have enough fate points']
         if compels:
             if len(compels) + self.char.fate_points <= 5:
                 self.char.fate_points += len(compels)
                 messages.append(''.join([f'Compeled "{c}" and added 1 fate point' for c in compels]))
-                messages.append(self.char.get_string_fate(self.user))
+                messages.append(self.char.get_string_fate())
             else:
                 return [f'{self.char.name} already has the maximum fate points (5)']
         if (not self.char.created):
@@ -113,9 +113,9 @@ class RollCommand():
             available.append(f'{self.char.high_concept} (character \'{self.char.name}\')')
         if self.char.trouble:
             available.append(f'{self.char.trouble} (character \'{self.char.name}\')')
-        char_aspects = [f'{a.name} (character \'{self.char.name}\')' for a in Aspect().get_by_parent_id(self.char.id)]
+        char_aspects = [f'{a.name} (character \'{self.char.name}\')' for a in Character().get_by_parent(self.char)] if self.char else []
         available.extend(char_aspects)
-        sc_aspects = [f'{a.name} (scene \'{self.sc.name}\')' for a in Aspect().get_by_parent_id(self.sc.id)]
+        sc_aspects = [f'{a.name} (scene \'{self.sc.name}\')' for a in Character().get_by_parent(self.sc)] if self.sc else []
         available.extend(sc_aspects)
         return ['**Available aspects:**\n        ' + '\n        '.join([a for a in available]) if available else 'No available aspects to invoke']
 
@@ -126,9 +126,9 @@ class RollCommand():
                 return self.char.high_concept
             if self.char.trouble and aspect.lower() in self.char.trouble.lower():
                 return self.char.trouble
-            aspects = [a.name for a in Aspect().get_by_parent_id(self.char.id, aspect)]
+            aspects = [a.name for a in Character().get_by_parent(self.char, aspect)]
             if aspects:
                 return aspects[0]
-            aspects = [a.name for a in Aspect().get_by_parent_id(self.sc.id, aspect)]
+            aspects = [a.name for a in Character().get_by_parent(self.sc, aspect)]
             if aspects:
                 return aspects[0]

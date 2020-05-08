@@ -30,6 +30,8 @@ class Setup():
     character_help = '.d c help - display these instructions\nCharacter Help:\n\
             .d (c)haracter - display active character\n\
             .d c help - display character help\n\
+            .d c (st)ress help - display help on stress tracks\n\
+            .d c (con)sequence help - display help on consequences and conditions\n\
             .d c \{name\} - display/set active character\n\
             .d c (l)ist - display list of characters\n\
             .d c (desc)ription \{description\} - set the description for the active character\n\
@@ -42,11 +44,23 @@ class Setup():
             .d c (app)roach [(d)elete] \{approach\} \{bonus\} - add/remove approach bonuses\n\
             .d c (app)roach help - display a list of approach descriptions\n\
             .d c (sk)ill [(d)elete] \{skill\} \{bonus\} - set/remove bonuses\n\
-            .d c (sk)ill help - display a list of skill descriptions\n\
-            .d c (st)ress (m)ental|(p)hysical {1,2,3}\n\
-            .d c (st)ress (d)elete (m)ental|(p)hysical {1,2,3}\n\
-            .d c (con)sequence (mi)ld|(mo)derate|(s)evere {aspect}\n\
-            .d c (con)sequence (d)elete (mi)ld|(mo)derate|(s)evere'
+            .d c (sk)ill help - display a list of skill descriptions'
+
+    stress_help = '.d c (st)ress help - display these instructions\nStress Help:\n\
+            .d c (st)ress (m)ental|(p)hysical {1,2,3} - add stress\n\
+            .d c (st)ress (d)elete (m)ental|(p)hysical {1,2,3} - remove stress\n\
+            .d c (st)ress (t)itle {total} {stress} - create stress track\n\
+            .d c (st)ress (t)itle (d)elete {(st)ress} - delete stress track\n\
+            .d c (st)ress {(st)ress} {1,2,3}- add custom stress\n\
+            .d c (st)ress (d)elete {(st)ress} - remove custom stress'
+
+    consequences_help = '.d c (con)sequence help - display these instructions\nConsequences and Conditions Help:\n\
+            .d c (con)sequence (mi)ld|(mo)derate|(se)vere {aspect} - add consequence\n\
+            .d c (con)sequence (d)elete (mi)ld|(mo)derate|(s)evere - remove consequence\n\
+            .d c (con)sequence (t)itle {total} {condition} - create condition\n\
+            .d c (con)sequence (t)itle (d)elete {(co)ndition} - delete condition\n\
+            .d c (con)sequence {(co)ndition} - add condition\n\
+            .d c (con)sequence (d}elete {(co)ndition} - remove condition'
 
     scene_help = '.d s help - display these instructions\nScene Help:\n\
             .d (s)cene - display active scene\n\

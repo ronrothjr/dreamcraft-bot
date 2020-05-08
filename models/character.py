@@ -10,6 +10,11 @@ from config.setup import Setup
 SETUP = Setup()
 X = SETUP.x
 O = SETUP.o
+STRESS = SETUP.stress
+STRESS_TITLES = SETUP.stress_titles
+CONSEQUENCES = SETUP.consequences
+CONSEQUENCES_TITLES = SETUP.consequences_titles
+CONSEQUENCES_SHIFTS = SETUP.consequence_shifts
 
 class Character(Document):
     name = StringField(required=True)
@@ -83,8 +88,8 @@ class Character(Document):
         if category == 'Character':
             self.refresh = 3
             self.fate_points = 3
-            self.stress = [[['1', O],['1', O],['1', O]],[['1', O],['1', O],['1', O]]]
-            self.consequences = [['2', O],['4', O],['6', O]]
+            self.stress = STRESS
+            self.consequences = CONSEQUENCES
         if parent_id:
             self.parent_id = parent_id
         self.created = datetime.datetime.utcnow()
@@ -124,11 +129,11 @@ class Character(Document):
         return f'\n**{title}:**\n        {skills_string}' if skills_string else ''
 
     def get_string_stress(self):
-        stress_name = 'Stress'
+        stress_name = '**_Stress_** '
         stress_string = ''
         if self.stress:
             if self.stress_titles and len(self.stress_titles) == 1:
-                stress_name = f'_{self.stress_titles[0]}:_ '
+                stress_name = f'**_{self.stress_titles[0]}_** '
                 stress = '  '.join([self.stress[0][s][1] for s in range(0, len(self.stress[0]))])
                 stress_string = f' {stress}'
             else:
@@ -137,20 +142,21 @@ class Character(Document):
                     for s in range(0, len(self.stress[t])):
                         stress[t] += f' {self.stress[t][s][1]}'
                 stress_string = '\n        ' + '\n        '.join(stress)
-        return f'\n**{stress_name}:**{stress_string}' if stress_string else ''
+        return f'\n{stress_name}{stress_string}' if stress_string else ''
 
     def get_string_consequences(self):
+        consequences_name = '**_Consequences:_** '
         consequences_string = ''
         if self.consequences:
-            consequences = self.consequences_titles if self.consequences_titles else ['_Mild:_           ', '_Moderate:_ ', '_Severe:_       ']
+            consequences_name = '**_Conditions:_** ' if self.consequences_titles else consequences_name
+            consequences = [f'_{t}_ ' for t in self.consequences_titles] if self.consequences_titles else ['_Mild:_           ', '_Moderate:_ ', '_Severe:_       ']
+            consequences_strings = []
             for c in range(0, len(self.consequences)):
                 check = ' '+ self.consequences[c][1]
-                description = ''
-                if self.consequences[c][1] and len(self.consequences[c]) == 3:
-                    description = f' - {self.consequences[c][2]}'
-                consequences[c] += f'_{self.consequences[c][0]}_ {check}{description}'
-            consequences_string = '\n        '.join([c for c in consequences])
-        return f'\n**Consequences:**\n        {consequences_string}' if consequences_string else ''
+                description = f' - {self.consequences[c][2]}' if self.consequences[c][1] and len(self.consequences[c]) == 3 else ''
+                consequences_strings.append(f'{check} _{self.consequences[c][0]}_ {consequences[c]}{description}')
+            consequences_string = '\n        '.join([c for c in consequences_strings])
+        return f'\n{consequences_name}\n        {consequences_string}' if consequences_string else ''
 
     def get_string(self, user=None):
         name = self.get_string_name(user)

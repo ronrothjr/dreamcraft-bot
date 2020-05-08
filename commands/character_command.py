@@ -8,11 +8,13 @@ SETUP = Setup()
 APPROACHES = SETUP.approaches
 SKILLS = SETUP.skills
 CHARACTER_HELP = SETUP.character_help
+STRESS_HELP = SETUP.stress_help
+CONSEQUENCES_HELP = SETUP.consequences_help
 X = SETUP.x
 O = SETUP.o
 STRESS = SETUP.stress
 STRESS_TITLES = SETUP.stress_titles
-CONSEQUENCE = SETUP.consequences
+CONSEQUENCES = SETUP.consequences
 CONSEQUENCES_TITLES = SETUP.consequences_titles
 CONSEQUENCES_SHIFTS = SETUP.consequence_shifts
 
@@ -75,6 +77,13 @@ class CharacterCommand():
     def help(self, args):
         return [CHARACTER_HELP]
 
+    def save(self):
+        if self.char:
+            if (not self.char.created):
+                self.char.created = datetime.datetime.utcnow()
+            self.char.updated = datetime.datetime.utcnow()
+            self.char.save()
+
     def name(self, args):
         if len(args) == 0:
             if not self.char:
@@ -114,10 +123,7 @@ class CharacterCommand():
         else:
             description = ' '.join(args[1:])
             self.char.description = description
-            if (not self.char.created):
-                self.char.created = datetime.datetime.utcnow()
-            self.char.updated = datetime.datetime.utcnow()
-            self.char.save()
+            self.save()
             return [
                 f'Description updated to {description}',
                 self.char.get_string_short(self.user)
@@ -135,10 +141,7 @@ class CharacterCommand():
             else:
                 hc = ' '.join(args[1:])
             self.char.high_concept = hc
-            if (not self.char.created):
-                self.char.created = datetime.datetime.utcnow()
-            self.char.updated = datetime.datetime.utcnow()
-            self.char.save()
+            self.save()
             return [
                 f'High Concept updated to {hc}',
                 self.char.get_string_short(self.user)
@@ -152,10 +155,7 @@ class CharacterCommand():
         else:
             trouble = ' '.join(args[1:])
             self.char.trouble = trouble
-            if (not self.char.created):
-                self.char.created = datetime.datetime.utcnow()
-            self.char.updated = datetime.datetime.utcnow()
-            self.char.save()
+            self.save()
             return [
                 f'Trouble updated to {trouble}',
                 self.char.get_short_string(self.user)
@@ -170,10 +170,7 @@ class CharacterCommand():
             self.char.fate_points += 1 if self.char.fate_points < 5 else 0
         elif len(args) == 2 and args[1] == '-':
             self.char.fate_points -= 1 if self.char.fate_points > 0 else 0
-        if (not self.char.created):
-            self.char.created = datetime.datetime.utcnow()
-        self.char.updated = datetime.datetime.utcnow()
-        self.char.save()
+        self.save()
         return [f'Fate Points: {self.char.fate_points}']
 
     def aspect(self, args):
@@ -204,10 +201,7 @@ class CharacterCommand():
             aspect = ' '.join(args[1:])
             self.asp = Character().get_or_create(self.user, aspect, self.ctx.guild.name, self.char, 'Aspect')
             self.char.active_aspect = str(self.asp.id)
-            if (not self.char.created):
-                self.char.created = datetime.datetime.utcnow()
-            self.char.updated = datetime.datetime.utcnow()
-            self.char.save()
+            self.save()
             return [self.char.get_string_aspects(self.user)]
 
     def approach(self, args):
@@ -230,20 +224,14 @@ class CharacterCommand():
                             if key != skill:
                                 new_skills[key] = self.char.skills[key]
                         self.char.skills = new_skills
-                    if (not self.char.created):
-                        self.char.created = datetime.datetime.utcnow()
-                    self.char.updated = datetime.datetime.utcnow()
-                    self.char.save()
+                    self.save()
                     messages.append(f'Removed {skill}') 
                 else:
                     skill = [s for s in APPROACHES if args[1][0:2].lower() == s[0:2].lower()]
                     skill = skill[0].split(' - ')[0] if skill else args[1]
                     self.char.skills[skill] = args[2]
                     self.char.use_approaches = True
-                    if (not self.char.created):
-                        self.char.created = datetime.datetime.utcnow()
-                    self.char.updated = datetime.datetime.utcnow()
-                    self.char.save()
+                    self.save()
                     messages.append(f'Updated {skill} to {args[2]}')
                 messages.append(self.char.get_string_skills())
         return messages
@@ -268,20 +256,14 @@ class CharacterCommand():
                             if key != skill:
                                 new_skills[key] = self.char.skills[key]
                         self.char.skills = new_skills
-                    if (not self.char.created):
-                        self.char.created = datetime.datetime.utcnow()
-                    self.char.updated = datetime.datetime.utcnow()
-                    self.char.save()
+                    self.save()
                     messages.append(f'Removed {skill} skill') 
                 else:
                     skill = [s for s in SKILLS if args[1][0:2].lower() == s[0:2].lower()]
                     skill = skill[0].split(' - ')[0] if skill else args[1]
                     self.char.skills[skill] = args[2]
                     self.char.use_approaches = False
-                    if (not self.char.created):
-                        self.char.created = datetime.datetime.utcnow()
-                    self.char.updated = datetime.datetime.utcnow()
-                    self.char.save()
+                    self.save()
                     messages.append(f'Updated {skill} to {args[2]}')                
                 messages.append(self.char.get_string_skills())
         return messages
@@ -315,10 +297,7 @@ class CharacterCommand():
             stunt = ' '.join(args[1:])
             self.stu = Stunt().get_or_create(stunt, self.char.id)
             self.char.active_stunt = str(self.stu.id)
-            if (not self.char.created):
-                self.char.created = datetime.datetime.utcnow()
-            self.char.updated = datetime.datetime.utcnow()
-            self.char.save()
+            self.save()
             return [self.char.get_string_stunts()]
         return messages
     
@@ -327,12 +306,15 @@ class CharacterCommand():
 
     def stress(self, args):
         messages = []
+        if args[1].lower() == 'help':
+            messages.append(STRESS_HELP)
+            return messages
         modified = None
         stress_titles = self.char.stress_titles if self.char.stress_titles else STRESS_TITLES
         stress_checks = []
         [stress_checks.append(t[0:2].lower()) for t in stress_titles]
         [stress_checks.append(t.lower()) for t in stress_titles]
-        stress_check_types = ' or '.join([f'({t[0].lower()}){t[1:].lower()}' for t in stress_titles])
+        stress_check_types = ' or '.join([f'({t[0:2 ].lower()}){t[2:].lower()}' for t in stress_titles])
         if not self.char:
             messages.append('You don\'t have an active character.\nTry this: ".d c n Name"')
             return messages
@@ -362,10 +344,6 @@ class CharacterCommand():
                     self.char.stress_titles = titles if titles else None
                     messages.append(f'_{title}_ removed from stress titles')
                     self.char.stress = modified if modified else STRESS
-                    if (not self.char.created):
-                        self.char.created = datetime.datetime.utcnow()
-                    self.char.updated = datetime.datetime.utcnow()
-                    self.char.save()
                     messages.append(f'{self.char.get_string_stress()}')
             else:
                 total = args[2]
@@ -384,15 +362,10 @@ class CharacterCommand():
                 else:
                     titles.append(title)
                     self.char.stress_titles = titles
-                    modified = []
                     modified.append(stress_boxes)
                     messages.append(f'_{title}_ added to stress titles')
                 self.char.stress = modified
-                if (not self.char.created):
-                    self.char.created = datetime.datetime.utcnow()
-                self.char.updated = datetime.datetime.utcnow()
-                self.char.save()
-                messages.append(f'{self.char.get_string_stress()}')
+                messages.append([f'{self.char.get_string_stress()}'])
         elif args[1] in ['delete', 'd']:
             if len(args) == 2:
                 messages.append(f'No stress type provided - {stress_check_types}')
@@ -423,10 +396,6 @@ class CharacterCommand():
                         modified[stress_type][s][1] = O
                 messages.append(f'Removed {shift} from ***{self.char.name}\'s*** _{stress_type_name}_ stress')
                 self.char.stress = modified
-                if (not self.char.created):
-                    self.char.created = datetime.datetime.utcnow()
-                self.char.updated = datetime.datetime.utcnow()
-                self.char.save()
                 messages.append(f'{self.char.get_string_stress()}')
         else:
             if len(args) == 2:
@@ -454,67 +423,123 @@ class CharacterCommand():
                     modified[stress_type][s][1] = X
             messages.append(f'***{self.char.name}*** absorbed {shift} {stress_type_name} stress')
             self.char.stress = modified
-            if (not self.char.created):
-                self.char.created = datetime.datetime.utcnow()
-            self.char.updated = datetime.datetime.utcnow()
-            self.char.save()
             messages.append(f'{self.char.get_string_stress()}')
+        self.save()
         return messages
 
     def consequence(self, args):
         messages = []
+        if args[1].lower() == 'help':
+            messages.append(CONSEQUENCES_HELP)
+            return messages
         modified = None
-        consequences_titles = self.char.consequences_titles if self.char.consequences_titles else CONSEQUENCES_TITLES
-        consequences_shifts = self.char.consequences_shifts if self.char.consequences_shifts else CONSEQUENCES_SHIFTS
-        consequences_shifts = self.char.consequences_shifts if self.char.consequences_shifts else CONSEQUENCES_SHIFTS
+        consequences = copy.deepcopy(self.char.consequences) if self.char.consequences else CONSEQUENCES
+        consequences_titles = copy.deepcopy(self.char.consequences_titles) if self.char.consequences_titles else CONSEQUENCES_TITLES
+        consequences_shifts = copy.deepcopy(self.char.consequences_shifts) if self.char.consequences_shifts else CONSEQUENCES_SHIFTS
+        consequences_name = 'Condition' if self.char.consequences_titles else 'Consequence'
         consequences_checks = []
         [consequences_checks.append(t[0:2].lower()) for t in consequences_titles]
         [consequences_checks.append(t.lower()) for t in consequences_titles]
-        consequences_check_types = ' or '.join([f'({t[0].lower()}){t[1:].lower()}' for t in consequences_titles])
+        consequences_check_types = ' or '.join([f'({t[0:2].lower()}){t[2:].lower()}' for t in consequences_titles])
         if len(args) == 1:
             messages.append(f'{self.char.get_string_name(self.user)}{self.char.get_string_consequences()}')
             return messages
-        if args[1] in ['delete', 'd']:
+        if args[1] in ['title', 't']:
+            if len(args) == 2:
+                messages.append(f'No Condition title provided')
+                return messages
+            if args[2] in ['delete', 'd']:
+                if not self.char.consequences_titles:
+                    messages.append('You have not defined any Condition titles')
+                    return messages
+                title = ' '.join(args[3:])
+                indeces = [i for i in range(0, len(consequences_titles)) if title.lower() in consequences_titles[i].lower()]
+                if not indeces:
+                    messages.append(f'_{title}_ not found in Condition titles')
+                    return messages
+                else:
+                    modified_consequences = []
+                    modified_titles = []
+                    modified_shifts = []
+                    for i in range(0, len(consequences_titles)):
+                        if title.lower() not in consequences_titles[i].lower():
+                            modified_consequences.append(consequences[i])
+                            modified_titles.append(consequences_titles[i])
+                            modified_shifts.append(consequences_shifts[i])
+                    self.char.consequences = modified_consequences if modified_consequences else CONSEQUENCES
+                    self.char.consequences_titles = modified_titles if modified_titles else None
+                    self.char.consequences_shifts = modified_shifts if modified_shifts else None
+                    messages.append(f'_{title}_ removed from Conditions titles')
+            else:
+                total = args[2]
+                if not total.isdigit():
+                    messages.append('Stress shift must be a positive integer')
+                    return messages
+                title = ' '.join(args[3:])
+                if not self.char.consequences_titles:
+                    consequences = []
+                    consequences_titles = []
+                    consequences_shifts = []
+                matches = [i for i in range(0, len(consequences_titles)) if title.lower() in consequences_titles[i].lower()]
+                if matches:
+                    for i in range(0, len(consequences_titles)):
+                        if title.lower() in consequences_titles[i].lower():
+                            consequences[i] = [total, O]
+                            consequences_titles[i] = title
+                            consequences_shifts[i] = total
+                    messages.append(f'Updated the _{title} ({total})_ Conditions title')
+                else:
+                    consequences.append([total, O])
+                    consequences_titles.append(title)
+                    consequences_shifts.append(total)
+                    messages.append(f'_{title} ({total})_ added to Conditions titles')
+                self.char.consequences = consequences
+                self.char.consequences_titles = consequences_titles
+                self.char.consequences_shifts = consequences_shifts
+        elif args[1] in ['delete', 'd']:
             if len(args) == 2:
                 messages.append(f'No severity provided - {consequences_check_types}')
-                if args[2].lower() not in consequences_checks:
-                    messages.append(f'{args[2].lower()} is not a valid severity - {consequences_check_types}')
+                return messages
+            if args[2].lower() not in consequences_checks:
+                messages.append(f'{args[2].lower()} is not a valid severity - {consequences_check_types}')
                 return messages
             severity_str = args[2].lower()
             severity = [i for i in range(0, len(consequences_titles)) if 1 if severity_str in [consequences_titles[i].lower()[0:2], consequences_titles[i].lower()]][0]
             severity_shift = consequences_shifts[severity]
             severity_name = consequences_titles[severity]
             if self.char.consequences[severity][1] == O:
-                messages.append(f'***{self.char.name}*** does not currently have a _{severity_name}_ consequence')
+                messages.append(f'***{self.char.name}*** does not currently have a _{severity_name}_ {consequences_name}')
                 return messages
             previous = copy.deepcopy(self.char.consequences)
             modified = copy.deepcopy(self.char.consequences)
             modified[severity] = [severity_shift, O]
-            messages.append(f'Removed ***{self.char.name}\'s*** _{severity_name}_ consequence ("{previous[severity][2]}")')
-            messages.extend(self.aspect(['a', 'd', previous[severity][2]]))
+            self.char.consequences = modified
+            aspect = severity_name if self.char.consequences_titles else previous[severity][2]
+            messages.append(f'Removed ***{self.char.name}\'s*** _{severity_name}_ from {consequences_name} ("{aspect}")')
+            messages.extend(self.aspect(['a', 'd', aspect]))
         else:
-            if len(args) == 2:
-                if args[1].lower() not in consequences_checks:
-                    messages.append(f'{args[1].lower()} is not a valid severity - {consequences_check_types}')
-                messages.append('Missing consequence aspect')
+            if len(args) == 2 and not self.char.consequences_titles:
+                messages.append('Missing Consequence aspect')
+                return messages
+            if args[1].lower() not in consequences_checks:
+                messages.append(f'{args[1].lower()} is not a valid severity - {consequences_check_types}')
                 return messages
             severity_str = args[1].lower()
             severity = [i for i in range(0, len(consequences_titles)) if 1 if severity_str in [consequences_titles[i].lower()[0:2], consequences_titles[i].lower()]][0]
             severity_shift = consequences_shifts[severity]
             severity_name = consequences_titles[severity]
             if self.char.consequences[severity][1] == X:
-                messages.append(f'***{self.char.name}*** already has a _{severity_name}_ consequence ("{self.char.consequences[severity][2]}")')
+                messages.append(f'***{self.char.name}*** already has a _{severity_name}_ {consequences_name} ("{self.char.consequences[severity][2]}")')
                 return messages
-            aspect = ' '.join(args[2:])
+            aspect = severity_name if self.char.consequences else ' '.join(args[2:])
             modified = copy.deepcopy(self.char.consequences)
-            modified[severity] = [severity_shift, X, aspect]
-            messages.append(f'***{self.char.name}*** absorbed {severity_shift} shift for a {severity_name} consequence')
+            if self.char.consequences_titles:
+                modified[severity] = [severity_shift, X]
+            else:
+                modified[severity] = [severity_shift, X, aspect]
+            messages.append(f'***{self.char.name}*** absorbed {severity_shift} shift for a {severity_name} {consequences_name} "{aspect}"')
             messages.extend(self.aspect(['a', aspect]))
-        if modified:
             self.char.consequences = modified
-            if (not self.char.created):
-                self.char.created = datetime.datetime.utcnow()
-            self.char.updated = datetime.datetime.utcnow()
-            self.char.save()
-            messages.append(f'{self.char.get_string_consequences()}')
+        messages.append(f'{self.char.get_string_consequences()}')
+        self.save()
         return messages

@@ -9,30 +9,31 @@ class Scene(Document):
     description = StringField()
     channel = ReferenceField(Channel)
     character = ReferenceField(Character)
-    has_stress = BooleanField()
     active_user = StringField()
     characters = ListField(StringField())
+    archived = BooleanField(default=False)
     created = DateTimeField(required=True)
     updated = DateTimeField(required=True)
 
-    def create_new(self, user, channel, name):
+    def create_new(self, user, channel, name, archived):
         self.name = name
-        self.character = Character().get_or_create(user, name, channel.guild)
         self.channel = channel.id
         self.created = datetime.datetime.utcnow()
         self.updated = datetime.datetime.utcnow()
         self.save()
         return self
 
-    def find(self, channel, name):
-        filter = Scene.objects(channel=channel.id,name__icontains=name)
+    def find(self, channel, name, archived):
+        filter = Scene.objects(channel=channel.id, name__icontains=name, archived=archived)
         user = filter.first()
         return user
 
-    def get_or_create(self, user, channel, name):
-        scene = self.find(channel, name)
+    def get_or_create(self, user, channel, name, archived=False):
+        scene = self.find(channel, name, archived)
         if scene is None:
-            scene = self.create_new(user, channel, name)
+            scene = self.create_new(user, channel, name, archived)
+            self.character = Character().get_or_create(user, name, channel.guild, scene, 'Scene', archived)
+            scene.save()
         return scene
 
     def get_by_id(self, id):

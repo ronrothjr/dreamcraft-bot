@@ -7,7 +7,6 @@ class Stunt(Document):
     name = StringField(required=True)
     description = StringField()
     parent_id = StringField(required=True)
-    char_id = StringField()
     created = DateTimeField(required=True)
     updated = DateTimeField(required=True)
 

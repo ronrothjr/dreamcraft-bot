@@ -27,11 +27,12 @@ class SceneCommand():
             'n': self.name,
             'description': self.description,
             'desc': self.description,
-            'aspect': self.aspect,
-            'a': self.aspect,
             'character': self.character,
             'char': self.character,
             'c': self.character,
+            'members': self.member,
+            'member': self.member,
+            'm': self.member,
             'list': self.scene_list,
             'l': self.scene_list,
             'delete': self.delete_scene,
@@ -58,6 +59,10 @@ class SceneCommand():
         if len(args) == 0:
             if not self.sc:
                 return ['No active scene or name provided']
+            else:
+                scene_args = ['c']
+                scene_args.extend(args[1:])
+                return self.character(scene_args)
         else:
             scene_name = ' '.join(args[1:])
             self.sc = Scene().get_or_create(self.user, self.channel, scene_name)
@@ -89,34 +94,13 @@ class SceneCommand():
                 self.sc.get_string(self.channel)
             ]
 
-    def aspect(self, args):
-        if len(args) == 1:
-            return ['No aspect provided']
-        if not self.sc:
-            return ['You don\'t have an active scene.\nTry this: ".d s n {name}']
-        elif args[1].lower() == 'list':
-            aspects = Character().get_by_parent(self.char)
-            return [self.sc.get_string_aspects(self.user)]
-        elif args[1].lower() == 'delete' or args[1].lower() == 'd':
-            aspect = ' '.join(args[2:])
-            [a.delete() for a in Character().get_by_parent(self.sc, aspect)]
-            aspects = ''.join([a.get_string() for a in Character().get_by_parent(self.sc)])
-            return [
-                f'{aspect} removed from aspects',
-                f'    **Aspects:** {aspects}'
-            ]
-        else:
-            aspect = ' '.join(args[1:])
-            Character().get_or_create(self.user, aspect, self.ctx.guild.name, self.sc, 'Aspect')
-            aspects = ''.join([a.get_string() for a in Character().get_by_parent(self.sc)])
-            return [
-                f'Added {aspect} to aspects',
-                f'    **Aspects:** {aspects}'
-            ]
+    def character(self, args): 
+        command = CharacterCommand(self.ctx, args, self.sc.character)
+        return command.run()
 
-    def character(self, args):
+    def member(self, args):
         if len(args) == 1:
-            return ['No character provided']
+            return ['No characters added']
         if not self.sc:
             return ['You don\'t have an active scene.\nTry this: ".d s name {name}"']
         elif args[1].lower() == 'list' or args[1].lower() == 'l':

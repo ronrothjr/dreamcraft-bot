@@ -64,7 +64,7 @@ class Scene(Document):
 
     def get_string(self, channel):
         name = f'***{self.name}***'
-        active = active = ' _(Active Scene)_' if str(self.id) == channel.active_scene else ''
+        active = ' _(Active Scene)_ ' if str(self.id) == channel.active_scene else ''
         description = f' - "{self.description}"' if self.description else ''
         characters = f'{self.get_string_characters()}' if self.characters else ''
         aspects = ''

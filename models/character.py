@@ -19,8 +19,9 @@ CONSEQUENCES_SHIFTS = SETUP.consequence_shifts
 class Character(Document):
     name = StringField(required=True)
     guild = StringField(required=True)
-    user = ReferenceField(User)
+    user = LazyReferenceField(User)
     parent_id = StringField()
+    characters = ListField(StringField())
     category = StringField()
     description = StringField()
     high_concept = StringField()
@@ -105,10 +106,10 @@ class Character(Document):
 
     def get_string_name(self, user=None):
         active = ''
-        category = f' {self.category}' if self.category else ''
+        category = f' _({self.category})_ ' if self.category else ''
         if user and str(self.id) == user.active_character:
-            active = f' _(Active {category})_'
-        return f'***{self.name}***{active}'
+            active = f' _(Active)_ '
+        return f'***{self.name}***{active}{category}'
 
     def nl(self):
         return '\n' if self.category == 'Character' else '    '

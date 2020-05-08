@@ -195,6 +195,7 @@ class CharacterCommand():
                 self.char.get_string_aspects(self.user)
             ]
         elif args[1].lower() in ['character', 'char', 'c']:
+            self.char.active_aspect = str(self.asp.id)
             command = CharacterCommand(self.ctx, args[1:], self.asp)
             return command.run()
         elif args[1].lower() == 'desc' or args[1].lower() == 'description':

@@ -73,13 +73,13 @@ class Character(Document):
         return characters
 
     @classmethod
-    def get_by_parent(cls, parent, name=''):
+    def get_by_parent(cls, parent, name='', category=''):
         characters = []
         if name:
-            character = cls.filter(parent_id=str(parent.id), name__icontains=name).first()
+            character = cls.filter(parent_id=str(parent.id), name__icontains=name, category=category).first()
             characters = [character] if character else []
         else:
-            characters = cls.filter(parent_id=str(parent.id)).all()
+            characters = cls.filter(parent_id=str(parent.id), category=category).all()
         return characters
 
     def create_new(self, user, name, guild, parent_id, category, archived):
@@ -125,14 +125,14 @@ class Character(Document):
 
     def get_string_fate(self):
         return f'\n**Fate Points:** {self.fate_points} (_Refresh:_ {self.refresh})' if self.fate_points is not None else ''
-        
+
     def get_string_aspects(self, user=None):
-        aspects = Character().get_by_parent(self)
+        aspects = Character().get_by_parent(self, '', 'Aspect')
         aspects_string = self.sep().join([a.get_string(user) for a in aspects]) if aspects else ''
         return f'{self.nl()}**Aspects:**{self.sep()}{aspects_string}' if aspects_string else ''
 
     def get_string_stunts(self, user=None):
-        stunts = Stunt().get_by_parent(self)
+        stunts = Character().get_by_parent(self, '', 'Stunt')
         stunts_string = self.sep().join([s.get_string(self) for s in stunts]) if stunts else ''
         return f'{self.sep()}**Stunts:**{self.sep()}{stunts_string}' if stunts_string else ''
 

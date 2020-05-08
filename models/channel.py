@@ -55,7 +55,7 @@ class Channel(Document):
     def get_scenes_string(self):
         scene_list = Scene.filter(channel_id=str(self.id)).all()
         scenes = [s.character.get_string() for s in scene_list]
-        scenes_string = '***Scenes:***\n        ' + '\n        '.join([f'_{s}_ ' for s in scenes]) if scenes else ''
+        scenes_string = '***Scenes:***\n        ' + '\n        '.join([s for s in scenes]) if scenes else ''
         return f'{scenes_string}'
 
     def get_string(self):

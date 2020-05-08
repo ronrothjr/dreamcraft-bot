@@ -27,7 +27,7 @@ class CharacterCommand():
         self.user = User().get_or_create(ctx.author.name, ctx.guild.name)
         self.char = char if char else (Character().get_by_id(self.user.active_character) if self.user and self.user.active_character else None)
         self.asp = Character().get_by_id(self.char.active_aspect) if self.char and self.char.active_aspect else None
-        self.stu = Stunt().get_by_id(self.char.active_stunt) if self.char and self.char.active_stunt else None
+        self.stu = Character().get_by_id(self.char.active_stunt) if self.char and self.char.active_stunt else None
 
     def run(self):
         switcher = {
@@ -209,40 +209,6 @@ class CharacterCommand():
         self.save()
         return [f'Fate Points: {self.char.fate_points}']
 
-    def aspect(self, args):
-        messages = []
-        if len(args) == 1:
-            if not self.asp:
-                return ['You don\'t have an active aspect.\nTry this: ".d c a {aspect}"']
-            messages.append(f'{self.asp.get_string(self.char)}')
-        if not self.char:
-            return ['You don\'t have an active character.\nTry this: ".d c n Name"']
-        elif args[1].lower() == 'list':
-            return [self.char.get_string_aspects(self.user)]
-        elif args[1].lower() == 'delete' or args[1].lower() == 'd':
-            aspect = ' '.join(args[2:])
-            for a in Character().get_by_parent(self.char, aspect):
-                aspect = str(a.name)
-                a.reverse_delete()
-                a.delete()
-            messages.append(f'"{aspect}" removed from aspects')
-            messages.append(self.char.get_string_aspects(self.user))
-        elif args[1].lower() in ['character', 'char', 'c']:
-            self.user.active_character = str(self.asp.id)
-            self.save_user()
-            self.char.active_aspect = str(self.asp.id)
-            self.char.active_character = str(self.asp.id)
-            self.save()
-            command = CharacterCommand(self.ctx, args[1:], self.asp)
-            messages.extend(command.run())
-        else:
-            aspect = ' '.join(args[1:])
-            self.asp = Character().get_or_create(self.user, aspect, self.ctx.guild.name, self.char, 'Aspect')
-            self.char.active_aspect = str(self.asp.id)
-            self.save()
-            messages.append(self.char.get_string_aspects(self.user))
-        return messages
-
     def approach(self, args):
         messages = []
         if args[1].lower() == 'help':
@@ -307,22 +273,56 @@ class CharacterCommand():
                 messages.append(self.char.get_string_skills())
         return messages
 
+    def aspect(self, args):
+        messages = []
+        if len(args) == 1:
+            if not self.asp:
+                return ['You don\'t have an active aspect.\nTry this: ".d c a {aspect}"']
+            messages.append(f'{self.asp.get_string(self.char)}')
+        if not self.char:
+            return ['You don\'t have an active character.\nTry this: ".d c n Name"']
+        elif args[1].lower() == 'list':
+            return [self.char.get_string_aspects(self.user)]
+        elif args[1].lower() == 'delete' or args[1].lower() == 'd':
+            aspect = ' '.join(args[2:])
+            for a in Character().get_by_parent(self.char, aspect, 'Aspect'):
+                aspect = str(a.name)
+                a.reverse_delete()
+                a.delete()
+            messages.append(f'"{aspect}" removed from aspects')
+            messages.append(self.char.get_string_aspects(self.user))
+        elif args[1].lower() in ['character', 'char', 'c']:
+            self.user.active_character = str(self.asp.id)
+            self.save_user()
+            self.char.active_aspect = str(self.asp.id)
+            self.char.active_character = str(self.asp.id)
+            self.save()
+            command = CharacterCommand(self.ctx, args[1:], self.asp)
+            messages.extend(command.run())
+        else:
+            aspect = ' '.join(args[1:])
+            self.asp = Character().get_or_create(self.user, aspect, self.ctx.guild.name, self.char, 'Aspect')
+            self.char.active_aspect = str(self.asp.id)
+            self.save()
+            messages.append(self.char.get_string_aspects(self.user))
+        return messages
+
     def stunt(self, args):
         messages = []
         if len(args) == 1:
             if not self.stu:
                 return ['You don\'t have an active stunt.\nTry this: ".d c a {aspect}"']
-            messages.append(f'{self.asp.get_string(self.char)}')
+            messages.append(f'{self.stu.get_string(self.char)}')
         if not self.char:
             return ['You don\'t have an active character.\nTry this: ".d c n Name"']
         elif args[1].lower() == 'list':
             return [self.char.get_string_stunts(self.user)]
         elif args[1].lower() == 'delete' or args[1].lower() == 'd':
             stunt = ' '.join(args[2:])
-            for a in Character().get_by_parent(self.char, stunt):
-                stunt = str(a.name)
-                a.reverse_delete()
-                a.delete()
+            for s in Character().get_by_parent(self.char, stunt, 'Stunt'):
+                stunt = str(s.name)
+                s.reverse_delete()
+                s.delete()
             messages.append(f'"{stunt}" removed from stunts')
             messages.append(self.char.get_string_stunts(self.user))
         elif args[1].lower() in ['character', 'char', 'c']:
@@ -334,12 +334,12 @@ class CharacterCommand():
             command = CharacterCommand(self.ctx, args[1:], self.stu)
             messages.extend(command.run())
         else:
-            aspect = ' '.join(args[1:])
-            self.asp = Character().get_or_create(self.user, aspect, self.ctx.guild.name, self.char, 'Stunt')
-            self.char.active_aspect = str(self.asp.id)
+            stunt = ' '.join(args[1:])
+            self.stu = Character().get_or_create(self.user, stunt, self.ctx.guild.name, self.char, 'Stunt')
+            self.char.active_stunt = str(self.stu.id)
             self.char.active_character = str(self.stu.id)
             self.save()
-            messages.append(self.char.get_string_aspects(self.user))
+            messages.append(self.char.get_string_stunts(self.user))
         return messages
     
     def get_available_stress(self, stress_type):

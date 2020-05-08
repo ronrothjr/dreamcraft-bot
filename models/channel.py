@@ -2,6 +2,8 @@
 import datetime
 from mongoengine import *
 
+from models.scene import Scene
+
 class Channel(Document):
     name = StringField(required=True)
     guild = StringField(required=True)
@@ -9,6 +11,14 @@ class Channel(Document):
     users = ListField(StringField())
     created = DateTimeField(required=True)
     updated = DateTimeField(required=True)
+
+    @staticmethod
+    def query():
+        return Channel.objects
+
+    @staticmethod
+    def filter(**params):
+        return Channel.objects.filter(**params)
 
     def create_new(self, name, guild):
         self.name = name
@@ -27,6 +37,10 @@ class Channel(Document):
             channel = self.create_new(name, guild)
         return channel
 
+    def get_by_id(self, id):
+        channel = Channel.filter(id=id).first()
+        return channel
+
     def set_active_scene(self, scene):
         self.active_scene = str(scene.id)
         if (not self.created):
@@ -35,11 +49,16 @@ class Channel(Document):
         self.save()
 
     def get_users_string(self):
-        return 'Players:\n' + ''.join([f'        {u}\n' for u in self.users])
+        users_string = '***Players:***\n        ' + '\n        '.join([f'_{u}_ ' for u in self.users]) if self.users else ''
+        return f'{users_string}'
+
+    def get_scenes_string(self):
+        scene_list = Scene.filter(channel_id=str(self.id)).all()
+        scenes = [s.character.get_string() for s in scene_list]
+        scenes_string = '***Scenes:***\n        ' + '\n        '.join([f'_{s}_ ' for s in scenes]) if scenes else ''
+        return f'{scenes_string}'
 
     def get_string(self):
-        users = ''
-        if self.users:
-            users = f'\n{self.get_users_string()}'
-        scenes = ''
-        return f'Guild: {self.guild}\nChannel: {self.name}{users}'
+        users = f'\n{self.get_users_string()}' if self.users else ''
+        scenes = f'\n{self.get_scenes_string()}' if self.users else ''
+        return f'***Guild:*** {self.guild}\n***Channel:*** {self.name}{users}{scenes}'

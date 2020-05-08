@@ -21,6 +21,7 @@ class Character(Document):
     guild = StringField(required=True)
     user = LazyReferenceField(User)
     parent_id = StringField()
+    active_character = StringField()
     characters = ListField(StringField())
     category = StringField()
     description = StringField()
@@ -103,6 +104,11 @@ class Character(Document):
         if character is None:
             character = self.create_new(user, name, guild, str(parent.id) if parent else None, category, archived)
         return character
+
+    def reverse_delete(self):
+        for c in Character().get_by_parent(self):
+            c.reverse_delete()
+            c.delete()
 
     def get_string_name(self, user=None):
         active = ''

@@ -19,12 +19,12 @@ CONSEQUENCES_TITLES = SETUP.consequences_titles
 CONSEQUENCES_SHIFTS = SETUP.consequence_shifts
 
 class CharacterCommand():
-    def __init__(self, ctx, args):
+    def __init__(self, ctx, args, char=None):
         self.ctx = ctx
         self.args = args[1:]
         self.command = self.args[0].lower() if len(self.args) > 0 else 'n'
         self.user = User().get_or_create(ctx.author.name, ctx.guild.name)
-        self.char = Character().get_by_id(self.user.active_character) if self.user and self.user.active_character else None
+        self.char = char if char else (Character().get_by_id(self.user.active_character) if self.user and self.user.active_character else None)
         self.asp = Character().get_by_id(self.char.active_aspect) if self.char and self.char.active_aspect else None
         self.stu = Stunt().get_by_id(self.char.active_stunt) if self.char and self.char.active_stunt else None
 
@@ -102,10 +102,15 @@ class CharacterCommand():
             return [f'{c.get_short_string(self.user)}\n' for c in characters]
 
     def delete_character(self, args):
+        search = ''
         if len(args) == 1:
-            return ['No character provided for deletion']
-        search = ' '.join(args[1:])
-        self.char = Character().find(self.user, search, self.ctx.guild.name, None, 'Character', False)
+            if not self.char:
+                return ['No active character for deletion']
+            search = self.char.name
+            self.char = Character().find(self.user, search, self.ctx.guild.name, None, self.char.category, False)
+        else:
+            search = ' '.join(args[1:])
+            self.char = Character().find(self.user, search, self.ctx.guild.name, None, 'Character', False)
         if not self.char:
             return [f'{search} was not found. No changes made.\nTry this: ".d c n Name"']
         else:
@@ -189,6 +194,9 @@ class CharacterCommand():
                 f'"{aspect}" removed from aspects',
                 self.char.get_string_aspects(self.user)
             ]
+        elif args[1].lower() in ['character', 'char', 'c']:
+            command = CharacterCommand(self.ctx, args[1:], self.asp)
+            return command.run()
         elif args[1].lower() == 'desc' or args[1].lower() == 'description':
             description = ' '.join(args[2:])
             self.asp.description = description
@@ -295,7 +303,7 @@ class CharacterCommand():
             messages.append(self.char.get_string_stunts())
         else:
             stunt = ' '.join(args[1:])
-            self.stu = Stunt().get_or_create(stunt, self.char.id)
+            self.stu = Stunt().get_or_create(stunt, self.char)
             self.char.active_stunt = str(self.stu.id)
             self.save()
             return [self.char.get_string_stunts()]
@@ -306,6 +314,9 @@ class CharacterCommand():
 
     def stress(self, args):
         messages = []
+        if len(args) == 1:
+            messages.append(STRESS_HELP)
+            return messages
         if args[1].lower() == 'help':
             messages.append(STRESS_HELP)
             return messages
@@ -354,7 +365,7 @@ class CharacterCommand():
                 stress_boxes = []
                 [stress_boxes.append(['1', O]) for i in range(0, int(total))]
                 matches = [t for t in titles if title.lower() in t.lower()]
-                modified = copy.deepcopy(self.char.stress)
+                modified = copy.deepcopy(self.char.stress) if self.char.stress else []
                 if matches:
                     for i in range(0, len(titles)):
                         if title.lower() in titles[i].lower():

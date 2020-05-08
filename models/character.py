@@ -110,23 +110,29 @@ class Character(Document):
             active = f' _(Active {category})_'
         return f'***{self.name}***{active}'
 
+    def nl(self):
+        return '\n' if self.category == 'Character' else '    '
+
+    def sep(self):
+        return '\n        ' if self.category == 'Character' else '    '
+
     def get_string_fate(self):
         return f'\n**Fate Points:** {self.fate_points} (_Refresh:_ {self.refresh})' if self.fate_points is not None else ''
         
     def get_string_aspects(self, user=None):
         aspects = Character().get_by_parent(self)
-        aspects_string = '\n        '.join([a.get_string(user) for a in aspects]) if aspects else ''
-        return f'\n**Aspects:**\n        {aspects_string}' if aspects_string else ''
+        aspects_string = self.sep().join([a.get_string(user) for a in aspects]) if aspects else ''
+        return f'{self.nl()}**Aspects:**{self.sep()}{aspects_string}' if aspects_string else ''
 
     def get_string_stunts(self, user=None):
         stunts = Stunt().get_by_parent(self)
-        stunts_string = '\n        '.join([s.get_string(self) for s in stunts]) if stunts else ''
-        return f'\n**Stunts:**\n        {stunts_string}' if stunts_string else ''
+        stunts_string = self.sep().join([s.get_string(self) for s in stunts]) if stunts else ''
+        return f'{self.sep()}**Stunts:**{self.sep()}{stunts_string}' if stunts_string else ''
 
     def get_string_skills(self):
         title = 'Approaches' if self.use_approaches else 'Skills'
-        skills_string = '\n        '.join([f'{key}: {self.skills[key]}' for key in self.skills])
-        return f'\n**{title}:**\n        {skills_string}' if skills_string else ''
+        skills_string = self.sep().join([f'{key}: {self.skills[key]}' for key in self.skills])
+        return f'{self.sep()}**{title}:**{self.sep()}{skills_string}' if skills_string else ''
 
     def get_string_stress(self):
         stress_name = '**_Stress_** '
@@ -141,8 +147,8 @@ class Character(Document):
                 for t in range(0, len(self.stress)):
                     for s in range(0, len(self.stress[t])):
                         stress[t] += f' {self.stress[t][s][1]}'
-                stress_string = '\n        ' + '\n        '.join(stress)
-        return f'\n{stress_name}{stress_string}' if stress_string else ''
+                stress_string = self.sep() + self.sep().join(stress)
+        return f'{self.nl()}{stress_name}{stress_string}' if stress_string else ''
 
     def get_string_consequences(self):
         consequences_name = '**_Consequences:_** '
@@ -155,26 +161,26 @@ class Character(Document):
                 check = ' '+ self.consequences[c][1]
                 description = f' - {self.consequences[c][2]}' if self.consequences[c][1] and len(self.consequences[c]) == 3 else ''
                 consequences_strings.append(f'{check} _{self.consequences[c][0]}_ {consequences[c]}{description}')
-            consequences_string = '\n        '.join([c for c in consequences_strings])
-        return f'\n{consequences_name}\n        {consequences_string}' if consequences_string else ''
+            consequences_string = self.sep().join([c for c in consequences_strings])
+        return f'{self.nl()}{consequences_name}{self.sep()}{consequences_string}' if consequences_string else ''
 
     def get_string(self, user=None):
         name = self.get_string_name(user)
         fate_points = self.get_string_fate()
-        description = f'\n"{self.description}"' if self.description else ''
-        high_concept = f'\n**High Concept:** {self.high_concept}' if self.high_concept else ''
-        trouble = f'\n**Trouble:** {self.trouble}' if self.trouble else ''
+        description = f'{self.sep()}"{self.description}"' if self.description else ''
+        high_concept = f'{self.sep()}**High Concept:** {self.high_concept}' if self.high_concept else ''
+        trouble = f'{self.sep()}**Trouble:** {self.trouble}' if self.trouble else ''
         aspects = self.get_string_aspects(user)
         stunts = self.get_string_stunts(user)
         skills = self.get_string_skills()
         stress = self.get_string_stress()
         consequenses = self.get_string_consequences()
-        return f'{name}{description}{high_concept}{trouble}{fate_points}{skills}{aspects}{stunts}{stress}{consequenses}'
+        return f'{name}{description}{high_concept}{trouble}{fate_points}{skills}{stress}{aspects}{stunts}{consequenses}'
 
     def get_short_string(self, user=None):
         name = self.get_string_name(user)
         fate_points = self.get_string_fate(user)
-        description = f'\n"{self.description}"' if self.description else ''
-        high_concept = f'\n**High Concept:** {self.high_concept}' if self.high_concept else ''
-        trouble = f'\n**Trouble:** {self.trouble}' if self.trouble else ''
+        description = f'{self.nl()}"{self.description}"' if self.description else ''
+        high_concept = f'{self.nl()}**High Concept:** {self.high_concept}' if self.high_concept else ''
+        trouble = f'{self.nl()}**Trouble:** {self.trouble}' if self.trouble else ''
         return f'{name}{description}{high_concept}{trouble}{fate_points}'

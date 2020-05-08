@@ -1,6 +1,7 @@
 # character_command.py
 import datetime
 import copy
+from bson.objectid import ObjectId
 from models import User, Character, Stunt
 from config.setup import Setup
 
@@ -31,6 +32,8 @@ class CharacterCommand():
     def run(self):
         switcher = {
             'help': self.help,
+            'parent': self.parent,
+            'p': self.parent,
             'name': self.name,
             'n': self.name,
             'list': self.character_list,
@@ -77,12 +80,35 @@ class CharacterCommand():
     def help(self, args):
         return [CHARACTER_HELP]
 
+    def parent(self, args):
+        messages = []
+        if (self.user and self.char and self.char.parent_id):
+            messages.extend(self.get_parent_by_id(self.char.parent_id))
+        else:
+            messages.append('No parent found')
+        return messages
+
+    def get_parent_by_id(self, parent_id):
+        parent = Character.filter(id=ObjectId(parent_id)).first()
+        if parent:
+            self.user.active_character = str(parent.id)
+            self.save_user()
+            return [parent.get_string(self.user)]
+        return ['No parent found']
+
     def save(self):
         if self.char:
             if (not self.char.created):
                 self.char.created = datetime.datetime.utcnow()
             self.char.updated = datetime.datetime.utcnow()
             self.char.save()
+
+    def save_user(self):
+        if self.user:
+            if (not self.user.created):
+                self.user.created = datetime.datetime.utcnow()
+            self.user.updated = datetime.datetime.utcnow()
+            self.user.save()
 
     def name(self, args):
         if len(args) == 0:
@@ -92,6 +118,7 @@ class CharacterCommand():
             char_name = ' '.join(args[1:])
             self.char = Character().get_or_create(self.user, char_name, self.ctx.guild.name)
             self.user.set_active_character(self.char)
+            self.save_user()
         return [self.char.get_string(self.user)]
 
     def character_list(self, args):
@@ -102,6 +129,7 @@ class CharacterCommand():
             return [f'{c.get_short_string(self.user)}\n' for c in characters]
 
     def delete_character(self, args):
+        messages = []
         search = ''
         if len(args) == 1:
             if not self.char:
@@ -115,10 +143,13 @@ class CharacterCommand():
             return [f'{search} was not found. No changes made.\nTry this: ".d c n Name"']
         else:
             search = self.char.name
-            [a.delete() for a in Character().get_by_parent(self.char)]
-            [s.delete() for s in Stunt().get_by_parent(self.char)]
+            parent_id = str(self.char.parent_id) if self.char.parent_id else ''
+            self.char.reverse_delete()
             self.char.delete()
-            return [f'***{search}*** removed']
+            messages.append(f'***{search}*** removed')
+            if parent_id:
+                messages.extend(self.get_parent_by_id(parent_id))
+            return messages
 
     def description(self, args):
         if len(args) == 1:
@@ -179,39 +210,38 @@ class CharacterCommand():
         return [f'Fate Points: {self.char.fate_points}']
 
     def aspect(self, args):
+        messages = []
         if len(args) == 1:
             if not self.asp:
                 return ['You don\'t have an active aspect.\nTry this: ".d c a {aspect}"']
-            return [f'{self.asp.get_string(self.char)}']
+            messages.append(f'{self.asp.get_string(self.char)}')
         if not self.char:
             return ['You don\'t have an active character.\nTry this: ".d c n Name"']
         elif args[1].lower() == 'list':
             return [self.char.get_string_aspects(self.user)]
         elif args[1].lower() == 'delete' or args[1].lower() == 'd':
             aspect = ' '.join(args[2:])
-            [a.delete() for a in Character().get_by_parent(self.char, aspect)]
-            return [
-                f'"{aspect}" removed from aspects',
-                self.char.get_string_aspects(self.user)
-            ]
+            for a in Character().get_by_parent(self.char, aspect):
+                aspect = str(a.name)
+                a.reverse_delete()
+                a.delete()
+            messages.append(f'"{aspect}" removed from aspects')
+            messages.append(self.char.get_string_aspects(self.user))
         elif args[1].lower() in ['character', 'char', 'c']:
+            self.user.active_character = str(self.asp.id)
+            self.save_user()
             self.char.active_aspect = str(self.asp.id)
+            self.char.active_character = str(self.asp.id)
+            self.save()
             command = CharacterCommand(self.ctx, args[1:], self.asp)
-            return command.run()
-        elif args[1].lower() == 'desc' or args[1].lower() == 'description':
-            description = ' '.join(args[2:])
-            self.asp.description = description
-            if (not self.asp.created):
-                self.asp.created = datetime.datetime.utcnow()
-            self.asp.updated = datetime.datetime.utcnow()
-            self.asp.save()
-            return [self.char.get_string_aspects(self.user)]
+            messages.extend(command.run())
         else:
             aspect = ' '.join(args[1:])
             self.asp = Character().get_or_create(self.user, aspect, self.ctx.guild.name, self.char, 'Aspect')
             self.char.active_aspect = str(self.asp.id)
             self.save()
-            return [self.char.get_string_aspects(self.user)]
+            messages.append(self.char.get_string_aspects(self.user))
+        return messages
 
     def approach(self, args):
         messages = []
@@ -281,33 +311,35 @@ class CharacterCommand():
         messages = []
         if len(args) == 1:
             if not self.stu:
-                return ['You don\'t have an active stunt.\nTry this: ".d c s {stunt}"']
-            return [f'{self.stu.get_string(self.char)}']
+                return ['You don\'t have an active stunt.\nTry this: ".d c a {aspect}"']
+            messages.append(f'{self.asp.get_string(self.char)}')
         if not self.char:
-            return ['You don\'t have an active character.\nTry this: ".d c n Name']
+            return ['You don\'t have an active character.\nTry this: ".d c n Name"']
         elif args[1].lower() == 'list':
-            return [self.char.get_string_stunts()]
+            return [self.char.get_string_stunts(self.user)]
         elif args[1].lower() == 'delete' or args[1].lower() == 'd':
             stunt = ' '.join(args[2:])
-            [s.delete() for s in Stunt().get_by_parent(self.char, stunt)]
-            return [
-                f'"{stunt}" removed from stunts',
-                self.char.get_string_stunts()
-            ]
-        elif args[1].lower() == 'desc' or args[1].lower() == 'description':
-            description = ' '.join(args[2:])
-            self.stu.description = description
-            if (not self.stu.created):
-                self.stu.created = datetime.datetime.utcnow()
-            self.stu.updated = datetime.datetime.utcnow()
-            self.stu.save()
-            messages.append(self.char.get_string_stunts())
-        else:
-            stunt = ' '.join(args[1:])
-            self.stu = Stunt().get_or_create(stunt, self.char)
+            for a in Character().get_by_parent(self.char, stunt):
+                stunt = str(a.name)
+                a.reverse_delete()
+                a.delete()
+            messages.append(f'"{stunt}" removed from stunts')
+            messages.append(self.char.get_string_stunts(self.user))
+        elif args[1].lower() in ['character', 'char', 'c']:
+            self.user.active_character = str(self.stu.id)
+            self.save_user()
             self.char.active_stunt = str(self.stu.id)
+            self.char.active_character = str(self.stu.id)
             self.save()
-            return [self.char.get_string_stunts()]
+            command = CharacterCommand(self.ctx, args[1:], self.stu)
+            messages.extend(command.run())
+        else:
+            aspect = ' '.join(args[1:])
+            self.asp = Character().get_or_create(self.user, aspect, self.ctx.guild.name, self.char, 'Stunt')
+            self.char.active_aspect = str(self.asp.id)
+            self.char.active_character = str(self.stu.id)
+            self.save()
+            messages.append(self.char.get_string_aspects(self.user))
         return messages
     
     def get_available_stress(self, stress_type):
@@ -355,29 +387,37 @@ class CharacterCommand():
                     titles = [t for t in titles if title.lower() not in t.lower()]
                     self.char.stress_titles = titles if titles else None
                     messages.append(f'_{title}_ removed from stress titles')
-                    self.char.stress = modified if modified else STRESS
+                    self.char.stress = modified
                     messages.append(f'{self.char.get_string_stress()}')
             else:
                 total = args[2]
-                if not total.isdigit():
-                    messages.append('Stress shift must be a positive integer')
-                    return messages
                 title = ' '.join(args[3:])
-                stress_boxes = []
-                [stress_boxes.append(['1', O]) for i in range(0, int(total))]
-                matches = [t for t in titles if title.lower() in t.lower()]
-                modified = copy.deepcopy(self.char.stress) if self.char.stress else []
-                if matches:
-                    for i in range(0, len(titles)):
-                        if title.lower() in titles[i].lower():
-                            modified[i] = stress_boxes
+                if total == "None":
+                    self.char.stress = None
+                    self.char.stress_titles = None
+                    messages.append(f'{self.char.get_string()}')
+                elif total == "FATE":
+                    self.char.stress = STRESS
+                    self.char.stress_titles = None
                 else:
-                    titles.append(title)
-                    self.char.stress_titles = titles
-                    modified.append(stress_boxes)
-                    messages.append(f'_{title}_ added to stress titles')
-                self.char.stress = modified
-                messages.append([f'{self.char.get_string_stress()}'])
+                    if not total.isdigit():
+                        messages.append('Stress shift must be a positive integer')
+                        return messages
+                    stress_boxes = []
+                    [stress_boxes.append(['1', O]) for i in range(0, int(total))]
+                    matches = [t for t in titles if title.lower() in t.lower()]
+                    modified = copy.deepcopy(self.char.stress) if self.char.stress_titles and self.char.stress else []
+                    if matches:
+                        for i in range(0, len(titles)):
+                            if title.lower() in titles[i].lower():
+                                modified[i] = stress_boxes
+                    else:
+                        titles.append(title)
+                        self.char.stress_titles = titles
+                        modified.append(stress_boxes)
+                        messages.append(f'_{title}_ added to stress titles')
+                    self.char.stress = modified
+                messages.append(f'{self.char.get_string_stress()}')
         elif args[1] in ['delete', 'd']:
             if len(args) == 2:
                 messages.append(f'No stress type provided - {stress_check_types}')
@@ -478,36 +518,46 @@ class CharacterCommand():
                             modified_consequences.append(consequences[i])
                             modified_titles.append(consequences_titles[i])
                             modified_shifts.append(consequences_shifts[i])
-                    self.char.consequences = modified_consequences if modified_consequences else CONSEQUENCES
+                    self.char.consequences = modified_consequences
                     self.char.consequences_titles = modified_titles if modified_titles else None
                     self.char.consequences_shifts = modified_shifts if modified_shifts else None
                     messages.append(f'_{title}_ removed from Conditions titles')
             else:
                 total = args[2]
-                if not total.isdigit():
-                    messages.append('Stress shift must be a positive integer')
-                    return messages
                 title = ' '.join(args[3:])
-                if not self.char.consequences_titles:
-                    consequences = []
-                    consequences_titles = []
-                    consequences_shifts = []
-                matches = [i for i in range(0, len(consequences_titles)) if title.lower() in consequences_titles[i].lower()]
-                if matches:
-                    for i in range(0, len(consequences_titles)):
-                        if title.lower() in consequences_titles[i].lower():
-                            consequences[i] = [total, O]
-                            consequences_titles[i] = title
-                            consequences_shifts[i] = total
-                    messages.append(f'Updated the _{title} ({total})_ Conditions title')
+                if total == "None":
+                    self.char.consequences = None
+                    self.char.consequences_titles = None
+                    self.char.consequences_shifts = None
+                    messages.append(f'{self.char.get_string()}')
+                elif total == "FATE":
+                    self.char.consequences = CONSEQUENCES
+                    self.char.consequences_titles = None
+                    self.char.consequences_shifts = None
                 else:
-                    consequences.append([total, O])
-                    consequences_titles.append(title)
-                    consequences_shifts.append(total)
-                    messages.append(f'_{title} ({total})_ added to Conditions titles')
-                self.char.consequences = consequences
-                self.char.consequences_titles = consequences_titles
-                self.char.consequences_shifts = consequences_shifts
+                    if not total.isdigit():
+                        messages.append('Stress shift must be a positive integer')
+                        return messages
+                    if not self.char.consequences_titles:
+                        consequences = []
+                        consequences_titles = []
+                        consequences_shifts = []
+                    matches = [i for i in range(0, len(consequences_titles)) if title.lower() in consequences_titles[i].lower()]
+                    if matches:
+                        for i in range(0, len(consequences_titles)):
+                            if title.lower() in consequences_titles[i].lower():
+                                consequences[i] = [total, O]
+                                consequences_titles[i] = title
+                                consequences_shifts[i] = total
+                        messages.append(f'Updated the _{title} ({total})_ Conditions title')
+                    else:
+                        consequences.append([total, O])
+                        consequences_titles.append(title)
+                        consequences_shifts.append(total)
+                        messages.append(f'_{title} ({total})_ added to Conditions titles')
+                    self.char.consequences = consequences
+                    self.char.consequences_titles = consequences_titles
+                    self.char.consequences_shifts = consequences_shifts
         elif args[1] in ['delete', 'd']:
             if len(args) == 2:
                 messages.append(f'No severity provided - {consequences_check_types}')

@@ -67,6 +67,12 @@ class SceneCommand():
             scene_name = ' '.join(args[1:])
             self.sc = Scene().get_or_create(self.user, self.channel, scene_name)
             self.channel.set_active_scene(self.sc)
+            if self.user:
+                self.user.active_character = str(self.sc.character.id)
+                if (not self.user.created):
+                    self.user.created = datetime.datetime.utcnow()
+                self.user.updated = datetime.datetime.utcnow()
+                self.user.save()
         return [self.sc.get_string(self.channel)]
 
     def scene_list(self, args):
@@ -94,7 +100,13 @@ class SceneCommand():
                 self.sc.get_string(self.channel)
             ]
 
-    def character(self, args): 
+    def character(self, args):
+        if self.user:
+            self.user.active_character = str(self.sc.character.id)
+            if (not self.user.created):
+                self.user.created = datetime.datetime.utcnow()
+            self.user.updated = datetime.datetime.utcnow()
+            self.user.save()
         command = CharacterCommand(self.ctx, args, self.sc.character)
         return command.run()
 
@@ -130,12 +142,24 @@ class SceneCommand():
             ]
 
     def delete_scene(self, args):
+        messages = []
+        search = ''
         if len(args) == 1:
-            return ['No scene provided for deletion']
-        search = ' '.join(args[1:])
-        self.sc = Scene().find(self.channel, search)
+            if not self.sc:
+                return ['No scene provided for deletion']
+        else:
+            search = ' '.join(args[1:])
+            self.sc = Scene().find(self.channel, search)
         if not self.sc:
             return [f'{search} was not found. No changes made.']
         else:
+            search = str(self.sc.name)
+            channel_id = str(self.sc.channel_id) if self.sc.channel_id else ''
+            self.sc.character.reverse_delete()
+            self.sc.character.delete()
             self.sc.delete()
-            return [f'{search} removed']
+            messages.append(f'***{search}*** removed')
+            if channel_id:
+                channel = Channel().get_by_id(channel_id)
+                messages.append(channel.get_string())
+            return messages

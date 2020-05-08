@@ -1,13 +1,12 @@
 # scene.py
 import datetime
 from mongoengine import *
-from models.channel import Channel
 from models.character import Character
 
 class Scene(Document):
     name = StringField(required=True)
     description = StringField()
-    channel = ReferenceField(Channel)
+    channel_id = StringField()
     character = ReferenceField(Character)
     active_user = StringField()
     characters = ListField(StringField())
@@ -15,24 +14,32 @@ class Scene(Document):
     created = DateTimeField(required=True)
     updated = DateTimeField(required=True)
 
-    def create_new(self, user, channel, name, archived):
+    @staticmethod
+    def query():
+        return Scene.objects
+
+    @staticmethod
+    def filter(**params):
+        return Scene.objects.filter(**params)
+
+    def create_new(self, user, channel_id, name, archived):
         self.name = name
-        self.channel = channel.id
+        self.channel_id = channel_id
         self.created = datetime.datetime.utcnow()
         self.updated = datetime.datetime.utcnow()
         self.save()
         return self
 
-    def find(self, channel, name, archived):
-        filter = Scene.objects(channel=channel.id, name__icontains=name, archived=archived)
+    def find(self, channel_id, name, archived=False):
+        filter = Scene.objects(channel_id=channel_id, name__icontains=name, archived=archived)
         user = filter.first()
         return user
 
     def get_or_create(self, user, channel, name, archived=False):
-        scene = self.find(channel, name, archived)
+        scene = self.find(str(channel.id), name, archived)
         if scene is None:
-            scene = self.create_new(user, channel, name, archived)
-            self.character = Character().get_or_create(user, name, channel.guild, scene, 'Scene', archived)
+            scene = self.create_new(user, str(channel.id), name, archived)
+            scene.character = Character().get_or_create(user, name, channel.guild, scene, 'Scene', archived)
             scene.save()
         return scene
 
@@ -48,7 +55,7 @@ class Scene(Document):
         self.save()
 
     def get_by_channel(self, channel):
-        scenes = Scene.objects(channel=channel.id).all()
+        scenes = Scene.objects(channel_id=str(channel.id)).all()
         return scenes
 
     def get_string_characters(self):

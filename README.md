@@ -1,4 +1,6 @@
-Fate Condensed CLI will cover the complete features of the Fate Condensed System.
+#DREAMCRAFT BOT
+
+`Fate Condensed CLI` will cover the complete features of the Fate Condensed System.
 
 This Command Line Interface (CLI) allows users to:
 

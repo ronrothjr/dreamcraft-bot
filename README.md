@@ -18,130 +18,129 @@ Dreamcraft Bot:
 .d cheat {search} - display condensed game instructions
 
 User Setup:
-            .d (u)ser - display user info
-            .d u help - display user help
+* .d (u)ser - display user info
+* .d u help - display user help
 
 Character Setup:
-            .d (c)haracter - display active character
-            .d c help - display character help
+* .d (c)haracter - display active character
+* .d c help - display character help
 
 Scene Setup
-            .d (s)cene - display active scene
-            .d s help - display scene help
+* .d (s)cene - display active scene
+* .d s help - display scene help
 
 Roll Fate Dice
-            .d r - roll fate dice
-            .d r (i)nvoke {aspect} [...(i)nvoke {aspect}] - roll fate dice and apply
-            .d r {approach|skill} - roll fate dice with active character's stat bonus
-            .d r {approach|skill} (i)nvoke {aspect} (+2|reroll) [...(i)nvoke {aspect} (+2|reroll)] - roll fate dice with active character's stat bonus
-            .d re (i)nvoke {aspect} (+2|reroll) [...(i)nvoke {aspect} (+2|reroll)] - reroll the character's last roll
-            .d (av)ailable - display invocable/compelable aspects
-            .d (i)nvoke {aspect} (+2|reroll) [...(i)invoke {aspect} (+2|reroll)] - invokes an aspect and uses the active character's fate point(s)
-            .d compel {aspect} [...(c)compel {aspect}] - compels aspect(s) and grants the active character a fate point
+* .d r - roll fate dice
+* .d r (i)nvoke {aspect} [...(i)nvoke {aspect}] - roll fate dice and apply
+* .d r {approach|skill} - roll fate dice with active character's stat bonus
+* .d r {approach|skill} (i)nvoke {aspect} (+2|reroll) [...(i)nvoke {aspect} (+2|reroll)] - roll fate dice with active character's stat bonus
+* .d re (i)nvoke {aspect} (+2|reroll) [...(i)nvoke {aspect} (+2|reroll)] - reroll the character's last roll
+* .d (av)ailable - display invocable/compelable aspects
+* .d (i)nvoke {aspect} (+2|reroll) [...(i)invoke {aspect} (+2|reroll)] - invokes an aspect and uses the active character's fate point(s)
+* .d compel {aspect} [...(c)compel {aspect}] - compels aspect(s) and grants the active character a fate point
 
 .d u help - display user help
 User Setup:
-            .d (u)ser - display user info
-            .d u tz {timezone} - set user time zone
-            .d u tz (l)ist {search} - search the list of time zones
+* .d (u)ser - display user info
+* .d u tz {timezone} - set user time zone
+* .d u tz (l)ist {search} - search the list of time zones
 
 .d c help - display these instructions
 Character Help:
-            .d (c)haracter - display active character
-            .d c help - display character help
-            .d c (st)ress help - display help on stress tracks
-            .d c (con)sequence help - display help on consequences and conditions
-            .d c {name} - display/set active character
-            .d c (l)ist - display list of characters
-            .d c (desc)ription {description} - set the description for the active character
-            .d c (high/hc) concept {high concept} - set the high concept for the active character
-            .d c (t)rouble {trouble} - set the trouble for the active character
-            .d c (d)delete {name} - removes a character
-            .d c (f)ate {refresh|+|-} - display, refresh, add or subtract fate points
-            .d c (a)spect [(d)elete] {aspect} - add/remove aspects
-            .d c (s)tunt [(d)elete] {stunt} - add/remove stunts
-            .d c (app)roach [(d)elete] {approach} {bonus} - add/remove approach bonuses
-            .d c (app)roach help - display a list of approach descriptions
-            .d c (sk)ill [(d)elete] {skill} {bonus} - set/remove bonuses
-            .d c (sk)ill help - display a list of skill descriptions
+* .d (c)haracter - display active character
+* .d c help - display character help
+* .d c (st)ress help - display help on stress tracks
+* .d c (con)sequence help - display help on consequences and conditions
+* .d c {name} - display/set active character
+* .d c (l)ist - display list of characters
+* .d c (desc)ription {description} - set the description for the active character
+* .d c (high/hc) concept {high concept} - set the high concept for the active character
+* .d c (t)rouble {trouble} - set the trouble for the active character
+* .d c (d)delete {name} - removes a character
+* .d c (f)ate {refresh|+|-} - display, refresh, add or subtract fate points
+* .d c (a)spect [(d)elete] {aspect} - add/remove aspects
+* .d c (s)tunt [(d)elete] {stunt} - add/remove stunts
+* .d c (app)roach [(d)elete] {approach} {bonus} - add/remove approach bonuses
+* .d c (app)roach help - display a list of approach descriptions
+* .d c (sk)ill [(d)elete] {skill} {bonus} - set/remove bonuses
+* .d c (sk)ill help - display a list of skill descriptions
 
 .d s help - display these instructions
 Scene Help:
-            .d (s)cene - display active scene
-            .d s (n)ame {name} - add/display/set active scene
-            .d s (l)ist - display list of scenes
-            .d s (desc)ription {description} - set the description for the active scene
-            .d s (a)spect [(d)elete] {aspect} - add/remove aspect for active scene
-            .d s (c)haracter [(d)elete] {character} - add/remove character for active scene
-            .d s (d)delete {name} - removes a scene
+* .d (s)cene - display active scene
+* .d s (n)ame {name} - add/display/set active scene
+* .d s (l)ist - display list of scenes
+* .d s (desc)ription {description} - set the description for the active scene
+* .d s (a)spect [(d)elete] {aspect} - add/remove aspect for active scene
+* .d s (c)haracter [(d)elete] {character} - add/remove character for active scene
+* .d s (d)delete {name} - removes a scene
 
 APPROACHES:
 .d character approach help
 .d c app help
-        Careful - pay close attention to detail and take your time.
-        Flashy - draw attention to you; full of style and panache.
-        Forceful - not subtle, but brute strength and power.
-        Sneaky - emphasis on misdirection, stealth, or deceit.
-        Clever - think fast, solve problems, or devise strategy.
-        Quick - move fast and with dexterity
+* Careful - pay close attention to detail and take your time.
+* Flashy - draw attention to you; full of style and panache.
+* Forceful - not subtle, but brute strength and power.
+* Sneaky - emphasis on misdirection, stealth, or deceit.
+* Clever - think fast, solve problems, or devise strategy.
+* Quick - move fast and with dexterity
 
 SKILLS:
 .d character skills help
 .d c sk help
-        Academics - knowledge, education, science expertise.
-        Athletics - run, jump, dodge attacks.
-        Burglary - bypass security, pick pockets, pull off crimes.
-        Contacts - know the right people & helpful connections.
-        Crafts - make, build, fix and break things.
-        Deceive - lie, cheat, impersonate.
-        Drive - maneuver, race, control vehicles.
-        Empathy - counsel, spot lies, judge mood & intentions.
-        Fight - fists or hand-to-hand weapons.
-        Investigate - find clues, deductions, solve mysteries.
-        Lore - supernatural knowledge.
-        Notice - spot details, sense trouble, be perceptive.
-        Physique - strength, durability, raw power.
-        Provoke - scare, manipulate, anger, push people.
-        Rapport - connect with others, build trust & goodwill.
-        Resources - wealth, borrow or access material things.
-        Shoot - ranged combat; guns, throwing knives, bows.
-        Stealth - hide, evade, blend in, go unnoticed, vanish.
-        Will - resist temptation, withstand trauma, hold steady.
+* Academics - knowledge, education, science expertise.
+* Athletics - run, jump, dodge attacks.
+* Burglary - bypass security, pick pockets, pull off crimes.
+* Contacts - know the right people & helpful connections.
+* Crafts - make, build, fix and break things.
+* Deceive - lie, cheat, impersonate.
+* Drive - maneuver, race, control vehicles.
+* Empathy - counsel, spot lies, judge mood & intentions.
+* Fight - fists or hand-to-hand weapons.
+* Investigate - find clues, deductions, solve mysteries.
+* Lore - supernatural knowledge.
+* Notice - spot details, sense trouble, be perceptive.
+* Physique - strength, durability, raw power.
+* Provoke - scare, manipulate, anger, push people.
+* Rapport - connect with others, build trust & goodwill.
+* Resources - wealth, borrow or access material things.
+* Shoot - ranged combat; guns, throwing knives, bows.
+* Stealth - hide, evade, blend in, go unnoticed, vanish.
+* Will - resist temptation, withstand trauma, hold steady.
 
-###.d cheat
-On Your Turn
-
- Describe what you’re trying to do.
- Choose the skill & action that fit.
- Roll: 4dF + skill + stunt.
- Optional: invoke aspect(s) 
-  •  re-roll or add +2 (1 Fate point each)
- Resolve action (see Outcomes/Actions).
-  •  Absorb shifts (if attacked).
-    – **Stress**:
-      • check off stress boxes
-      • one box per shift
-    – **Consequences**:
-      • absorb 2/4/6 shifts
-      • create a consequence aspect
-      • attacker gets one free invoke
-    – **Taken Out**:
-      • if you can’t absorb the hit
-      • attacker removes you from scene
-    – **Concede**:
-      • choose before a roll
-      • you get a Fate point
-      • you choose how to exit scene
+#### .d cheat
+**On Your Turn**
+1. Describe what you’re trying to do.
+1. Choose the skill & action that fit.
+1. Roll: 4dF + skill + stunt.
+1. Optional: invoke aspect(s) 
+> re-roll or add +2 (1 Fate point each)
+1. Resolve action (see Outcomes/Actions).
+> Absorb shifts (if attacked).
+>   – **Stress**:
+>     • check off stress boxes
+>     • one box per shift
+>   – **Consequences**:
+>     • absorb 2/4/6 shifts
+>     • create a consequence aspect
+>     • attacker gets one free invoke
+>   – **Taken Out**:
+>     • if you can’t absorb the hit
+>     • attacker removes you from scene
+>   – **Concede**:
+>     • choose before a roll
+>     • you get a Fate point
+>     • you choose how to exit scene
 
 OUTCOMES/ACTIONS
 
 **Shifts** = 
-  Your Effort - [Opposing Effort or Target Difficulty]
-  
-  •  *Fail*: effort < opposition
-  •  *Tie*: effort = opposition
-  •  *Success*: effort > opposition by 1 or 2
-  •  *Success w/ Style*: effort > opp. by 3 or more
+>  Your Effort - [Opposing Effort or Target Difficulty]
+>  
+>  •  *Fail*: effort < opposition
+>  •  *Tie*: effort = opposition
+>  •  *Success*: effort > opposition by 1 or 2
+>  •  *Success w/ Style*: effort > opp. by 3 or more
 
 **Create an Advantage (CaA)**
      Leverage and create aspects

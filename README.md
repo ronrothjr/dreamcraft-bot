@@ -68,6 +68,26 @@ This Command Line Interface (CLI) allows users to:
 * `.d c (sk)ill [(d)elete] {skill} {bonus}` - set/remove bonuses
 * `.d c (sk)ill help` - display a list of skill descriptions
 
+### Stress Help:
+`.d c (st)ress help` - display these instructions
+* `.d c (st)ress (m)ental|(p)hysical {1,2,3...}` - add stress
+* `.d c (st)ress (d)elete (m)ental|(p)hysical {1,2,3...}` - remove stress
+* `.d c (st)ress (t)itle {1,2,3...} {stress}` - create custom stress track
+* `.d c (st)ress (t)itle (d)elete {(st)ress}` - delete custom stress track
+* `.d c (st)ress {(st)ress} {1,2,3}`- add custom stress
+* `.d c (st)ress (d)elete {(st)ress}` - remove custom stress
+* `.d c (st)ress (t)itle FATE` - reset stress boxes to standard FATE configuration
+
+### Consequences and Conditions Help:
+`.d c (con)sequence help` - display these instructions
+* `.d c (con)sequence (mi)ld|(mo)derate|(se)vere {aspect}` - add consequence
+* `.d c (con)sequence (d)elete (mi)ld|(mo)derate|(s)evere` - remove consequence
+* `.d c (con)sequence (t)itle {1,2,3...} {condition}` - create condition
+* `.d c (con)sequence (t)itle (d)elete {(co)ndition}` - delete condition
+* `.d c (con)sequence {(co)ndition}` - add condition
+* `.d c (con)sequence (d}elete {(co)ndition}` - remove condition
+* `.d c (con)sequence (t)itle FATE` -reset consequences to standard FATE configuration
+
 ### Scene Help:
 `.d s help` - display these instructions
 * `.d (s)cene` - display active scene

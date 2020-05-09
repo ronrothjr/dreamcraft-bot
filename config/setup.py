@@ -49,10 +49,11 @@ class Setup():
     stress_help = '.d c (st)ress help - display these instructions\nStress Help:\n\
             .d c (st)ress (m)ental|(p)hysical {1,2,3} - add stress\n\
             .d c (st)ress (d)elete (m)ental|(p)hysical {1,2,3} - remove stress\n\
-            .d c (st)ress (t)itle {total} {stress} - create stress track\n\
-            .d c (st)ress (t)itle (d)elete {(st)ress} - delete stress track\n\
+            .d c (st)ress (t)itle {total} {stress} - create custom stress track\n\
+            .d c (st)ress (t)itle (d)elete {(st)ress} - delete custom stress track\n\
             .d c (st)ress {(st)ress} {1,2,3}- add custom stress\n\
-            .d c (st)ress (d)elete {(st)ress} - remove custom stress'
+            .d c (st)ress (d)elete {(st)ress} - remove custom stress\n\
+            .d c (st)ress (t)itle FATE - reset stress boxes to standard FATE configuration'
 
     consequences_help = '.d c (con)sequence help - display these instructions\nConsequences and Conditions Help:\n\
             .d c (con)sequence (mi)ld|(mo)derate|(se)vere {aspect} - add consequence\n\
@@ -60,7 +61,8 @@ class Setup():
             .d c (con)sequence (t)itle {total} {condition} - create condition\n\
             .d c (con)sequence (t)itle (d)elete {(co)ndition} - delete condition\n\
             .d c (con)sequence {(co)ndition} - add condition\n\
-            .d c (con)sequence (d}elete {(co)ndition} - remove condition'
+            .d c (con)sequence (d}elete {(co)ndition} - remove condition\n\
+            .d c (con)sequence (t)itle FATE -reset consequences to standard FATE configuration'
 
     scene_help = '.d s help - display these instructions\nScene Help:\n\
             .d (s)cene - display active scene\n\

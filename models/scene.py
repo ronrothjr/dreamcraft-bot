@@ -58,8 +58,9 @@ class Scene(Document):
         scenes = Scene.objects(channel_id=str(channel.id)).all()
         return scenes
 
-    def get_string_characters(self):
-        characters = '***\n                ***'.join(self.characters)
+    def get_string_characters(self, channel):
+        characters = [Character.get_by_id(id) for id in self.characters]
+        characters = '***\n                ***'.join(c.name for c in characters if c)
         return f'\n            _Characters:_\n                ***{characters}***'
 
     def get_string(self, channel):

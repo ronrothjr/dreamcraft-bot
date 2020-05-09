@@ -5,9 +5,9 @@ This Command Line Interface (CLI) allows users to:
 * Get help with condensed instructions.
 * Create characters, aspects (that you can treat as characters), stunts, stress, consequences, and conditions.
 * Create scenes, scenarios, and arcs (all of which can be treated as characters).
-* **COMING SOON** Manage contests, challenges, and conflicts within scenes, sessions, and arcs.
-* **COMING SOON** Record narrative elements to read back and view them within the context of their scenes.
-* **COMING SOON** Return to a previous point in time to alter history on a new timeline
+* **COMING SOON** - Manage contests, challenges, and conflicts within scenes, sessions, and arcs.
+* **COMING SOON** - Record narrative elements to read back and view them within the context of their scenes.
+* **COMING SOON** - Return to a previous point in time to alter history on a new timeline
 
 # HELP COMMANDS
 

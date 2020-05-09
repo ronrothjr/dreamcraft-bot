@@ -1,4 +1,4 @@
-#DREAMCRAFT BOT
+# DREAMCRAFT BOT
 
 `Fate Condensed CLI` will cover the complete features of the Fate Condensed System.
 

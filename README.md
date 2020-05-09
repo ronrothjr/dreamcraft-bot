@@ -11,73 +11,73 @@ Return to a previous point in time to alter history on a new timeline
 
 HELP COMMANDS
 
-.d
+`.d`
 
 Dreamcraft Bot:
-.d - display these instructions
-.d cheat {search} - display condensed game instructions
+* `.d` - display these instructions
+* `.d` cheat {search} - display condensed game instructions
 
 User Setup:
-* .d (u)ser - display user info
-* .d u help - display user help
+* `.d (u)ser` - display user info
+* `.d u help` - display user help
 
 Character Setup:
-* .d (c)haracter - display active character
-* .d c help - display character help
+* `.d (c)haracter` - display active character
+* `.d c help` - display character help
 
 Scene Setup
-* .d (s)cene - display active scene
-* .d s help - display scene help
+* `.d (s)cene` - display active scene
+* `.d s help` - display scene help
 
 Roll Fate Dice
-* .d r - roll fate dice
-* .d r (i)nvoke {aspect} [...(i)nvoke {aspect}] - roll fate dice and apply
-* .d r {approach|skill} - roll fate dice with active character's stat bonus
-* .d r {approach|skill} (i)nvoke {aspect} (+2|reroll) [...(i)nvoke {aspect} (+2|reroll)] - roll fate dice with active character's stat bonus
-* .d re (i)nvoke {aspect} (+2|reroll) [...(i)nvoke {aspect} (+2|reroll)] - reroll the character's last roll
-* .d (av)ailable - display invocable/compelable aspects
-* .d (i)nvoke {aspect} (+2|reroll) [...(i)invoke {aspect} (+2|reroll)] - invokes an aspect and uses the active character's fate point(s)
-* .d compel {aspect} [...(c)compel {aspect}] - compels aspect(s) and grants the active character a fate point
+* `.d r` - roll fate dice
+* `.d r (i)nvoke {aspect}` [...(i)nvoke {aspect}] - roll fate dice and apply
+* `.d r {approach|skill}` - roll fate dice with active character's stat bonus
+* `.d r {approach|skill} (i)nvoke {aspect} (+2|reroll) [...(i)nvoke {aspect} (+2|reroll)]` - roll fate dice with active character's stat bonus
+* `.d re (i)nvoke {aspect} (+2|reroll) [...(i)nvoke {aspect} (+2|reroll)]` - reroll the character's last roll
+* `.d (av)ailable` - display invocable/compelable aspects
+* `.d (i)nvoke {aspect} (+2|reroll) [...(i)invoke {aspect} (+2|reroll)]` - invokes an aspect and uses the active character's fate point(s)
+* `.d compel {aspect} [...(c)compel {aspect}]` - compels aspect(s) and grants the active character a fate point
 
-.d u help - display user help
+`.d u help` - display user help
 User Setup:
-* .d (u)ser - display user info
-* .d u tz {timezone} - set user time zone
-* .d u tz (l)ist {search} - search the list of time zones
+* `.d (u)ser` - display user info
+* `.d u tz {timezone}` - set user time zone
+* `.d u tz (l)ist {search}` - search the list of time zones
 
-.d c help - display these instructions
+`.d c help` - display these instructions
 Character Help:
-* .d (c)haracter - display active character
-* .d c help - display character help
-* .d c (st)ress help - display help on stress tracks
-* .d c (con)sequence help - display help on consequences and conditions
-* .d c {name} - display/set active character
-* .d c (l)ist - display list of characters
-* .d c (desc)ription {description} - set the description for the active character
-* .d c (high/hc) concept {high concept} - set the high concept for the active character
-* .d c (t)rouble {trouble} - set the trouble for the active character
-* .d c (d)delete {name} - removes a character
-* .d c (f)ate {refresh|+|-} - display, refresh, add or subtract fate points
-* .d c (a)spect [(d)elete] {aspect} - add/remove aspects
-* .d c (s)tunt [(d)elete] {stunt} - add/remove stunts
-* .d c (app)roach [(d)elete] {approach} {bonus} - add/remove approach bonuses
-* .d c (app)roach help - display a list of approach descriptions
-* .d c (sk)ill [(d)elete] {skill} {bonus} - set/remove bonuses
-* .d c (sk)ill help - display a list of skill descriptions
+* `.d (c)haracter` - display active character
+* `.d c help` - display character help
+* `.d c (st)ress help` - display help on stress tracks
+* `.d c (con)sequence help` - display help on consequences and conditions
+* `.d c {name}` - display/set active character
+* `.d c (l)ist` - display list of characters
+* `.d c (desc)ription {description}` - set the description for the active character
+* `.d c (high/hc) concept {high concept}` - set the high concept for the active character
+* `.d c (t)rouble {trouble}` - set the trouble for the active character
+* `.d c (d)delete {name}` - removes a character
+* `.d c (f)ate {refresh|+|-}` - display, refresh, add or subtract fate points
+* `.d c (a)spect [(d)elete] {aspect}` - add/remove aspects
+* `.d c (s)tunt [(d)elete] {stunt}` - add/remove stunts
+* `.d c (app)roach [(d)elete] {approach} {bonus}` - add/remove approach bonuses
+* `.d c (app)roach help` - display a list of approach descriptions
+* `.d c (sk)ill [(d)elete] {skill} {bonus}` - set/remove bonuses
+* `.d c (sk)ill help` - display a list of skill descriptions
 
-.d s help - display these instructions
+`.d s help` - display these instructions
 Scene Help:
-* .d (s)cene - display active scene
-* .d s (n)ame {name} - add/display/set active scene
-* .d s (l)ist - display list of scenes
-* .d s (desc)ription {description} - set the description for the active scene
-* .d s (a)spect [(d)elete] {aspect} - add/remove aspect for active scene
-* .d s (c)haracter [(d)elete] {character} - add/remove character for active scene
-* .d s (d)delete {name} - removes a scene
+* `.d (s)cene` - display active scene
+* `.d s (n)ame {name}` - add/display/set active scene
+* `.d s (l)ist` - display list of scenes
+* `.d s (desc)ription {description}` - set the description for the active scene
+* `.d s (a)spect [(d)elete] {aspect}` - add/remove aspect for active scene
+* `.d s (c)haracter [(d)elete] {character}` - add/remove character for active scene
+* `.d s (d)delete {name}` - removes a scene
 
+* `.d character approach help`
+* `.d c app help`
 APPROACHES:
-.d character approach help
-.d c app help
 * Careful - pay close attention to detail and take your time.
 * Flashy - draw attention to you; full of style and panache.
 * Forceful - not subtle, but brute strength and power.
@@ -85,9 +85,9 @@ APPROACHES:
 * Clever - think fast, solve problems, or devise strategy.
 * Quick - move fast and with dexterity
 
+* `.d character skills help`
+* `.d c sk help`
 SKILLS:
-.d character skills help
-.d c sk help
 * Academics - knowledge, education, science expertise.
 * Athletics - run, jump, dodge attacks.
 * Burglary - bypass security, pick pockets, pull off crimes.
@@ -108,98 +108,96 @@ SKILLS:
 * Stealth - hide, evade, blend in, go unnoticed, vanish.
 * Will - resist temptation, withstand trauma, hold steady.
 
-#### .d cheat
+`.d cheat {search}`
 **On Your Turn**
 1. Describe what you’re trying to do.
 1. Choose the skill & action that fit.
 1. Roll: 4dF + skill + stunt.
-1. Optional: invoke aspect(s) 
-> re-roll or add +2 (1 Fate point each)
-1. Resolve action (see Outcomes/Actions).
-> Absorb shifts (if attacked).
->   – **Stress**:
->     • check off stress boxes
->     • one box per shift
->   – **Consequences**:
->     • absorb 2/4/6 shifts
->     • create a consequence aspect
->     • attacker gets one free invoke
->   – **Taken Out**:
->     • if you can’t absorb the hit
->     • attacker removes you from scene
->   – **Concede**:
->     • choose before a roll
->     • you get a Fate point
->     • you choose how to exit scene
+1. Optional: invoke aspect(s) - re-roll or add +2 (1 Fate point each)
+1. Resolve action (see Outcomes/Actions). - Absorb shifts (if attacked).
+            – **Stress**:
+              • check off stress boxes
+              • one box per shift
+            – **Consequences**:
+              • absorb 2/4/6 shifts
+              • create a consequence aspect
+              • attacker gets one free invoke
+            – **Taken Out**:
+              • if you can’t absorb the hit
+              • attacker removes you from scene
+            – **Concede**:
+              • choose before a roll
+              • you get a Fate point
+              • you choose how to exit scene
 
 OUTCOMES/ACTIONS
 
-**Shifts** = 
->  Your Effort - [Opposing Effort or Target Difficulty]
->  
->  •  *Fail*: effort < opposition
->  •  *Tie*: effort = opposition
->  •  *Success*: effort > opposition by 1 or 2
->  •  *Success w/ Style*: effort > opp. by 3 or more
-
-**Create an Advantage (CaA)**
-     Leverage and create aspects
-
-     When creating a new situation aspect
-        *Fail*: not created or free enemy invoke
-        *Tie*: not created, but free boost
-        *Success*: created with free invoke
-        *SwS*: created with 2 free invokesn\
-     When targeting existing/unknown aspects
-        *Fail*: unknown or free enemy invoke
-        *Tie*: free invoke on known, boost on unk.
-        *Success*: free invoke on aspect
-        *SwS*: 2 free invokes on aspect
+        **Shifts** = 
+          Your Effort - [Opposing Effort or Target Difficulty]
+          
+          •  *Fail*: effort < opposition
+          •  *Tie*: effort = opposition
+          •  *Success*: effort > opposition by 1 or 2
+          •  *Success w/ Style*: effort > opp. by 3 or more
+        
+        **Create an Advantage (CaA)**
+             Leverage and create aspects
+        
+             When creating a new situation aspect
+                *Fail*: not created or free enemy invoke
+                *Tie*: not created, but free boost
+                *Success*: created with free invoke
+                *SwS*: created with 2 free invokesn\
+             When targeting existing/unknown aspects
+                *Fail*: unknown or free enemy invoke
+                *Tie*: free invoke on known, boost on unk.
+                *Success*: free invoke on aspect
+                *SwS*: 2 free invokes on aspect
 
 OUTCOMES/ACTIONS (cont.)
 
-**Attack**:
-     to harm a target
-        *Fail*:  you fail to connect
-        *Tie*:  you get a boost
-        *Success*:  deal a hit equal to shift(s)
-        *SwS*:  may reduce 1 shift for a boostn\
-**Defend**:
-     to oppose attack or stop foe
-        *Fail*: foe succeeds or you take hit
-        *Tie*: action’s tie results applies
-        *Success*: enemy stopped/missed
-        *SwS*: as Success with a boostn\
-**Overcome**:
-     to clear obstacles or hindrances
-        *Fail*: fail or success w/ major cost
-        *Tie*: partial succ., at minor cost, or boost
-        *Success*: you meet your goal
-        *SwS*: as Success with a boost
+        **Attack**:
+             to harm a target
+                *Fail*:  you fail to connect
+                *Tie*:  you get a boost
+                *Success*:  deal a hit equal to shift(s)
+                *SwS*:  may reduce 1 shift for a boostn\
+        **Defend**:
+             to oppose attack or stop foe
+                *Fail*: foe succeeds or you take hit
+                *Tie*: action’s tie results applies
+                *Success*: enemy stopped/missed
+                *SwS*: as Success with a boostn\
+        **Overcome**:
+             to clear obstacles or hindrances
+                *Fail*: fail or success w/ major cost
+                *Tie*: partial succ., at minor cost, or boost
+                *Success*: you meet your goal
+                *SwS*: as Success with a boost
 
 MAJOR/MINOR COSTS
 
-**Major**
-     significantly worse or more complicated
-     •  introduce new problem
-     •  bring in new foes
-     •  put PCs on a deadline
-     •  mild/moderate consequence
-     •  enemy gets situation aspect w/ free invoke
-**Minor**
-     difficulty or complication, not hindrance
-     •  a few points of stress
-     •  a boost to the enemy
-**Recovery**
-     •  stress clears at end of scene
-     •  consequences vary:
-         roll to overcome using skill
-         –  Mild: +2(Fair)
-             •   clears in one full scene
-         –  Moderate: +4(Great)
-             •   clears in one full session
-         –  Severe: +6(Fantastic)
-             •   clears on major milestone
+        **Major**
+             significantly worse or more complicated
+             •  introduce new problem
+             •  bring in new foes
+             •  put PCs on a deadline
+             •  mild/moderate consequence
+             •  enemy gets situation aspect w/ free invoke
+        **Minor**
+             difficulty or complication, not hindrance
+             •  a few points of stress
+             •  a boost to the enemy
+        **Recovery**
+             •  stress clears at end of scene
+             •  consequences vary:
+                 roll to overcome using skill
+                 –  Mild: +2(Fair)
+                     •   clears in one full scene
+                 –  Moderate: +4(Great)
+                     •   clears in one full session
+                 –  Severe: +6(Fantastic)
+                     •   clears on major milestone
 
 ASPECTS
 
@@ -268,16 +266,16 @@ TURN ORDER
 
 EARN FATE POINTS WHEN YOU
 
-  •  Accept a compel.
-  •  Have your aspectsinvoked.
-  •  Concede a conflict.',
+          •  Accept a compel.
+          •  Have your aspectsinvoked.
+          •  Concede a conflict.',
 
 SPEND FATE POINTS TO
 
-  •  Invoke an aspect.
-  •  Power a stunt.
-  •  Refuse a compel.
-  •  Declare a story detail.
+          •  Invoke an aspect.
+          •  Power a stunt.
+          •  Refuse a compel.
+          •  Declare a story detail.
   
 CHALLENGES
 

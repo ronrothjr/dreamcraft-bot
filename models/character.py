@@ -6,6 +6,7 @@ from bson.objectid import ObjectId
 from models.user import User
 from models.stunt import Stunt
 from config.setup import Setup
+from utils.text_utils import TextUtils
 
 SETUP = Setup()
 X = SETUP.x
@@ -55,11 +56,21 @@ class Character(Document):
         return Character.objects.filter(**params)
 
     @classmethod
-    def find(cls, user, name, guild, parent, category, archived):
+    def find(cls, user, name, guild, parent=None, category='', archived=False):
+        params = {}
+        if user:
+            params.update(user=user.id)
+        if name:
+            params.update(name__icontains=name)
+        if guild:
+            params.update(guild=guild)
         if parent:
-            character = cls.filter(user=user.id, name__icontains=name, guild=guild, parent_id=str(parent.id), category=category, archived=archived).first()
-        else:
-            character = cls.filter(user=user.id, name__icontains=name, guild=guild, category=category, archived=archived).first()
+            params.update(parent_id=str(parent.id))
+        if category:
+            params.update(category=category)
+        if archived:
+            params.update(archived=archived)
+        character = cls.filter(**params).first()
         return character
 
     @classmethod
@@ -124,7 +135,20 @@ class Character(Document):
         return '\n        ' if self.category == 'Character' else '    '
 
     def get_string_fate(self):
-        return f'\n**Fate Points:** {self.fate_points} (_Refresh:_ {self.refresh})' if self.fate_points is not None else ''
+        refresh = f' (_Refresh:_ {self.refresh})' if self.refresh else ''
+        return f'{self.sep()}**Fate Points:** {self.fate_points}{refresh}' if self.fate_points is not None else ''
+
+    def get_available_aspects(self):
+        available = []
+        if self.high_concept:
+            available.append(f'***{TextUtils.clean(self.high_concept)}*** (high concept of _\'{self.name}\'_)')
+        if self.trouble:
+            available.append(f'***{TextUtils.clean(self.trouble)}*** (trouble of _\'{self.name}\'_)')
+        char_aspects = [f'***{TextUtils.clean(a.name)}*** (aspect of _\'{self.name}\'_)' for a in Character().get_by_parent(self, '', 'Aspect')]
+        available.extend(char_aspects)
+        char_stunts = [f'***{TextUtils.clean(a.name)}*** (stunt of _\'{self.name}\'_)' for a in Character().get_by_parent(self, '', 'Stunt')]
+        available.extend(char_stunts)
+        return available
 
     def get_string_aspects(self, user=None):
         aspects = Character().get_by_parent(self, '', 'Aspect')
@@ -134,7 +158,7 @@ class Character(Document):
     def get_string_stunts(self, user=None):
         stunts = Character().get_by_parent(self, '', 'Stunt')
         stunts_string = self.sep().join([s.get_string(self) for s in stunts]) if stunts else ''
-        return f'{self.sep()}**Stunts:**{self.sep()}{stunts_string}' if stunts_string else ''
+        return f'{self.nl()}**Stunts:**{self.sep()}{stunts_string}' if stunts_string else ''
 
     def get_string_skills(self):
         title = 'Approaches' if self.use_approaches else 'Skills'

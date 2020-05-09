@@ -9,27 +9,27 @@ Manage contests, challenges, and conflicts within scenes, sessions, and arcs.
 Record narrative elements to read back and view them within the context of their scenes.
 Return to a previous point in time to alter history on a new timeline
 
-HELP COMMANDS
+### HELP COMMANDS
 
 `.d`
 
-Dreamcraft Bot:
+### Dreamcraft Bot:
 * `.d` - display these instructions
 * `.d` cheat {search} - display condensed game instructions
 
-User Setup:
+### User Setup:
 * `.d (u)ser` - display user info
 * `.d u help` - display user help
 
-Character Setup:
+### Character Setup:
 * `.d (c)haracter` - display active character
 * `.d c help` - display character help
 
-Scene Setup
+### Scene Setup
 * `.d (s)cene` - display active scene
 * `.d s help` - display scene help
 
-Roll Fate Dice
+### Roll Fate Dice
 * `.d r` - roll fate dice
 * `.d r (i)nvoke {aspect}` [...(i)nvoke {aspect}] - roll fate dice and apply
 * `.d r {approach|skill}` - roll fate dice with active character's stat bonus
@@ -40,13 +40,13 @@ Roll Fate Dice
 * `.d compel {aspect} [...(c)compel {aspect}]` - compels aspect(s) and grants the active character a fate point
 
 `.d u help` - display user help
-User Setup:
+### User Setup:
 * `.d (u)ser` - display user info
 * `.d u tz {timezone}` - set user time zone
 * `.d u tz (l)ist {search}` - search the list of time zones
 
 `.d c help` - display these instructions
-Character Help:
+### Character Help:
 * `.d (c)haracter` - display active character
 * `.d c help` - display character help
 * `.d c (st)ress help` - display help on stress tracks
@@ -66,7 +66,7 @@ Character Help:
 * `.d c (sk)ill help` - display a list of skill descriptions
 
 `.d s help` - display these instructions
-Scene Help:
+### Scene Help:
 * `.d (s)cene` - display active scene
 * `.d s (n)ame {name}` - add/display/set active scene
 * `.d s (l)ist` - display list of scenes
@@ -77,7 +77,7 @@ Scene Help:
 
 * `.d character approach help`
 * `.d c app help`
-APPROACHES:
+### APPROACHES:
 * Careful - pay close attention to detail and take your time.
 * Flashy - draw attention to you; full of style and panache.
 * Forceful - not subtle, but brute strength and power.
@@ -87,7 +87,7 @@ APPROACHES:
 
 * `.d character skills help`
 * `.d c sk help`
-SKILLS:
+### SKILLS:
 * Academics - knowledge, education, science expertise.
 * Athletics - run, jump, dodge attacks.
 * Burglary - bypass security, pick pockets, pull off crimes.
@@ -109,7 +109,7 @@ SKILLS:
 * Will - resist temptation, withstand trauma, hold steady.
 
 `.d cheat {search}`
-**On Your Turn**
+### On Your Turn
 1. Describe what you’re trying to do.
 1. Choose the skill & action that fit.
 1. Roll: 4dF + skill + stunt.
@@ -130,7 +130,7 @@ SKILLS:
               • you get a Fate point
               • you choose how to exit scene
 
-OUTCOMES/ACTIONS
+### OUTCOMES/ACTIONS
 
         **Shifts** = 
           Your Effort - [Opposing Effort or Target Difficulty]
@@ -154,7 +154,7 @@ OUTCOMES/ACTIONS
                 *Success*: free invoke on aspect
                 *SwS*: 2 free invokes on aspect
 
-OUTCOMES/ACTIONS (cont.)
+### OUTCOMES/ACTIONS (cont.)
 
         **Attack**:
              to harm a target
@@ -175,7 +175,7 @@ OUTCOMES/ACTIONS (cont.)
                 *Success*: you meet your goal
                 *SwS*: as Success with a boost
 
-MAJOR/MINOR COSTS
+### MAJOR/MINOR COSTS
 
         **Major**
              significantly worse or more complicated
@@ -199,7 +199,7 @@ MAJOR/MINOR COSTS
                  –  Severe: +6(Fantastic)
                      •   clears on major milestone
 
-ASPECTS
+### ASPECTS
 
         Aspects are true. They can grant or withdraw
         permission for what can happen in the story.
@@ -210,7 +210,7 @@ ASPECTS
         character’s circumstances, Player receives fate point
         or spends fate point to deny circumstances.
 
-TYPES OF ASPECTS
+### TYPES OF ASPECTS
 
         **Boost.** Temporary, sometimes unnamed aspect.
             Provides a free invoke. Vanishes once used.
@@ -222,7 +222,7 @@ TYPES OF ASPECTS
             Situation aspects of a group, scene or storyline,
             campaign, or map area, respectively.',
 
-ADJECTIVE LADDER
+### ADJECTIVE LADDER
 
         +8  Legendary
         +7  Epic
@@ -238,7 +238,7 @@ ADJECTIVE LADDER
         -3  Catastrophic
         -4  Horrifying
 
-SETTING DIFFICULTY
+### SETTING DIFFICULTY
 
         **Low** = below relevant PC skill
         **Medium** =  close to PC skill
@@ -247,7 +247,7 @@ SETTING DIFFICULTY
         +2 for tough, +2 for each extra factor against them.
         Consult aspects to adjust. Use adjective ladder as guide.
 
-TEAMWORK OPTIONS
+### TEAMWORK OPTIONS
 
         _Combine Skills._ Character with highest skill rolls. 
             PCs with same skill at Average (+1) or better use action to add +1.
@@ -257,34 +257,34 @@ TEAMWORK OPTIONS
             use the free invokes on their turns.
         _Outside your turn._ Invoke an aspect to add a bonus to an ally’s roll.
 
-TURN ORDER
+### TURN ORDER
 
             At the start, everyone decides who goes first.
             After acting, player chooses who goes next.
             GM’s characters are in the turn order just like the PCs.
             Last player to go picks who starts next.
 
-EARN FATE POINTS WHEN YOU
+### EARN FATE POINTS WHEN YOU
 
           •  Accept a compel.
           •  Have your aspectsinvoked.
           •  Concede a conflict.',
 
-SPEND FATE POINTS TO
+### SPEND FATE POINTS TO
 
           •  Invoke an aspect.
           •  Power a stunt.
           •  Refuse a compel.
           •  Declare a story detail.
   
-CHALLENGES
+### CHALLENGES
 
         GM picks a number of skills representing the tasks needed to beat the challenge.
         Number of tasks roughly equals the number of players.
         Each player picks a task and rolls skill to overcome.
         GM considers mix of results to determine outcome.
 
-CONTESTS
+### CONTESTS
 
         Take place over a series of exchanges.
         Each side takes an overcome action for their goals.
@@ -298,7 +298,7 @@ CONTESTS
         Tie results in unexpected twist - GM describes.
         First side to 3 victories (as GM determines) wins.
 
-CONFLICTS
+### CONFLICTS
 
         When violence/coercion is an option and each side could harm the other.
         Takes place over a series of exchanges. Each character acts in turn order (as On Your Turn).
@@ -307,7 +307,7 @@ CONFLICTS
 
 
 
-DEVELOPER SETUP
+### DEVELOPER SETUP
 
 https://www.mongodb.com/download-center/community?tck=docs_server
 

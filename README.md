@@ -9,7 +9,7 @@ Manage contests, challenges, and conflicts within scenes, sessions, and arcs.
 Record narrative elements to read back and view them within the context of their scenes.
 Return to a previous point in time to alter history on a new timeline
 
-### HELP COMMANDS
+# HELP COMMANDS
 
 `.d`
 
@@ -39,14 +39,14 @@ Return to a previous point in time to alter history on a new timeline
 * `.d (i)nvoke {aspect} (+2|reroll) [...(i)invoke {aspect} (+2|reroll)]` - invokes an aspect and uses the active character's fate point(s)
 * `.d compel {aspect} [...(c)compel {aspect}]` - compels aspect(s) and grants the active character a fate point
 
-`.d u help` - display user help
 ### User Setup:
+`.d u help` - display user help
 * `.d (u)ser` - display user info
 * `.d u tz {timezone}` - set user time zone
 * `.d u tz (l)ist {search}` - search the list of time zones
 
-`.d c help` - display these instructions
 ### Character Help:
+`.d c help` - display these instructions
 * `.d (c)haracter` - display active character
 * `.d c help` - display character help
 * `.d c (st)ress help` - display help on stress tracks
@@ -65,8 +65,8 @@ Return to a previous point in time to alter history on a new timeline
 * `.d c (sk)ill [(d)elete] {skill} {bonus}` - set/remove bonuses
 * `.d c (sk)ill help` - display a list of skill descriptions
 
-`.d s help` - display these instructions
 ### Scene Help:
+`.d s help` - display these instructions
 * `.d (s)cene` - display active scene
 * `.d s (n)ame {name}` - add/display/set active scene
 * `.d s (l)ist` - display list of scenes
@@ -75,9 +75,9 @@ Return to a previous point in time to alter history on a new timeline
 * `.d s (c)haracter [(d)elete] {character}` - add/remove character for active scene
 * `.d s (d)delete {name}` - removes a scene
 
+### APPROACHES:
 * `.d character approach help`
 * `.d c app help`
-### APPROACHES:
 * Careful - pay close attention to detail and take your time.
 * Flashy - draw attention to you; full of style and panache.
 * Forceful - not subtle, but brute strength and power.
@@ -85,9 +85,9 @@ Return to a previous point in time to alter history on a new timeline
 * Clever - think fast, solve problems, or devise strategy.
 * Quick - move fast and with dexterity
 
+### SKILLS:
 * `.d character skills help`
 * `.d c sk help`
-### SKILLS:
 * Academics - knowledge, education, science expertise.
 * Athletics - run, jump, dodge attacks.
 * Burglary - bypass security, pick pockets, pull off crimes.
@@ -108,6 +108,7 @@ Return to a previous point in time to alter history on a new timeline
 * Stealth - hide, evade, blend in, go unnoticed, vanish.
 * Will - resist temptation, withstand trauma, hold steady.
 
+# CHEAT CARDS
 `.d cheat {search}`
 ### On Your Turn
 1. Describe what you’re trying to do.
@@ -307,7 +308,7 @@ Return to a previous point in time to alter history on a new timeline
 
 
 
-### DEVELOPER SETUP
+# DEVELOPER SETUP
 
 https://www.mongodb.com/download-center/community?tck=docs_server
 

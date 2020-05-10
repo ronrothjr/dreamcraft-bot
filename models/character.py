@@ -210,7 +210,7 @@ class Character(Document):
 
     def get_short_string(self, user=None):
         name = self.get_string_name(user)
-        fate_points = self.get_string_fate(user)
+        fate_points = self.get_string_fate()
         description = f'{self.nl()}"{self.description}"' if self.description else ''
         high_concept = f'{self.nl()}**High Concept:** {self.high_concept}' if self.high_concept else ''
         trouble = f'{self.nl()}**Trouble:** {self.trouble}' if self.trouble else ''

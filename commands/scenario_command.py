@@ -1,4 +1,4 @@
-# scene_command
+# scenario_command
 import datetime
 from commands import CharacterCommand
 from models.channel import Channel
@@ -9,9 +9,9 @@ from models.user import User
 from config.setup import Setup
 
 SETUP = Setup()
-SCENE_HELP = SETUP.scene_help
+SCENARIO_HELP = SETUP.scenario_help
 
-class SceneCommand():
+class ScenarioCommand():
     def __init__(self, ctx, args):
         self.ctx = ctx
         self.args = args[1:]
@@ -35,10 +35,10 @@ class SceneCommand():
             'players': self.player,
             'player': self.player,
             'p': self.player,
-            'list': self.scene_list,
-            'l': self.scene_list,
-            'delete': self.delete_scene,
-            'd': self.delete_scene
+            'list': self.scenario_list,
+            'l': self.scenario_list,
+            'delete': self.delete_scenario,
+            'd': self.delete_scenario
         }
         # Get the function from switcher dictionary
         if self.command in switcher:
@@ -55,22 +55,20 @@ class SceneCommand():
         return messages
 
     def help(self, args):
-        return [SCENE_HELP]
+        return [SCENARIO_HELP]
     
     def name(self, args):
         if len(args) == 0:
-            if not self.scenario:
-                return ['No active scenario or name provided;\ntry this: ".d scenario name {name}"']
             if not self.sc:
-                return ['No active scene or name provided']
+                return ['No active scenario or name provided']
             else:
-                scene_args = ['c']
-                scene_args.extend(args[1:])
-                return self.character(scene_args)
+                scenario_args = ['c']
+                scenario_args.extend(args[1:])
+                return self.character(scenario_args)
         else:
-            scene_name = ' '.join(args[1:])
-            self.sc = Scene().get_or_create(self.user, self.channel, self.scenario, scene_name)
-            self.channel.set_active_scene(self.sc)
+            scenario_name = ' '.join(args[1:])
+            self.sc = Scenario().get_or_create(self.user, self.channel, scenario_name)
+            self.channel.set_active_scenario(self.sc)
             if self.user:
                 self.user.active_character = str(self.sc.character.id)
                 if (not self.user.created):
@@ -79,19 +77,19 @@ class SceneCommand():
                 self.user.save()
         return [self.sc.get_string(self.channel)]
 
-    def scene_list(self, args):
-        scenes = Scene().get_by_channel(self.channel)
-        if len(scenes) == 0:
-            return ['You don\'t have any scenes.\nTry this: ".d scene name {name}"']
+    def scenario_list(self, args):
+        scenarios = Scenario().get_by_channel(self.channel)
+        if len(scenarios) == 0:
+            return ['You don\'t have any scenarios.\nTry this: ".d scenario name {name}"']
         else:
-            scenes_string = ''.join([s.get_string(self.channel) for s in scenes])
-            return [f'Scenes:{scenes_string}\n        ']
+            scenarios_string = ''.join([s.get_string(self.channel) for s in scenarios])
+            return [f'Scenarios:{scenarios_string}\n        ']
 
     def description(self, args):
         if len(args) == 1:
             return ['No description provided']
         if not self.sc:
-            return ['You don\'t have an active scene.\nTry this: ".d s name {name}"']
+            return ['You don\'t have an active scenario.\nTry this: ".d s name {name}"']
         else:
             description = ' '.join(args[1:])
             self.sc.description = description
@@ -118,7 +116,7 @@ class SceneCommand():
         if len(args) == 1:
             return ['No characters added']
         if not self.sc:
-            return ['You don\'t have an active scene.\nTry this: ".d s name {name}"']
+            return ['You don\'t have an active scenario.\nTry this: ".d s name {name}"']
         elif args[1].lower() == 'list' or args[1].lower() == 'l':
             return [self.sc.get_string_characters(self.channel)]
         elif args[1].lower() == 'delete' or args[1].lower() == 'd':
@@ -129,7 +127,7 @@ class SceneCommand():
             self.sc.updated = datetime.datetime.utcnow()
             self.sc.save()
             return [
-                f'{char} removed from scene characters',
+                f'{char} removed from scenario characters',
                 self.sc.get_string_characters(self.channel)
             ]
         else:
@@ -144,33 +142,29 @@ class SceneCommand():
             self.sc.updated = datetime.datetime.utcnow()
             self.sc.save()
             return [
-                f'Added {char.name} to scene characters',
+                f'Added {char.name} to scenario characters',
                 self.sc.get_string_characters(self.channel)
             ]
 
-    def delete_scene(self, args):
+    def delete_scenario(self, args):
         messages = []
         search = ''
         if len(args) == 1:
             if not self.sc:
-                return ['No scene provided for deletion']
+                return ['No scenario provided for deletion']
         else:
             search = ' '.join(args[1:])
-            self.sc = Scene().find(str(self.channel.id), str(self.scenario.id), search)
+            self.scenario = Scenario().find(self.channel, search)
         if not self.sc:
             return [f'{search} was not found. No changes made.']
         else:
             search = str(self.sc.name)
-            scenario_id = str(self.sc.scenario_id) if self.sc.scenario_id else ''
             channel_id = str(self.sc.channel_id) if self.sc.channel_id else ''
             self.sc.character.reverse_delete()
             self.sc.character.delete()
             self.sc.delete()
             messages.append(f'***{search}*** removed')
-            if scenario_id:
-                secenario = Scenario().get_by_id(scenario_id)
-                messages.append(secenario.get_string(self.channel))
-            elif channel_id:
+            if channel_id:
                 channel = Channel().get_by_id(channel_id)
                 messages.append(channel.get_string())
             return messages

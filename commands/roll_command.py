@@ -2,11 +2,12 @@
 import datetime
 import random
 import copy
-from models import Channel, Scene, User, Character
+from models import Channel, Scenario, Scene, User, Character
 from commands import CharacterCommand
 from config.setup import Setup
 
 SETUP = Setup()
+ROLL_HELP = SETUP.roll_help
 APPROACHES = SETUP.approaches
 SKILLS = SETUP.skills
 FATE_DICE = SETUP.fate_dice
@@ -19,11 +20,14 @@ class RollCommand():
         self.compel_index = [i for i in range(0, len(self.args)) if self.args[i] in ['compel', 'c']]
         self.command = args[0].lower()
         self.channel = Channel().get_or_create(self.ctx.channel.name, self.ctx.guild.name)
+        self.scenario = Scenario().get_by_id(self.channel.active_scenario) if self.channel and self.channel.active_scenario else None
         self.sc = Scene().get_by_id(self.channel.active_scene) if self.channel and self.channel.active_scene else None
         self.user = User().get_or_create(self.ctx.author.name, self.ctx.guild.name)
         self.char = Character().get_by_id(self.user.active_character) if self.user and self.user.active_character else None
 
     def run(self):
+        if self.args[1] == 'help':
+            return [ROLL_HELP]
         messages = [self.char.get_string_name(self.user)]
         errors = []
         last_roll = None
@@ -157,6 +161,8 @@ class RollCommand():
 
     def get_available_invokes(self):
         available = self.char.get_available_aspects() if self.char else []
+        scenario_aspects = self.scenario.character.get_available_aspects() if self.scenario else []
+        available.extend(scenario_aspects)
         sc_aspects = self.sc.character.get_available_aspects() if self.sc else []
         available.extend(sc_aspects)
         if self.sc and self.sc.characters:
@@ -168,6 +174,8 @@ class RollCommand():
 
     def get_available_list(self):
         available = self.char.get_available_aspects() if self.char else []
+        scenario_aspects = self.scenario.character.get_available_aspects() if self.scenario else []
+        available.extend(sc_aspects)
         sc_aspects = self.sc.character.get_available_aspects() if self.sc else []
         available.extend(sc_aspects)
         if self.sc and self.sc.characters:
@@ -187,6 +195,8 @@ class RollCommand():
         if self.char:
             self.sc.characters.append(str(self.sc.character.id))
             aspects.extend(Character.filter(name__icontains=aspect, guild=self.channel.guild, parent_id__in=self.sc.characters, category__in=['Aspect', 'Stunt']).all())
+            self.scenario.characters.append(str(self.scenario.character.id))
+            aspects.extend(Character.filter(name__icontains=aspect, guild=self.channel.guild, parent_id__in=self.scenario.characters, category__in=['Aspect', 'Stunt']).all())
             if aspects:
                 return aspects[0]
         return aspects

@@ -2,11 +2,13 @@
 import datetime
 from mongoengine import *
 
+from models.scenario import Scenario
 from models.scene import Scene
 
 class Channel(Document):
     name = StringField(required=True)
     guild = StringField(required=True)
+    active_scenario = StringField()
     active_scene = StringField()
     users = ListField(StringField())
     created = DateTimeField(required=True)
@@ -41,6 +43,13 @@ class Channel(Document):
         channel = Channel.filter(id=id).first()
         return channel
 
+    def set_active_scenario(self, scenario):
+        self.active_scenario = str(scenario.id)
+        if (not self.created):
+            self.created = datetime.datetime.utcnow()
+        self.updated = datetime.datetime.utcnow()
+        self.save()
+
     def set_active_scene(self, scene):
         self.active_scene = str(scene.id)
         if (not self.created):
@@ -52,6 +61,12 @@ class Channel(Document):
         users_string = '***Players:***\n        ' + '\n        '.join([f'_{u}_ ' for u in self.users]) if self.users else ''
         return f'{users_string}'
 
+    def get_scenarios_string(self):
+        scenario_list = Scenario.filter(channel_id=str(self.id)).all()
+        scenarios = [s.character.get_string() for s in scenario_list]
+        scenarios_string = '***Scenarios:***\n        ' + '\n        '.join([s for s in scenarios]) if scenarios else ''
+        return f'{scenarios_string}'
+
     def get_scenes_string(self):
         scene_list = Scene.filter(channel_id=str(self.id)).all()
         scenes = [s.character.get_string() for s in scene_list]
@@ -60,5 +75,6 @@ class Channel(Document):
 
     def get_string(self):
         users = f'\n{self.get_users_string()}' if self.users else ''
+        scenarios = f'\n{self.get_sscenarios_string()}' if self.users else ''
         scenes = f'\n{self.get_scenes_string()}' if self.users else ''
-        return f'***Guild:*** {self.guild}\n***Channel:*** {self.name}{users}{scenes}'
+        return f'***Guild:*** {self.guild}\n***Channel:*** {self.name}{users}{scenarios}{scenes}'

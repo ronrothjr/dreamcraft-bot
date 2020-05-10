@@ -29,6 +29,7 @@ class DreamcraftHandler():
             'character': CharacterCommand,
             'char': CharacterCommand,
             'c': CharacterCommand,
+            'scenario': ScenarioCommand,
             'scene': SceneCommand,
             's': SceneCommand,
             'roll': RollCommand,
@@ -75,4 +76,4 @@ class DreamcraftHandler():
 
     async def send(self, message):
         if message:
-            await self.ctx.send(embed=Embed(title='Dreamcraft Bot', color='#CE5904', text=message))
+            await self.ctx.send(embed=Embed(title='Dreamcraft Bot', colour=13400320, description=message))

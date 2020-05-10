@@ -162,7 +162,7 @@ class CharacterCommand():
             self.save()
             return [
                 f'Description updated to {description}',
-                self.char.get_string_short(self.user)
+                self.char.get_short_string(self.user)
             ]
 
     def high_concept(self, args):
@@ -180,7 +180,7 @@ class CharacterCommand():
             self.save()
             return [
                 f'High Concept updated to {hc}',
-                self.char.get_string_short(self.user)
+                self.char.get_short_string(self.user)
             ]
 
     def trouble(self, args):

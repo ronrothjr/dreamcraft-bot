@@ -8,9 +8,16 @@ class Setup():
             \nCharacter Setup:\n\
             .d (c)haracter - display active character\n\
             .d c help - display character help\n\
+            \nRoll Help\n\
+            .d (r)oll help - display roll help\n\
+            \nScenario Setup\n\
+            .d (s)cenario - display active scenario\n\
+            .d s help - display scenario help\n\
             \nScene Setup\n\
             .d (s)cene - display active scene\n\
-            .d s help - display scene help\n\
+            .d s help - display scene help'
+
+    roll_help = 'd r help = display rol help\n\
             \nRoll Fate Dice\n\
             .d r - roll fate dice\n\
             .d r (i)nvoke {aspect} [...(i)nvoke {aspect}] - roll fate dice and apply\n\
@@ -40,7 +47,9 @@ class Setup():
             .d c (d)delete \{name} - removes a character\n\
             .d c (f)ate {refresh|+|-} - display, refresh, add or subtract fate points\n\
             .d c (a)spect [(d)elete] \{aspect} - add/remove aspects\n\
+            .d c (a)spect (c)character - set the current aspect as the active character\n\
             .d c (s)tunt [(d)elete] \{stunt} - add/remove stunts\n\
+            .d c (s)tunt (c)character - set the current stunt as the active character\n\
             .d c (app)roach [(d)elete] \{approach\} \{bonus\} - add/remove approach bonuses\n\
             .d c (app)roach help - display a list of approach descriptions\n\
             .d c (sk)ill [(d)elete] \{skill\} \{bonus\} - set/remove bonuses\n\
@@ -53,7 +62,7 @@ class Setup():
             .d c (st)ress (t)itle (d)elete {(st)ress} - delete custom stress track\n\
             .d c (st)ress {(st)ress} {1,2,3}- add custom stress\n\
             .d c (st)ress (r)efresh - clears all stress tracks\n\
-            .d c (st)ress (r)efresh {stress} - clears the titled stress track\n\
+            .d c (st)ress (r)efresh {(st)ress} - clears the titled stress track\n\
             .d c (st)ress (d)elete {(st)ress} - remove custom stress\n\
             .d c (st)ress (t)itle FATE - reset stress boxes to standard FATE configuration'
 
@@ -66,12 +75,23 @@ class Setup():
             .d c (con)sequence (d}elete {(co)ndition} - remove condition\n\
             .d c (con)sequence (t)itle FATE -reset consequences to standard FATE configuration'
 
+    scenario_help = '.d scenario help - display these instructions\nScenario Help:\n\
+            .d scenario - display active scenario\n\
+            .d scenario (n)ame \{name\} - add/display/set active scenario\n\
+            .d scenario (l)ist - display list of scenarios\n\
+            .d scenario (desc)ription \{description\} - set the description for the active scenario\n\
+            .d scenario (a)spect [(d)elete] \{aspect} - add/remove aspect for active scenario\n\
+            .d scenario (a)spect (c)character - set the current aspect as the active character\n\
+            .d scenario (c)haracter [(d)elete] \{character} - add/remove character for active scenario\n\
+            .d scenario (d)delete \{name} - removes a scenario'
+
     scene_help = '.d s help - display these instructions\nScene Help:\n\
             .d (s)cene - display active scene\n\
             .d s (n)ame \{name\} - add/display/set active scene\n\
             .d s (l)ist - display list of scenes\n\
             .d s (desc)ription \{description\} - set the description for the active scene\n\
             .d s (a)spect [(d)elete] \{aspect} - add/remove aspect for active scene\n\
+            .d c (a)spect (c)character - set the current aspect as the active character\n\
             .d s (c)haracter [(d)elete] \{character} - add/remove character for active scene\n\
             .d s (d)delete \{name} - removes a scene'
 

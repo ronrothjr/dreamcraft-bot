@@ -424,6 +424,28 @@ class CharacterCommand():
                         messages.append(f'_{title}_ added to stress titles')
                     self.char.stress = modified
                 messages.append(f'{self.char.get_string_stress()}')
+        elif args[1] in ['refresh', 'r']:
+            modified = copy.deepcopy(self.char.stress)
+            if len(args) == 3:
+                if args[2].lower() not in stress_checks:
+                    messages.append(f'{args[2].lower()} is not a valid stress type - {stress_check_types}')
+                    return messages
+                else:
+                    stress_type_str = args[2].lower()
+                    stress_type = [i for i in range(0, len(stress_titles)) if stress_type_str in [stress_titles[i].lower()[0:2], stress_titles[i].lower()]][0]
+                    stress_type_name = stress_titles[stress_type]
+                    for s in range(0, len(self.char.stress[stress_type])):
+                        modified[stress_type][s][1] = O
+                    messages.append(f'Refreshed all of ***{self.char.name}\'s*** _{stress_type_name}_ stress')
+                    self.char.stress = modified
+                    messages.append(f'{self.char.get_string_stress()}')
+            else:
+                for i in range(0, len(self.char.stress)):
+                    for s in range(0, len(self.char.stress[i])):
+                        modified[i][s][1] = O
+                messages.append(f'Refreshed all of ***{self.char.name}\'s*** stress')
+                self.char.stress = modified
+                messages.append(f'{self.char.get_string_stress()}')
         elif args[1] in ['delete', 'd']:
             if len(args) == 2:
                 messages.append(f'No stress type provided - {stress_check_types}')

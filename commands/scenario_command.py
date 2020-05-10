@@ -59,7 +59,7 @@ class ScenarioCommand():
     
     def name(self, args):
         if len(args) == 0:
-            if not self.sc:
+            if not self.scenario:
                 return ['No active scenario or name provided']
             else:
                 scenario_args = ['c']
@@ -67,15 +67,15 @@ class ScenarioCommand():
                 return self.character(scenario_args)
         else:
             scenario_name = ' '.join(args[1:])
-            self.sc = Scenario().get_or_create(self.user, self.channel, scenario_name)
-            self.channel.set_active_scenario(self.sc)
+            self.scenario = Scenario().get_or_create(self.user, self.channel, scenario_name)
+            self.channel.set_active_scenario(self.scenario)
             if self.user:
-                self.user.active_character = str(self.sc.character.id)
+                self.user.active_character = str(self.scenario.character.id)
                 if (not self.user.created):
                     self.user.created = datetime.datetime.utcnow()
                 self.user.updated = datetime.datetime.utcnow()
                 self.user.save()
-        return [self.sc.get_string(self.channel)]
+        return [self.scenario.get_string(self.channel)]
 
     def scenario_list(self, args):
         scenarios = Scenario().get_by_channel(self.channel)
@@ -88,81 +88,81 @@ class ScenarioCommand():
     def description(self, args):
         if len(args) == 1:
             return ['No description provided']
-        if not self.sc:
+        if not self.scenario:
             return ['You don\'t have an active scenario.\nTry this: ".d s name {name}"']
         else:
             description = ' '.join(args[1:])
-            self.sc.description = description
-            if (not self.sc.created):
-                self.sc.created = datetime.datetime.utcnow()
-            self.sc.updated = datetime.datetime.utcnow()
-            self.sc.save()
+            self.scenario.description = description
+            if (not self.scenario.created):
+                self.scenario.created = datetime.datetime.utcnow()
+            self.scenario.updated = datetime.datetime.utcnow()
+            self.scenario.save()
             return [
                 f'Description updated to "{description}"',
-                self.sc.get_string(self.channel)
+                self.scenario.get_string(self.channel)
             ]
 
     def character(self, args):
         if self.user:
-            self.user.active_character = str(self.sc.character.id)
+            self.user.active_character = str(self.scenario.character.id)
             if (not self.user.created):
                 self.user.created = datetime.datetime.utcnow()
             self.user.updated = datetime.datetime.utcnow()
             self.user.save()
-        command = CharacterCommand(self.ctx, args, self.sc.character)
+        command = CharacterCommand(self.ctx, args, self.scenario.character)
         return command.run()
 
     def player(self, args):
         if len(args) == 1:
             return ['No characters added']
-        if not self.sc:
+        if not self.scenario:
             return ['You don\'t have an active scenario.\nTry this: ".d s name {name}"']
         elif args[1].lower() == 'list' or args[1].lower() == 'l':
-            return [self.sc.get_string_characters(self.channel)]
+            return [self.scenario.get_string_characters(self.channel)]
         elif args[1].lower() == 'delete' or args[1].lower() == 'd':
             char = ' '.join(args[2:])
-            [self.sc.characters.remove(s) for s in self.sc.characters if char.lower() in s.lower()]
-            if (not self.sc.created):
-                self.sc.created = datetime.datetime.utcnow()
-            self.sc.updated = datetime.datetime.utcnow()
-            self.sc.save()
+            [self.scenario.characters.remove(s) for s in self.scenario.characters if char.lower() in s.lower()]
+            if (not self.scenario.created):
+                self.scenario.created = datetime.datetime.utcnow()
+            self.scenario.updated = datetime.datetime.utcnow()
+            self.scenario.save()
             return [
                 f'{char} removed from scenario characters',
-                self.sc.get_string_characters(self.channel)
+                self.scenario.get_string_characters(self.channel)
             ]
         else:
             search = ' '.join(args[1:])
             char = Character().find(None, search, self.channel.guild)
             if char:
-                self.sc.characters.append(str(char.id))
+                self.scenario.characters.append(str(char.id))
             else:
-                return [f'***{search}*** not found. No character added to _{self.sc.name}_']
-            if (not self.sc.created):
-                self.sc.created = datetime.datetime.utcnow()
-            self.sc.updated = datetime.datetime.utcnow()
-            self.sc.save()
+                return [f'***{search}*** not found. No character added to _{self.scenario.name}_']
+            if (not self.scenario.created):
+                self.scenario.created = datetime.datetime.utcnow()
+            self.scenario.updated = datetime.datetime.utcnow()
+            self.scenario.save()
             return [
                 f'Added {char.name} to scenario characters',
-                self.sc.get_string_characters(self.channel)
+                self.scenario.get_string_characters(self.channel)
             ]
 
     def delete_scenario(self, args):
         messages = []
         search = ''
         if len(args) == 1:
-            if not self.sc:
+            if not self.scenario:
                 return ['No scenario provided for deletion']
         else:
             search = ' '.join(args[1:])
-            self.scenario = Scenario().find(self.channel, search)
-        if not self.sc:
+            self.scenarioenario = Scenario().find(self.channel, search)
+        if not self.scenario:
             return [f'{search} was not found. No changes made.']
         else:
-            search = str(self.sc.name)
-            channel_id = str(self.sc.channel_id) if self.sc.channel_id else ''
-            self.sc.character.reverse_delete()
-            self.sc.character.delete()
-            self.sc.delete()
+            search = str(self.scenario.name)
+            channel_id = str(self.scenario.channel_id) if self.scenario.channel_id else ''
+            self.scenario.character.reverse_delete()
+            self.scenario.character.delete()
+            self.scenario.delete()
             messages.append(f'***{search}*** removed')
             if channel_id:
                 channel = Channel().get_by_id(channel_id)

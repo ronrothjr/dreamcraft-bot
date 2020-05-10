@@ -15,7 +15,10 @@ class Setup():
             .d s help - display scenario help\n\
             \nScene Setup\n\
             .d (s)cene - display active scene\n\
-            .d s help - display scene help'
+            .d s help - display scene help\n\
+            \nZone Setup\n\
+            .d (z)one - display active zone\n\
+            .d z help - display zone help'
 
     roll_help = 'd r help = display rol help\n\
             \nRoll Fate Dice\n\
@@ -91,9 +94,19 @@ class Setup():
             .d s (l)ist - display list of scenes\n\
             .d s (desc)ription \{description\} - set the description for the active scene\n\
             .d s (a)spect [(d)elete] \{aspect} - add/remove aspect for active scene\n\
-            .d c (a)spect (c)character - set the current aspect as the active character\n\
+            .d s (a)spect (c)character - set the current aspect as the active character\n\
             .d s (c)haracter [(d)elete] \{character} - add/remove character for active scene\n\
             .d s (d)delete \{name} - removes a scene'
+
+    zone_help = '.d z help - display these instructions\nZone Help:\n\
+            .d (z)one - display active zone\n\
+            .d z (n)ame \{name\} - add/display/set active zone\n\
+            .d z (l)ist - display list of zones\n\
+            .d z (desc)ription \{description\} - set the description for the active zone\n\
+            .d z (a)spect [(d)elete] \{aspect} - add/remove aspect for active zone\n\
+            .d z (a)spect (c)character - set the current aspect as the active character\n\
+            .d z (c)haracter [(d)elete] \{character} - add/remove character for active zone\n\
+            .d z (d)delete \{name} - removes a zone'
 
     approaches = [
         'Careful - pay close attention to detail and take your time.',

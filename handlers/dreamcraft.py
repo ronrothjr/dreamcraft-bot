@@ -32,6 +32,8 @@ class DreamcraftHandler():
             'scenario': ScenarioCommand,
             'scene': SceneCommand,
             's': SceneCommand,
+            'zone': ZoneCommand,
+            'z': ZoneCommand,
             'roll': RollCommand,
             'r': RollCommand,
             'reroll': RollCommand,

@@ -345,7 +345,7 @@ class CharacterCommand():
     def get_available_stress(self, stress_type):
         return sum([1 for s in self.char.stress[stress_type] if s[1] == O])
 
-    def stress(self, args):
+    def stress(self, args, check_user=None):
         messages = []
         if len(args) == 1:
             messages.append(STRESS_HELP)
@@ -476,7 +476,10 @@ class CharacterCommand():
             messages.append(f'***{self.char.name}*** absorbed {shift} {stress_type_name} stress')
             self.char.stress = modified
             messages.append(f'{self.char.get_string_stress()}')
-        self.save()
+        if check_user:
+            return []
+        else:
+            self.save()
         return messages
 
     def consequence(self, args):

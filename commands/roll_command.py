@@ -1,7 +1,9 @@
 # roll_command.py
 import datetime
 import random
+import copy
 from models import Channel, Scene, User, Character
+from commands import CharacterCommand
 from config.setup import Setup
 
 SETUP = Setup()
@@ -25,9 +27,7 @@ class RollCommand():
         messages = [self.char.get_string_name(self.user)]
         errors = []
         last_roll = None
-        skill = self.match_skill(self.args[1] if len(self.args) > 1 else '') \
-            if self.command in ['reroll', 're'] \
-            else self.char.last_roll['skill']
+        skill = self.char.last_roll['skill'] if self.command in ['reroll', 're'] else self.match_skill(self.args[1] if len(self.args) > 1 else '')
         invokes = self.get_invokes(skill)
         errors.extend([i['error'] for i in invokes if i['aspect_name'] == 'error'])
         compels = self.get_compels()
@@ -50,11 +50,19 @@ class RollCommand():
                 self.char.last_roll = last_roll
                 messages.append(self.char.last_roll['roll_text'])
         if invokes:
-            invokes_cost = sum([i.fate_points for i in invokes])
+            invokes_cost = sum([i['fate_points'] for i in invokes])
             if invokes_cost < self.char.fate_points+1:
                 self.char.fate_points -= invokes_cost
                 if not last_roll:
-                    messages.append(''.join([f'Invoked "{i[0]}" and used 1 fate point' for i in invokes]))
+                    s = 's' if invokes_cost == 0 or invokes_cost > 1 else ''
+                    messages.append(''.join([f'Invoked "{i[0]}" and used {invokes_cost} fate point{s}' for i in invokes]))
+                for invoke in invokes:
+                    if invoke['stress_titles']:
+                        command = CharacterCommand(self.ctx, self.args, self.char)
+                        for i in range(0, len(invoke['stress_titles'])):
+                            stress_args = ['st', invoke['stress_titles'][i], invoke['stress'][i][0][0]]
+                            stress_messages = command.stress(stress_args)
+                            messages.extend(stress_messages)
                 messages.append(self.char.get_string_fate())
             else:
                 return [f'***{self.char.name}*** does not have enough fate points']
@@ -84,7 +92,15 @@ class RollCommand():
             if aspect:
                 aspect_name = aspect.name
                 skills = aspect.skills if aspect.skills else []
-                fate_points = aspect.fate_points if aspect.fate_points else 1
+                fate_points = aspect.fate_points if aspect.fate_points is not None else (0 if aspect.category == 'Stunt' else 1)
+                stress = aspect.stress if aspect.stress else []
+                stress_titles = aspect.stress_titles if aspect.stress_titles else []
+                stress_errors = []
+                for i in range(0, len(stress_titles)):
+                    char = copy.deepcopy(self.char)
+                    command = CharacterCommand(self.ctx, self.args, char)
+                    stress_errors.extend(command.stress(['st', stress_titles[i], stress[i][0][0]], char))
+                [invokes.append({'aspect_name': 'error', 'error': s}) for s in stress_errors]
             else:
                 invokes.append({'aspect_name': 'error', 'error': f'_{self.args[i+1]}_ not found in availabe aspects'})
                 continue
@@ -98,7 +114,7 @@ class RollCommand():
             check_invokes.extend(invokes)
             if self.command in ['reroll', 're']:
                 check_invokes.extend(self.char.last_roll['invokes'])
-            if [dup for dup in check_invokes if aspect_name == dup[0]]:
+            if [dup for dup in check_invokes if aspect_name == dup['aspect_name']]:
                 invokes.append({'aspect_name': 'error', 'error': f'{aspect_name} cannot be invoked more than once on the same roll'})
                 continue
             if self.command in ['reroll', 're']:
@@ -106,14 +122,20 @@ class RollCommand():
                     'aspect_name': aspect_name, 
                     'bonus_str': '+2 bonus' if self.args[i+2] == '+2' else 'reroll',
                     'skills': skills,
-                    'fate_points': fate_points
+                    'fate_points': fate_points,
+                    'category': aspect.category,
+                    'stress': stress,
+                    'stress_titles': aspect.stress_titles if aspect.stress_titles else []
                 })
             else:
                 invokes.append({
                     'aspect_name': aspect_name,
                     'bonus_str': '+2 bonus',
                     'skills': skills,
-                    'fate_points': fate_points
+                    'fate_points': fate_points,
+                    'category': aspect.category,
+                    'stress': stress,
+                    'stress_titles': stress_titles
                 })
         return invokes
 
@@ -219,12 +241,23 @@ class RollCommand():
 
     def get_invoke_bonus(self, skill, invokes):
         bonus_invokes = []
-        [invoke.update({'bonus_str': invoke['skills'][skill] if skill in invoke['skills'] else '+2'}) for invoke in invokes]
-        bonus_invokes = len([arr for arr in invokes if arr[1] == '+2 bonus'])
-        bonus_invokes_total = sum(int(i['bonus']) for i in invokes])
-        invokes_bonus_string = f' + (Invokes bonus = {bonus_invokes_total})' if invokes else ''
-        invoke_string = ''.join([f'\nInvoked "{invoke['aspect_name']}" for {invoke['bonus_str']} (cost {invoke['fate_points']} fate point{'s' if invoke['fate_points'] > 1 else ''})' for invoke in invokes]) if invokes else ''
+        [invoke.update({'bonus_str': invoke['skills'][skill] if skill in invoke['skills'] else ('+0' if invoke['category'] == 'Stunt' else '+2')}) for invoke in invokes]
+        bonus_invokes = len([invoke for invoke in invokes if invoke['bonus_str'] == '+2'])
+        bonus_invokes_total = sum([int(i['bonus_str']) for i in invokes])
+        invokes_bonus_string = f' + (Invokes bonus = {bonus_invokes_total})' if invokes and bonus_invokes_total else ''
+        invoke_string = self.get_invoke_string(invokes)
         return bonus_invokes, bonus_invokes_total, invokes_bonus_string, invoke_string
+
+    def get_invoke_string(self, invokes):
+        invoke_strings = []
+        for invoke in invokes:
+            name = invoke['aspect_name']
+            bonus_str = invoke['bonus_str']
+            fate_points = invoke['fate_points']
+            s = 's' if invoke['fate_points'] == 0 or invoke['fate_points'] > 1 else ''
+            invoike_string = f'\nInvoked "{name}" for {bonus_str} (cost {fate_points} fate point{s})'
+            invoke_strings.append(invoike_string)
+        return ''.join(invoke_strings)
 
     def roll_dice(self):
         dice = [random.choice(range(-1, 2)) for _ in range(4)]

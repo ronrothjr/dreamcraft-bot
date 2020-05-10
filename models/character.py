@@ -124,7 +124,7 @@ class Character(Document):
         return '\n        ' if self.category == 'Character' else '    '
 
     def get_string_fate(self):
-        return f'\n**Fate Points:** {self.fate_points} (_Refresh:_ {self.refresh})' if self.fate_points is not None else ''
+        return f'{self.nl()}**Fate Points:** {self.fate_points} (_Refresh:_ {self.refresh})' if self.fate_points is not None else ''
 
     def get_string_aspects(self, user=None):
         aspects = Character().get_by_parent(self, '', 'Aspect')

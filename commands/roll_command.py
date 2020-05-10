@@ -198,12 +198,15 @@ class RollCommand():
         aspect = aspect.replace('_', ' ')
         aspects = []
         if self.char:
-            self.zone.characters.append(str(self.zone.character.id))
-            aspects.extend(Character.filter(name__icontains=aspect, guild=self.channel.guild, parent_id__in=self.zone.characters, category__in=['Aspect', 'Stunt']).all())
-            self.sc.characters.append(str(self.sc.character.id))
-            aspects.extend(Character.filter(name__icontains=aspect, guild=self.channel.guild, parent_id__in=self.sc.characters, category__in=['Aspect', 'Stunt']).all())
-            self.scenario.characters.append(str(self.scenario.character.id))
-            aspects.extend(Character.filter(name__icontains=aspect, guild=self.channel.guild, parent_id__in=self.scenario.characters, category__in=['Aspect', 'Stunt']).all())
+            if self.zone:
+                self.zone.characters.append(str(self.zone.character.id)) 
+                aspects.extend(Character.filter(name__icontains=aspect, guild=self.channel.guild, parent_id__in=self.zone.characters, category__in=['Aspect', 'Stunt']).all())
+            if self.sc:
+                self.sc.characters.append(str(self.sc.character.id))
+                aspects.extend(Character.filter(name__icontains=aspect, guild=self.channel.guild, parent_id__in=self.sc.characters, category__in=['Aspect', 'Stunt']).all())
+            if self.scenario:
+                self.scenario.characters.append(str(self.scenario.character.id))
+                aspects.extend(Character.filter(name__icontains=aspect, guild=self.channel.guild, parent_id__in=self.scenario.characters, category__in=['Aspect', 'Stunt']).all())
             if aspects:
                 return aspects[0]
         return aspects

@@ -220,7 +220,7 @@ class CharacterCommand():
         if args[1].lower() == 'help':
             app_str = '\n        '.join(APPROACHES)
             messages.append(f'**Approaches:**\n        {app_str}')
-        elif len(args) != 3 and len(args) != 2:
+        elif len(args) < 3:
             messages.append('Approach syntax: .d (app)roach {approach} {bonus}')
         else:
             if not self.char:
@@ -236,14 +236,17 @@ class CharacterCommand():
                                 new_skills[key] = self.char.skills[key]
                         self.char.skills = new_skills
                     self.save()
-                    messages.append(f'Removed {skill}') 
+                    messages.append(f'Removed {skill}')
                 else:
-                    skill = [s for s in APPROACHES if args[1][0:2].lower() == s[0:2].lower()]
-                    skill = skill[0].split(' - ')[0] if skill else args[1]
-                    self.char.skills[skill] = args[2]
+                    for i in range(1, len(args), 2):
+                        abbr = args[i][0:2].lower()
+                        val = args[i+1]
+                        skill = [s for s in APPROACHES if abbr == s[0:2].lower()]
+                        skill = skill[0].split(' - ')[0] if skill else args[i]
+                        self.char.skills[skill] = val
+                        messages.append(f'Updated {skill} to {val}')
                     self.char.use_approaches = True
                     self.save()
-                    messages.append(f'Updated {skill} to {args[2]}')
                 messages.append(self.char.get_string_skills())
         return messages
 
@@ -347,7 +350,7 @@ class CharacterCommand():
             self.save()
             messages.append(self.char.get_string_stunts(self.user))
         return messages
-    
+
     def get_available_stress(self, stress_type):
         return sum([1 for s in self.char.stress[stress_type] if s[1] == O])
 

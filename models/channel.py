@@ -4,12 +4,14 @@ from mongoengine import *
 
 from models.scenario import Scenario
 from models.scene import Scene
+from models.zone import Zone
 
 class Channel(Document):
     name = StringField(required=True)
     guild = StringField(required=True)
     active_scenario = StringField()
     active_scene = StringField()
+    active_zone = StringField()
     users = ListField(StringField())
     created = DateTimeField(required=True)
     updated = DateTimeField(required=True)
@@ -52,6 +54,13 @@ class Channel(Document):
 
     def set_active_scene(self, scene):
         self.active_scene = str(scene.id)
+        if (not self.created):
+            self.created = datetime.datetime.utcnow()
+        self.updated = datetime.datetime.utcnow()
+        self.save()
+
+    def set_active_zone(self, zone):
+        self.active_zone = str(zone.id)
         if (not self.created):
             self.created = datetime.datetime.utcnow()
         self.updated = datetime.datetime.utcnow()

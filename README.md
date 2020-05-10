@@ -117,6 +117,17 @@ This Command Line Interface (CLI) allows users to:
 * `.d s (c)haracter [(d)elete] {character}` - add/remove character for active scene
 * `.d s (d)delete {name}` - removes a scene
 
+### Zone Help:
+`.d z help` - display these instructions
+* `.d (z)one` - display active zone
+* `.d z (n)ame {name}` - add/display/set active zone
+* `.d z (l)ist` - display list of zones
+* `.d z (desc)ription {description}` - set the description for the active zone
+* `.d z (a)spect [(d)elete] {aspect}` - add/remove aspect for active zone
+* `.d z (a)spect (c)character` - set the current aspect as the active character
+* `.d z (c)haracter [(d)elete] {character}` - add/remove character for active zone
+* `.d z (d)delete {name}` - removes a zone
+
 ### APPROACHES:
 * `.d character approach help`
 * `.d c app help`

@@ -1,5 +1,7 @@
 # dreamcraft.py
 
+from discord import Embed
+
 from models import Channel
 from commands import *
 from config.setup import Setup
@@ -73,4 +75,4 @@ class DreamcraftHandler():
 
     async def send(self, message):
         if message:
-            await self.ctx.send(message)
+            await self.ctx.send(embed=Embed(title='Dreamcraft Bot', color='#CE5904', text=message))

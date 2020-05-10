@@ -52,6 +52,8 @@ class Setup():
             .d c (st)ress (t)itle {total} {stress} - create custom stress track\n\
             .d c (st)ress (t)itle (d)elete {(st)ress} - delete custom stress track\n\
             .d c (st)ress {(st)ress} {1,2,3}- add custom stress\n\
+            .d c (st)ress (r)efresh - clears all stress tracks\n\
+            .d c (st)ress (r)efresh {stress} - clears the titled stress track\n\
             .d c (st)ress (d)elete {(st)ress} - remove custom stress\n\
             .d c (st)ress (t)itle FATE - reset stress boxes to standard FATE configuration'
 

@@ -8,7 +8,7 @@ This Command Line Interface (CLI) allows users to:
 * Create characters, aspects (that you can treat as characters), stunts, stress, consequences, and conditions.
 * Roll fate dice with approach/skill bonuses while invoking/compelling any number of aspects (cannot invoke and compel in the same roll)
 * Create zones, scenes, and scenarios (all of which can be treated as characters and rolled with).
-* **COMING SOON** - Manage contests, challenges, and conflicts within scenes, sessions, and arcs.
+* **COMING SOON** - Manage contests, challenges, and conflicts within zones, scenes, and scenarios.
 * **COMING SOON** - Record narrative elements to read back and view them within the context of their scenes.
 * **COMING SOON** - Return to a previous point in time to alter history on a new timeline
 

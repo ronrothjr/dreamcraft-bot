@@ -201,10 +201,16 @@ class CharacterCommand():
         if not self.char:
             return ['You don\'t have an active character.\nTry this: ".d c n Name"']
         elif len(args) == 2 and (args[1] == 'refresh' or args[1] == 'r'):
+            if not self.char.refresh:
+                self.char.refresh = 3
             self.char.fate_points = self.char.refresh
         elif len(args) == 2 and args[1] == '+':
+            if not self.char.fate_points:
+                self.char.fate_points = 0
             self.char.fate_points += 1 if self.char.fate_points < 5 else 0
         elif len(args) == 2 and args[1] == '-':
+            if not self.char.fate_points:
+                self.char.fate_points = 2
             self.char.fate_points -= 1 if self.char.fate_points > 0 else 0
         self.save()
         return [f'Fate Points: {self.char.fate_points}']

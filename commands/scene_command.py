@@ -30,9 +30,9 @@ class SceneCommand():
             'character': self.character,
             'char': self.character,
             'c': self.character,
-            'members': self.member,
-            'member': self.member,
-            'm': self.member,
+            'players': self.player,
+            'player': self.player,
+            'p': self.player,
             'list': self.scene_list,
             'l': self.scene_list,
             'delete': self.delete_scene,
@@ -52,7 +52,7 @@ class SceneCommand():
         # Send messages
         return messages
 
-    def help(self):
+    def help(self, args):
         return [SCENE_HELP]
     
     def name(self, args):
@@ -110,13 +110,13 @@ class SceneCommand():
         command = CharacterCommand(self.ctx, args, self.sc.character)
         return command.run()
 
-    def member(self, args):
+    def player(self, args):
         if len(args) == 1:
             return ['No characters added']
         if not self.sc:
             return ['You don\'t have an active scene.\nTry this: ".d s name {name}"']
         elif args[1].lower() == 'list' or args[1].lower() == 'l':
-            return [self.sc.get_string_characters()]
+            return [self.sc.get_string_characters(self.channel)]
         elif args[1].lower() == 'delete' or args[1].lower() == 'd':
             char = ' '.join(args[2:])
             [self.sc.characters.remove(s) for s in self.sc.characters if char.lower() in s.lower()]
@@ -126,19 +126,22 @@ class SceneCommand():
             self.sc.save()
             return [
                 f'{char} removed from scene characters',
-                self.sc.get_string_characters()
+                self.sc.get_string_characters(self.channel)
             ]
         else:
             search = ' '.join(args[1:])
-            char = Character().find(self.user, search, self.channel.guild)
-            self.sc.characters.append(char.name)
+            char = Character().find(None, search, self.channel.guild)
+            if char:
+                self.sc.characters.append(str(char.id))
+            else:
+                return [f'***{search}*** not found. No character added to _{self.sc.name}_']
             if (not self.sc.created):
                 self.sc.created = datetime.datetime.utcnow()
             self.sc.updated = datetime.datetime.utcnow()
             self.sc.save()
             return [
                 f'Added {char.name} to scene characters',
-                self.sc.get_string_characters()
+                self.sc.get_string_characters(self.channel)
             ]
 
     def delete_scene(self, args):

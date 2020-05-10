@@ -39,11 +39,15 @@ This Command Line Interface (CLI) allows users to:
 * `.d compel {aspect} [...(c)compel {aspect}]` - compels aspect(s) and grants the active character a fate point
 
 ### Scenario Setup
-* `.d scenario help` - display active scenari
+* `.d scenario help` - display active scenario
 
 ### Scene Setup
 * `.d (s)cene` - display active scene
 * `.d s help` - display scene help
+
+### Zone Setup
+* `.d (z)oen` - display active zone
+* `.d z help` - display scene help
 
 ### User Setup:
 `.d u help` - display user help

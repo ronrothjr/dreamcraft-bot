@@ -72,9 +72,9 @@ This Command Line Interface (CLI) allows users to:
 * `.d c (a)spect (c)character` - set the current aspect as the active character
 * `.d c (s)tunt [(d)elete] {stunt}` - add/remove stunts
 * `.d c (s)tunt (c)character` - set the current stunt as the active character
-* `.d c (app)roach [(d)elete] {approach} {bonus}` - add/remove approach bonuses
+* `.d c (app)roach [(d)elete] {(ap)proach} {bonus} [{(ap)proach} {bonus}...]` - add/remove approach bonuses
 * `.d c (app)roach help` - display a list of approach descriptions
-* `.d c (sk)ill [(d)elete] {skill} {bonus}` - set/remove bonuses
+* `.d c (sk)ill [(d)elete] {(sk)ill} {bonus} [{(sk)ill} {bonus}...]` - set/remove bonuses
 * `.d c (sk)ill help` - display a list of skill descriptions
 
 ### Stress Help:

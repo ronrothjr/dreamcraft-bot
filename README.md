@@ -28,10 +28,6 @@ This Command Line Interface (CLI) allows users to:
 * `.d (c)haracter` - display active character
 * `.d c help` - display character help
 
-### Scene Setup
-* `.d (s)cene` - display active scene
-* `.d s help` - display scene help
-
 ### Roll Fate Dice
 * `.d r` - roll fate dice
 * `.d r (i)nvoke {aspect}` [...(i)nvoke {aspect}] - roll fate dice and apply
@@ -41,6 +37,13 @@ This Command Line Interface (CLI) allows users to:
 * `.d (av)ailable` - display invocable/compelable aspects
 * `.d (i)nvoke {aspect} (+2|reroll) [...(i)invoke {aspect} (+2|reroll)]` - invokes an aspect and uses the active character's fate point(s)
 * `.d compel {aspect} [...(c)compel {aspect}]` - compels aspect(s) and grants the active character a fate point
+
+### Scenario Setup
+* `.d scenario help` - display active scenari
+
+### Scene Setup
+* `.d (s)cene` - display active scene
+* `.d s help` - display scene help
 
 ### User Setup:
 `.d u help` - display user help
@@ -62,7 +65,9 @@ This Command Line Interface (CLI) allows users to:
 * `.d c (d)delete {name}` - removes a character
 * `.d c (f)ate {refresh|+|-}` - display, refresh, add or subtract fate points
 * `.d c (a)spect [(d)elete] {aspect}` - add/remove aspects
+* `.d c (a)spect (c)character` - set the current aspect as the active character
 * `.d c (s)tunt [(d)elete] {stunt}` - add/remove stunts
+* `.d c (s)tunt (c)character` - set the current stunt as the active character
 * `.d c (app)roach [(d)elete] {approach} {bonus}` - add/remove approach bonuses
 * `.d c (app)roach help` - display a list of approach descriptions
 * `.d c (sk)ill [(d)elete] {skill} {bonus}` - set/remove bonuses
@@ -90,6 +95,17 @@ This Command Line Interface (CLI) allows users to:
 * `.d c (con)sequence (d}elete {(co)ndition}` - remove condition
 * `.d c (con)sequence (t)itle FATE` -reset consequences to standard FATE configuration
 
+### Scenario Help:
+`.d scenario help` - display these instructions
+* `.d scenario` - display active scenario
+* `.d scenario (n)ame {name}` - add/display/set active scenario
+* `.d scenario (l)ist` - display list of scenarios
+* `.d scenario (desc)ription {description}` - set the description for the active scenario
+* `.d scenario (a)spect [(d)elete] {aspect}` - add/remove aspect for active scenario
+* `.d scenario (a)spect (c)character` - set the current aspect as the active character
+* `.d scenario (c)haracter [(d)elete] {character}` - add/remove character for active scenario
+* `.d scenario (d)delete {name}` - removes a scenario
+
 ### Scene Help:
 `.d s help` - display these instructions
 * `.d (s)cene` - display active scene
@@ -97,6 +113,7 @@ This Command Line Interface (CLI) allows users to:
 * `.d s (l)ist` - display list of scenes
 * `.d s (desc)ription {description}` - set the description for the active scene
 * `.d s (a)spect [(d)elete] {aspect}` - add/remove aspect for active scene
+* `.d s (a)spect (c)character` - set the current aspect as the active character
 * `.d s (c)haracter [(d)elete] {character}` - add/remove character for active scene
 * `.d s (d)delete {name}` - removes a scene
 

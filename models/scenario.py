@@ -1,13 +1,13 @@
-# scene.py
+# scenario.py
 import datetime
 from mongoengine import *
 from models.character import Character
 
-class Scene(Document):
+class Scenario(Document):
     name = StringField(required=True)
     description = StringField()
+    guild = StringField()
     channel_id = StringField()
-    scenario_id = StringField()
     character = ReferenceField(Character)
     active_user = StringField()
     characters = ListField(StringField())
@@ -17,37 +17,37 @@ class Scene(Document):
 
     @staticmethod
     def query():
-        return Scene.objects
+        return Scenario.objects
 
     @staticmethod
     def filter(**params):
-        return Scene.objects.filter(**params)
+        return Scenario.objects.filter(**params)
 
-    def create_new(self, user, channel_id, scenario_id, name, archived):
+    def create_new(self, user, channel_id, guild, name, archived):
         self.name = name
+        self.guild = guild
         self.channel_id = channel_id
-        self.scenario_id = scenario_id
         self.created = datetime.datetime.utcnow()
         self.updated = datetime.datetime.utcnow()
         self.save()
         return self
 
-    def find(self, channel_id, scenario_id, name, archived=False):
-        filter = Scene.objects(channel_id=channel_id, scenario_id=scenario_id, name__icontains=name, archived=archived)
-        scene = filter.first()
-        return scene
+    def find(self, channel_id, name, archived=False):
+        filter = Scenario.objects(channel_id=channel_id, name__icontains=name, archived=archived)
+        user = filter.first()
+        return user
 
-    def get_or_create(self, user, channel, scenario, name, archived=False):
-        scene = self.find(str(channel.id), str(scenario.id), name, archived)
-        if scene is None:
-            scene = self.create_new(user, str(channel.id), str(scenario.id), name, archived)
-            scene.character = Character().get_or_create(user, name, channel.guild, scene, 'Scene', archived)
-            scene.save()
-        return scene
+    def get_or_create(self, user, channel, name, archived=False):
+        scenario = self.find(str(channel.id), name, archived)
+        if scenario is None:
+            scenario = self.create_new(user, str(channel.id), channel.guild, name, archived)
+            scenario.character = Character().get_or_create(user, name, channel.guild, scenario, 'Scenario', archived)
+            scenario.save()
+        return scenario
 
     def get_by_id(self, id):
-        scene = Scene.objects(id=id).first()
-        return scene
+        scenario = Scenario.objects(id=id).first()
+        return scenario
 
     def set_active_user(self, user):
         self.active_user = str(user.id)
@@ -57,8 +57,8 @@ class Scene(Document):
         self.save()
 
     def get_by_channel(self, channel):
-        scenes = Scene.objects(channel_id=str(channel.id)).all()
-        return scenes
+        scenarios = Scenario.objects(channel_id=str(channel.id)).all()
+        return scenarios
 
     def get_string_characters(self, channel):
         characters = [Character.get_by_id(id) for id in self.characters]
@@ -67,7 +67,7 @@ class Scene(Document):
 
     def get_string(self, channel):
         name = f'***{self.name}***'
-        active = ' _(Active Scene)_ ' if str(self.id) == channel.active_scene else ''
+        active = ' _(Active Scenario)_ ' if str(self.id) == channel.active_scenario else ''
         description = f' - "{self.description}"' if self.description else ''
         characters = f'{self.get_string_characters()}' if self.characters else ''
         aspects = ''

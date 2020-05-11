@@ -12,6 +12,7 @@ load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 GUILD = os.getenv('DISCORD_GUILD')
 SETUP = Setup()
+START = SETUP.start
 HELP = SETUP.help
 
 connect('dreamcraft')
@@ -26,6 +27,10 @@ async def command_handler(ctx, *args):
     """
 
     if len(args) == 0:
+        await ctx.send(START)
+        return
+
+    if len(args) == 1 and args[0].lower() in ['h','help']:
         await ctx.send(HELP)
         return
     

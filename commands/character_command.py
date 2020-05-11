@@ -152,9 +152,9 @@ class CharacterCommand():
             if dialog_text:
                 dialog_string += dialog.get(dialog_text, '')
             else:
-                if char.high_concept and char.trouble and not char.skills:
-                    dialog_string += dialog.get('add_skills')
-                elif char.skills:
+                if not char.high_concept or not char.trouble:
+                    dialog_string += dialog.get('add_more_info')
+                if not char.skills:
                     dialog_string += dialog.get('add_aspects_and_stunts')
                 if not char.stress_titles:
                     dialog_string += dialog.get('manage_stress')
@@ -178,14 +178,32 @@ class CharacterCommand():
                 ]
             messages.append(self.dialog('active_character') + '\n')
         else:
-            if len(args) == 1 and args[1] == 'short':
+            if len(args) == 1 and args[1].lower() == 'short':
                 return [self.dialog('active_character_short')]
             char_name = ' '.join(args[1:])
-            self.char = Character().get_or_create(self.user, char_name, self.ctx.guild.name)
-            self.user.set_active_character(self.char)
-            self.save_user()
+            if len(args) > 1 and args[1] == 'rename':
+                char_name = ' '.join(args[2:])
+                if not self.char:
+                    return [
+                        'No active character or name provided\n\n',
+                        self.dialog('all')
+                    ]
+                else:
+                    char = Character().find(self.user, char_name, self.ctx.guild.name)
+                    if char:
+                        return [
+                            f'Cannot rename to _{char_name}_. Character already exists'
+                        ]
+                    else:
+                        self.char.name = char_name
+                        self.save()
+            else:
+                self.char = Character().get_or_create(self.user, char_name, self.ctx.guild.name)
+                self.user.set_active_character(self.char)
+                self.save_user()
             messages.append(self.dialog('active_character'))
             messages.append(f'\n\n_Is ***{self.char.name}*** not the character name you wanted?_\
+                ```css\n.d c rename NEW_NAME```_Want to remove ***{self.char.name}***?_\
                 ```css\n.d c delete {self.char.name}```')
             messages.append(self.dialog(''))
         return messages

@@ -528,7 +528,7 @@ class CharacterCommand():
             modified = copy.deepcopy(self.char.stress)
             if len(args) == 3:
                 if args[2].lower() not in stress_checks:
-                    messages.append(f'{args[2].lower()} is not a valid stress type - {stress_check_types}')
+                    messages.append(f'{args[2].lower()} is not a valid stress type for ***{self.char.name}*** - {stress_check_types}')
                     return messages
                 else:
                     stress_type_str = args[2].lower()
@@ -551,7 +551,7 @@ class CharacterCommand():
                 messages.append(f'No stress type provided - {stress_check_types}')
                 return messages
             if args[2].lower() not in stress_checks:
-                messages.append(f'{args[2].lower()} is not a valid stress type - {stress_check_types}')
+                messages.append(f'{args[2].lower()} is not a valid stress type for ***{self.char.name}*** - {stress_check_types}')
                 return messages
             if len(args) == 3:
                 messages.append('Missing stress shift number - 1,2,3')
@@ -582,7 +582,7 @@ class CharacterCommand():
                 messages.append('Missing stress shift number - 1,2,3')
                 return messages
             if args[1].lower() not in stress_checks:
-                messages.append(f'{args[1].lower()} is not a valid stress type - {stress_check_types}')
+                messages.append(f'{args[1].lower()} is not a valid stress type for ***{self.char.name}*** - {stress_check_types}')
                 return messages
             shift = args[2]
             if not shift.isdigit():
@@ -601,11 +601,12 @@ class CharacterCommand():
                 if shift_int > 0 and self.char.stress[stress_type][s][1] == O:
                     shift_int -= 1
                     modified[stress_type][s][1] = X
-            messages.append(f'***{self.char.name}*** absorbed {shift} {stress_type_name} stress')
-            self.char.stress = modified
-            messages.append(f'{self.char.get_string_stress()}')
+            if not check_user:
+                messages.append(f'***{self.char.name}*** absorbed {shift} {stress_type_name} stress')
+                self.char.stress = modified
+                messages.append(f'{self.char.get_string_stress()}')
         if check_user:
-            return []
+            return messages
         else:
             self.save()
         return messages

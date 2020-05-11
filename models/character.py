@@ -86,11 +86,18 @@ class Character(Document):
     @classmethod
     def get_by_parent(cls, parent, name='', category=''):
         characters = []
+        params = {}
+        if parent:
+            params.update(parent_id=str(parent.id))
         if name:
-            character = cls.filter(parent_id=str(parent.id), name__icontains=name, category=category).first()
+            params.update(name__icontains=name)
+        if category:
+            params.update(category=category)
+        if name:
+            character = cls.filter(**params).first()
             characters = [character] if character else []
         else:
-            characters = cls.filter(parent_id=str(parent.id), category=category).all()
+            characters = cls.filter(**params).all()
         return characters
 
     def create_new(self, user, name, guild, parent_id, category, archived):
@@ -138,16 +145,50 @@ class Character(Document):
         refresh = f' (_Refresh:_ {self.refresh})' if self.refresh else ''
         return f'{self.sep()}**Fate Points:** {self.fate_points}{refresh}' if self.fate_points is not None else ''
 
-    def get_available_aspects(self):
+    def get_invokable_objects(self, char=None):
+        char = char if char else self
+        available = []
+        if char.high_concept or char.trouble:
+            available.append({'char': char, 'parent': char})
+        
+        if char.category in ['Aspect', 'Stunt']:
+            available.append({'char': char, 'parent': char})
+        children = Character().get_by_parent(char, '', '')
+        for child in children:
+            if child.category in ['Aspect', 'Stunt']:
+                available.append({'char': child, 'parent': char})
+                available.extend(self.get_invokable_objects(child))
+        return available
+
+    def get_character_aspects(self, char=None):
+        char = char if char else self
+        available = self.get_invokable_objects(char)
+        aspects_strings = []
+        for obj in available:
+            if obj['char'].high_concept:
+                name = TextUtils.clean(obj['char'].name)
+                high_concept = TextUtils.clean(obj['char'].high_concept)
+                aspects_strings.append(f'***{high_concept}*** (High Concept of _\'{name}\'_)')
+            if obj['char'].trouble:
+                name = TextUtils.clean(obj['char'].name)
+                trouble = TextUtils.clean(obj['char'].trouble)
+                aspects_strings.append(f'***{trouble}*** (Trouble of _\'{name}\'_)')
+            if obj.category in ['Aspect','Stunt']:
+                name = TextUtils.clean(obj['char'].name)
+                category = TextUtils.clean(obj['char'].category)
+                parent = TextUtils.clean(obj['parent'].name)
+                aspects_strings.append(f'***{name}*** ({category} of _\'{parent}\'_)')
+        return aspects_strings
+
+    def get_available_aspects(self, parent=None):
         available = []
         if self.high_concept:
-            available.append(f'***{TextUtils.clean(self.high_concept)}*** (high concept of _\'{self.name}\'_)')
+            available.append(f'***{TextUtils.clean(self.high_concept)}*** (High Concept of _\'{self.name}\'_)')
         if self.trouble:
-            available.append(f'***{TextUtils.clean(self.trouble)}*** (trouble of _\'{self.name}\'_)')
-        char_aspects = [f'***{TextUtils.clean(a.name)}*** (aspect of _\'{self.name}\'_)' for a in Character().get_by_parent(self, '', 'Aspect')]
-        available.extend(char_aspects)
-        char_stunts = [f'***{TextUtils.clean(a.name)}*** (stunt of _\'{self.name}\'_)' for a in Character().get_by_parent(self, '', 'Stunt')]
-        available.extend(char_stunts)
+            available.append(f'***{TextUtils.clean(self.trouble)}*** (Trouble of _\'{self.name}\'_)')
+        if self.category in ['Aspect', 'Stunt']:
+            parent_string = f' of ***{parent.name}***' if parent else ''
+            available.append(f'***{TextUtils.clean(self.name)}*** ({self.category}{parent_string})')
         return available
 
     def get_string_aspects(self, user=None):

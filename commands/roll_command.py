@@ -2,6 +2,7 @@
 import datetime
 import random
 import copy
+from bson.objectid import ObjectId
 from models import Channel, Scenario, Scene, Zone, User, Character
 from commands import CharacterCommand
 from config.setup import Setup
@@ -32,7 +33,11 @@ class RollCommand():
         messages = [self.char.get_string_name(self.user)]
         errors = []
         last_roll = None
-        skill = self.char.last_roll['skill'] if self.command in ['reroll', 're'] else self.match_skill(self.args[1] if len(self.args) > 1 else '')
+        skill = ''
+        if self.command in ['reroll', 're']:
+            skill = self.char.last_roll['skill']
+        elif self.invoke_index and self.invoke_index[0] > 1:
+            skill = self.match_skill(self.args[1])
         invokes = self.get_invokes(skill)
         errors.extend([i['error'] for i in invokes if i['aspect_name'] == 'error'])
         compels = self.get_compels()
@@ -55,22 +60,31 @@ class RollCommand():
                 self.char.last_roll = last_roll
                 messages.append(self.char.last_roll['roll_text'])
         if invokes:
-            invokes_cost = sum([i['fate_points'] for i in invokes])
-            if invokes_cost < self.char.fate_points+1:
-                self.char.fate_points -= invokes_cost
-                if not last_roll:
-                    s = 's' if invokes_cost == 0 or invokes_cost > 1 else ''
-                    messages.append(''.join([f'Invoked "{i[0]}" and used {invokes_cost} fate point{s}' for i in invokes]))
+            char = self.get_parent_with_refresh(self.char)
+            invokes_cost = sum([invoke['fate_points'] for invoke in invokes])  
+            if char and invokes_cost >= char.fate_points + invokes_cost:
+                return [f'***{char.name}*** does not have enough fate points']
+            else:
                 for invoke in invokes:
+                    aspect_name = invoke['aspect_name']
+                    invoke_cost = invoke['fate_points']
+                    category = invoke['category']
+                    s = 's' if invoke_cost == 0 or invoke_cost > 1 else ''
+                    char.fate_points -= invoke_cost
+                    messages.append(f'***{char.name}*** invoked the _{aspect_name}_ {category} and used {invoke_cost} fate point{s}')
                     if invoke['stress_titles']:
-                        command = CharacterCommand(self.ctx, self.args, self.char)
                         for i in range(0, len(invoke['stress_titles'])):
-                            stress_args = ['st', invoke['stress_titles'][i], invoke['stress'][i][0][0]]
+                            # self.get_parent_with_stress(self.char, invoke['stress_titles'][i])
+                            stress_target = invoke['stress_targets'][i]
+                            stress_title = invoke['stress_titles'][i]
+                            stress_total = invoke['stress'][i][0][0]
+                            stress_args = ['st', stress_title, stress_total]
+                            command = CharacterCommand(self.ctx, self.args, stress_target)
                             stress_messages = command.stress(stress_args)
+                            if 'cannot absorb' in ''.join(stress_messages):
+                                return stress_messages
                             messages.extend(stress_messages)
                 messages.append(self.char.get_string_fate())
-            else:
-                return [f'***{self.char.name}*** does not have enough fate points']
         if compels:
             if len(compels) + self.char.fate_points <= 5:
                 self.char.fate_points += len(compels)
@@ -90,10 +104,11 @@ class RollCommand():
             if len(self.args) < i+1:
                 invokes.append(['error', f'An invoke is mssing an aspect'])
                 continue
-            aspect = self.find_aspect(self.args[i+1])
             aspect_name = ''
             skills = []
+            aspect = self.find_aspect(self.args[i+1])
             fate_points = None
+            stress_targets = []
             if aspect:
                 aspect_name = aspect.name
                 skills = aspect.skills if aspect.skills else []
@@ -101,10 +116,30 @@ class RollCommand():
                 stress = aspect.stress if aspect.stress else []
                 stress_titles = aspect.stress_titles if aspect.stress_titles else []
                 stress_errors = []
+                possible_targets = self.char.get_invokable_objects()
                 for i in range(0, len(stress_titles)):
-                    char = copy.deepcopy(self.char)
-                    command = CharacterCommand(self.ctx, self.args, char)
-                    stress_errors.extend(command.stress(['st', stress_titles[i], stress[i][0][0]], char))
+                    targets = copy.deepcopy(possible_targets)
+                    parent_stress = self.get_parent_with_stress(self.char, stress_titles[i])
+                    if parent_stress:
+                        targets.append({'char': parent_stress, 'parent': parent_stress})
+                    stress_targets.append(None)
+                    has_stress = []
+                    for target in targets:
+                        stress_target = copy.deepcopy(target['char'])
+                        command = CharacterCommand(self.ctx, self.args, stress_target)
+                        target_errors = command.stress(['st', stress_titles[i], stress[i][0][0]], stress_target)
+                        if target_errors:
+                            for error in target_errors:
+                                if 'cannot absorb' in error and aspect_name.lower() not in stress_target.name.lower():
+                                    has_stress.append(error)
+                                    continue
+                        else:
+                            stress_targets[i] = stress_target
+                            continue
+                    if stress_targets[i] is None:
+                        stress_errors.append(f'Cannot find a target to apply _{stress[i][0][0]} {stress_titles[i]}_ from **{aspect_name}**')
+                        if has_stress:
+                            [stress_errors.append(has) for has in has_stress]
                 [invokes.append({'aspect_name': 'error', 'error': s}) for s in stress_errors]
             else:
                 invokes.append({'aspect_name': 'error', 'error': f'_{self.args[i+1]}_ not found in availabe aspects'})
@@ -124,13 +159,14 @@ class RollCommand():
                 continue
             if self.command in ['reroll', 're']:
                 invokes.append({
-                    'aspect_name': aspect_name, 
+                    'aspect_name': aspect_name,
                     'bonus_str': '+2 bonus' if self.args[i+2] == '+2' else 'reroll',
                     'skills': skills,
                     'fate_points': fate_points,
                     'category': aspect.category,
                     'stress': stress,
-                    'stress_titles': aspect.stress_titles if aspect.stress_titles else []
+                    'stress_titles': aspect.stress_titles if aspect.stress_titles else [],
+                    'stress_targets': stress_targets
                 })
             else:
                 invokes.append({
@@ -140,7 +176,8 @@ class RollCommand():
                     'fate_points': fate_points,
                     'category': aspect.category,
                     'stress': stress,
-                    'stress_titles': stress_titles
+                    'stress_titles': stress_titles,
+                    'stress_targets': stress_targets
                 })
         return invokes
 
@@ -160,53 +197,59 @@ class RollCommand():
             compels.append(aspect)
         return compels
 
-    def get_available_invokes(self):
-        available = self.char.get_available_aspects() if self.char else []
-        scenario_aspects = self.scenario.character.get_available_aspects() if self.scenario else []
-        available.extend(scenario_aspects)
-        sc_aspects = self.sc.character.get_available_aspects() if self.sc else []
-        available.extend(sc_aspects)
-        zone_aspects = self.zone.character.get_available_aspects() if self.zone else []
-        available.extend(zone_aspects)
-        if self.sc and self.sc.characters:
-            for char_id in self.sc.characters:
-                char = Character.get_by_id(char_id)
-                if char and not char.name == self.char.name:
-                    available.extend(char.get_available_aspects())
-        return available
+    def get_parent_with_refresh(self, char):
+        if char:
+            if char.refresh:
+               return char
+            else:
+                if char.parent_id:
+                    parent = Character.get_by_id(char.parent_id)
+                    return self.get_parent_with_refresh(parent)
+        else:
+            return None
 
-    def get_available_list(self):
-        available = self.char.get_available_aspects() if self.char else []
-        scenario_aspects = self.scenario.character.get_available_aspects() if self.scenario else []
+    def get_parent_with_stress(self, char, stress):
+        if char:
+            if char.stress_titles and stress in char.stress_titles:
+               return char
+            else:
+                if char.parent_id:
+                    parent = Character.get_by_id(char.parent_id)
+                    return self.get_parent_with_refresh(parent)
+        else:
+            return None
+
+    def get_available_invokes(self, char):
+        available = char.get_invokable_objects() if char else []
+        scenario_aspects = self.scenario.character.get_invokable_objects() if self.scenario else []
         available.extend(scenario_aspects)
-        sc_aspects = self.sc.character.get_available_aspects() if self.sc else []
+        sc_aspects = self.sc.character.get_invokable_objects() if self.sc else []
         available.extend(sc_aspects)
-        zone_aspects = self.zone.character.get_available_aspects() if self.zone else []
+        zone_aspects = self.zone.character.get_invokable_objects() if self.zone else []
         available.extend(zone_aspects)
         if self.sc and self.sc.characters:
             for char_id in self.sc.characters:
                 char = Character.get_by_id(char_id)
+                if char and not char.name == char.name:
+                    available.extend(char.get_invokable_objects())
+        if self.zone and self.zone.characters:
+            for char_id in self.zone.characters:
+                char = Character.get_by_id(char_id)
                 if char and not char.name == self.char.name:
-                    available.extend(char.get_available_aspects())
+                    available.extend(char.get_invokable_objects())
         return available
 
     def available_aspects(self):
-        available = self.get_available_list()
-        return ['**Available aspects:**\n        ' + '\n        '.join([a for a in available]) if available else 'No available aspects to invoke']
+        aspect_list = self.get_available_invokes(self.char)
+        available = []
+        [available.extend(a['char'].get_available_aspects(a['parent'])) for a in aspect_list]
+        return ['**Available invokes:**\n        ' + '\n        '.join([a for a in available]) if available else 'No available aspects to invoke']
 
     def find_aspect(self, aspect):
         aspect = aspect.replace('_', ' ')
         aspects = []
         if self.char:
-            if self.zone:
-                self.zone.characters.append(str(self.zone.character.id)) 
-                aspects.extend(Character.filter(name__icontains=aspect, guild=self.channel.guild, parent_id__in=self.zone.characters, category__in=['Aspect', 'Stunt']).all())
-            if self.sc:
-                self.sc.characters.append(str(self.sc.character.id))
-                aspects.extend(Character.filter(name__icontains=aspect, guild=self.channel.guild, parent_id__in=self.sc.characters, category__in=['Aspect', 'Stunt']).all())
-            if self.scenario:
-                self.scenario.characters.append(str(self.scenario.character.id))
-                aspects.extend(Character.filter(name__icontains=aspect, guild=self.channel.guild, parent_id__in=self.scenario.characters, category__in=['Aspect', 'Stunt']).all())
+            aspects = [i['char'] for i in self.get_available_invokes(self.char) if aspect.lower() in i['char'].name.lower()]
             if aspects:
                 return aspects[0]
         return aspects

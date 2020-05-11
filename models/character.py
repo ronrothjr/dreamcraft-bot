@@ -162,7 +162,7 @@ class Character(Document):
 
     def get_string_skills(self):
         title = 'Approaches' if self.use_approaches else 'Skills'
-        skills_string = self.sep().join([f'{key}: {self.skills[key]}' for key in self.skills])
+        skills_string = self.sep().join([f'{self.skills[key]} - {key}' for key in self.skills])
         return f'{self.sep()}**{title}:**{self.sep()}{skills_string}' if skills_string else ''
 
     def get_string_stress(self):

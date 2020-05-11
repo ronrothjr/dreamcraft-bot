@@ -1,24 +1,18 @@
 # config.py
 
 class Setup():
-    help = 'Dreamcraft Bot:\n\.d - display these instructions\n.d cheat {search} - display condensed game instructions\n\
-            \nUser Setup:\n\
-            .d (u)ser - display user info\n\
-            .d u help - display user help\n\
-            \nCharacter Setup:\n\
-            .d (c)haracter - display active character\n\
-            .d c help - display character help\n\
-            \nRoll Help\n\
-            .d (r)oll help - display roll help\n\
-            \nScenario Setup\n\
-            .d (s)cenario - display active scenario\n\
-            .d s help - display scenario help\n\
-            \nScene Setup\n\
-            .d (s)cene - display active scene\n\
-            .d s help - display scene help\n\
-            \nZone Setup\n\
-            .d (z)one - display active zone\n\
-            .d z help - display zone help'
+    help = '***Dreamcraft Bot:***\
+            \n```css\n/* Display these instructions */\n.d\n/* Display condensed game instructions */\n.d cheat\n/*\nOR\nDisplay condensed game instructions matching search term\n*/\n.d cheat SEARCH_TEXT```\
+            \n***ADDITIONAL INSTRUCTIONS***\n\
+            \n**User Setup:**```css\n.d u help\n/* Display user info */\n.d user```\
+            \n**Character Setup:**```css\n.d c help\n/* Display active character */\n.d character\n.d c```\
+            \n**Roll Help**```css\n.d roll help```\
+            \n**Scenario Setup**```css\n.d scenario help\n/* Display active scenario */\n.d scenario```\
+            \n**Scene Setup**```css\n.d s help\n/* Display active scene */\n.d scene```\
+            \n**Zone Setup**```css\n.d z help\n/* Display active zone */\n.d zone```\
+            \n===============================\
+            \n*** >>>>>>>>>> START HERE <<<<<<<<<< ***\
+            \n**CREATE A CHARACTER**```css\n.d character YOUR_CHARACTER\'S_NAME```==============================='
 
     roll_help = 'd r help = display rol help\n\
             \nRoll Fate Dice\n\

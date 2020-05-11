@@ -39,7 +39,6 @@ class CharacterCommand():
             'list': self.character_list,
             'l': self.character_list,
             'delete': self.delete_character,
-            'd': self.delete_character,
             'description': self.description,
             'desc': self.description,
             'high': self.high_concept,
@@ -78,7 +77,7 @@ class CharacterCommand():
         return messages
 
     def help(self, args):
-        return [CHARACTER_HELP]
+        return [self.dialog('all')]
 
     def parent(self, args):
         messages = []
@@ -110,16 +109,86 @@ class CharacterCommand():
             self.user.updated = datetime.datetime.utcnow()
             self.user.save()
 
+    def dialog(self, dialog_text, char=None):
+        char = char if char else self.char
+        name = char.name if char else 'your character'
+        get_string = char.get_string(self.user) if char else ''
+        get_short_string = char.get_short_string(self.user) if char else ''
+        dialog = {
+            'create_character': '**CREATE or SELECT A CHARACTER**```css\n.d character YOUR_CHARACTER\'S_NAME```',
+            'active_character': f'***THIS IS YOUR ACTIVE CHARACTER:***\n:point_down:\n\n{get_string}',
+            'active_character_short': f'***THIS IS YOUR ACTIVE CHARACTER:***\n:point_down:\n\n{get_short_string}',
+            'add_more_info': f'Add more information about ***{name}***```css\n.d c description CHARACTER_DESCRIPTION\n.d c high concept HIGH_CONCEPT\n.d c trouble TROUBLE```',
+            'add_skills': '' +
+                f'Add approaches or skills for ***{name}***```css\n.d c approach Forceful +4 Clever +2 Quick +1 ...\n/* GET LIST OF APPROACHES or ADD YOUR OWN */\n.d c approach help\n\n\n.d c skill Will +4 Rapport +2 Lore +1 ...\n/* GET LIST OF SKILLS or ADD YOUR OWN */\n.d c skill help```',
+            'add_aspects_and_stunts': '' +
+                f'Add an aspect or two for ***{name}***```css\n.d c aspect ASPECT_NAME```' +
+                f'Give  ***{name}*** some cool stunts```css\n.d c stunt STUNT_NAME```',
+            'edit_active_aspect': '' +
+                f'***You can edit this aspect as if it were a character***```css\n.d c aspect character\n/* THIS WILL SHOW THE ASPECT IS THE ACTIVE CHARACTER */\n.d c```',
+            'edit_active_stunt': '' +
+                f'***You can edit this stunt as if it were a character***```css\n.d c stunt character\n/* THIS WILL SHOW THE STUNT IS THE ACTIVE CHARACTER */\n.d c```',
+            'manage_stress': '' +
+                f'***Modify the stress tracks.\n' +
+                'Here\'s an example to add and remove stress tracks***' +
+                '```css\n.d c stress title 4 Ammo\n.d c stress title delete Ammo\n.d c stress title FATE```',
+            'manage_conditions': '' +
+                f'***Modify the conditions tracks.\n' +
+                'Here\'s an example to add and remove consequence tracks***' +
+                '```css\n.d c consequences title 2 Injured\n.d c consequences title delete Injured\n.d c consequences title FATE```',
+            'go_back_to_parent': '' +
+                f'\n\n***You can GO BACK to the parent character, aspect, or stunt***```css\n.d c parent```'
+        }
+        dialog_string = ''
+        if dialog_text == 'all':
+            if not char:
+                dialog_string += dialog.get('create_character')
+            dialog_string += dialog.get('add_more_info')
+            dialog_string += dialog.get('add_skills')
+            dialog_string += dialog.get('add_aspects_and_stunts')
+            dialog_string += dialog.get('manage_stress')
+            dialog_string += dialog.get('manage_conditions')
+        elif char.category == 'Character':
+            if dialog_text:
+                dialog_string += dialog.get(dialog_text, '')
+            else:
+                if char.high_concept and char.trouble and not char.skills:
+                    dialog_string += dialog.get('add_skills')
+                elif char.skills:
+                    dialog_string += dialog.get('add_aspects_and_stunts')
+                if not char.stress_titles:
+                    dialog_string += dialog.get('manage_stress')
+                if not char.consequences_titles:
+                    dialog_string += dialog.get('manage_conditions')
+        else:
+            dialog_string += dialog.get('active_character')
+            dialog_string += dialog.get('go_back_to_parent')
+            dialog_string += dialog.get('add_aspects_and_stunts')
+            dialog_string += dialog.get('manage_stress')
+            dialog_string += dialog.get('manage_conditions')
+        return dialog_string
+
     def name(self, args):
+        messages = []
         if len(args) == 0:
             if not self.char:
-                return ['No active character or name provided']
+                return [
+                    'No active character or name provided\n\n',
+                    self.dialog('all')
+                ]
+            messages.append(self.dialog('active_character') + '\n')
         else:
+            if len(args) == 1 and args[1] == 'short':
+                return [self.dialog('active_character_short')]
             char_name = ' '.join(args[1:])
             self.char = Character().get_or_create(self.user, char_name, self.ctx.guild.name)
             self.user.set_active_character(self.char)
             self.save_user()
-        return [self.char.get_string(self.user)]
+            messages.append(self.dialog('active_character'))
+            messages.append(f'\n\n_Is ***{self.char.name}*** not the character name you wanted?_\
+                ```css\n.d c delete {self.char.name}```')
+            messages.append(self.dialog(''))
+        return messages
 
     def character_list(self, args):
         characters = Character().get_by_user(self.user)
@@ -149,27 +218,29 @@ class CharacterCommand():
             messages.append(f'***{search}*** removed')
             if parent_id:
                 messages.extend(self.get_parent_by_id(parent_id))
-            return messages
+        return messages
 
     def description(self, args):
+        messages = []
         if len(args) == 1:
-            return ['No description provided']
+            messages.append('No description provided')
         if not self.char:
-            return ['You don\'t have an active character.\nTry this: ".d c n Name"']
+            messages.append('You don\'t have an active character.\nTry this: ".d c n Name"')
         else:
             description = ' '.join(args[1:])
             self.char.description = description
             self.save()
-            return [
-                f'Description updated to {description}',
-                self.char.get_short_string(self.user)
-            ]
+            messages.append(f'Description updated to {description}\n')
+            messages.append(self.dialog('active_character_short') + '\n')
+            messages.append(self.dialog(''))
+        return messages
 
     def high_concept(self, args):
+        messages = []
         if len(args) == 2 or (len(args) == 1 and args[1].lower() != 'concept'):
-            return ['No high concept provided']
+            messages.append('No high concept provided')
         if not self.char:
-            return ['You don\'t have an active character.\nTry this: ".d c n Name"']
+            messages.append('You don\'t have an active character.\nTry this: ".d c n Name"')
         else:
             hc = ''
             if args[1].lower() == 'concept':
@@ -178,24 +249,25 @@ class CharacterCommand():
                 hc = ' '.join(args[1:])
             self.char.high_concept = hc
             self.save()
-            return [
-                f'High Concept updated to {hc}',
-                self.char.get_short_string(self.user)
-            ]
+            messages.append(f'High Concept updated to _{hc}_\n')
+            messages.append(self.dialog('active_character_short') + '\n')
+            messages.append(self.dialog(''))
+        return messages
 
     def trouble(self, args):
+        messages = []
         if len(args) == 1:
-            return ['No trouble provided']
+            messages.append('No trouble provided')
         if not self.char:
-            return ['You don\'t have an active character.\nTry this: ".d c n Name"']
+            messages.append('You don\'t have an active character.\nTry this: ".d c n Name"')
         else:
             trouble = ' '.join(args[1:])
             self.char.trouble = trouble
             self.save()
-            return [
-                f'Trouble updated to {trouble}',
-                self.char.get_short_string(self.user)
-            ]
+            messages.append(f'Trouble updated to _{trouble}_\n')
+            messages.append(self.dialog('active_character_short') + '\n')
+            messages.append(self.dialog(''))
+        return messages
 
     def fate(self, args):
         if not self.char:
@@ -247,7 +319,8 @@ class CharacterCommand():
                         messages.append(f'Updated {skill} to {val}')
                     self.char.use_approaches = True
                     self.save()
-                messages.append(self.char.get_string_skills())
+                messages.append(self.char.get_string_skills() + '\n')
+                messages.append(self.dialog(''))
         return messages
 
     def skill(self, args):
@@ -279,7 +352,8 @@ class CharacterCommand():
                     self.char.use_approaches = False
                     self.save()
                     messages.append(f'Updated {skill} to {args[2]}')                
-                messages.append(self.char.get_string_skills())
+                messages.append(self.char.get_string_skills() + '\n')
+                messages.append(self.dialog(''))
         return messages
 
     def aspect(self, args):
@@ -301,6 +375,8 @@ class CharacterCommand():
             messages.append(f'"{aspect}" removed from aspects')
             messages.append(self.char.get_string_aspects(self.user))
         elif args[1].lower() in ['character', 'char', 'c']:
+            if not self.asp:
+                return ['You don\'t have an active aspect.\nTry this: ".d c a {aspect}"']
             self.user.active_character = str(self.asp.id)
             self.save_user()
             self.char.active_aspect = str(self.asp.id)
@@ -313,7 +389,8 @@ class CharacterCommand():
             self.asp = Character().get_or_create(self.user, aspect, self.ctx.guild.name, self.char, 'Aspect')
             self.char.active_aspect = str(self.asp.id)
             self.save()
-            messages.append(self.char.get_string_aspects(self.user))
+            messages.append(self.char.get_string_aspects(self.user) + '\n')
+            messages.append(self.dialog('edit_active_aspect'))
         return messages
 
     def stunt(self, args):
@@ -348,7 +425,8 @@ class CharacterCommand():
             self.char.active_stunt = str(self.stu.id)
             self.char.active_character = str(self.stu.id)
             self.save()
-            messages.append(self.char.get_string_stunts(self.user))
+            messages.append(self.char.get_string_stunts(self.user) + '\n')
+        messages.append(self.dialog(''))
         return messages
 
     def get_available_stress(self, stress_type):

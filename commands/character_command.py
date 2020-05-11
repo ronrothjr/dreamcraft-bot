@@ -154,8 +154,9 @@ class CharacterCommand():
             else:
                 if not char.high_concept or not char.trouble:
                     dialog_string += dialog.get('add_more_info')
-                if not char.skills:
-                    dialog_string += dialog.get('add_aspects_and_stunts')
+                if not char.skills:                    
+                    dialog_string += dialog.get('add_skills')
+                dialog_string += dialog.get('add_aspects_and_stunts')
                 if not char.stress_titles:
                     dialog_string += dialog.get('manage_stress')
                 if not char.consequences_titles:

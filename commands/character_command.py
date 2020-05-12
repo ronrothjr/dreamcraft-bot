@@ -1,9 +1,11 @@
 # character_command.py
+import traceback
 import datetime
 import copy
 from bson.objectid import ObjectId
 from models import User, Character, Stunt
 from config.setup import Setup
+from utils.text_utils import TextUtils
 
 SETUP = Setup()
 APPROACHES = SETUP.approaches
@@ -30,51 +32,56 @@ class CharacterCommand():
         self.stu = Character().get_by_id(self.char.active_stunt) if self.char and self.char.active_stunt else None
 
     def run(self):
-        switcher = {
-            'help': self.help,
-            'parent': self.parent,
-            'p': self.parent,
-            'name': self.name,
-            'n': self.name,
-            'list': self.character_list,
-            'l': self.character_list,
-            'delete': self.delete_character,
-            'description': self.description,
-            'desc': self.description,
-            'high': self.high_concept,
-            'hc': self.high_concept,
-            'trouble': self.trouble,
-            't': self.trouble,
-            'fate': self.fate,
-            'f': self.fate,
-            'aspect': self.aspect,
-            'a': self.aspect,
-            'boost': self.aspect,
-            'b': self.aspect,
-            'approach': self.approach,
-            'app': self.approach,
-            'skill': self.skill,
-            'sk': self.skill,
-            'stunt': self.stunt,
-            's': self.stunt,
-            'stress': self.stress,
-            'st': self.stress,
-            'consequence': self.consequence,
-            'con': self.consequence
-        }
-        # Get the function from switcher dictionary
-        if self.command in switcher:
-            func = switcher.get(self.command, lambda: self.name)
-            # Execute the function
-            messages = func(self.args)
-        else:
-            self.args = ('n',) + self.args
-            self.command = 'n'
-            func = self.name
-            # Execute the function
-            messages = func(self.args)
-        # Send messages
-        return messages
+        try:
+            switcher = {
+                'help': self.help,
+                'parent': self.parent,
+                'p': self.parent,
+                'name': self.name,
+                'n': self.name,
+                'list': self.character_list,
+                'l': self.character_list,
+                'delete': self.delete_character,
+                'description': self.description,
+                'desc': self.description,
+                'high': self.high_concept,
+                'hc': self.high_concept,
+                'trouble': self.trouble,
+                't': self.trouble,
+                'fate': self.fate,
+                'f': self.fate,
+                'aspect': self.aspect,
+                'a': self.aspect,
+                'boost': self.aspect,
+                'b': self.aspect,
+                'approach': self.approach,
+                'app': self.approach,
+                'skill': self.skill,
+                'sk': self.skill,
+                'stunt': self.stunt,
+                's': self.stunt,
+                'stress': self.stress,
+                'st': self.stress,
+                'consequence': self.consequence,
+                'con': self.consequence,
+                'custom': self.custom
+            }
+            # Get the function from switcher dictionary
+            if self.command in switcher:
+                func = switcher.get(self.command, lambda: self.name)
+                # Execute the function
+                messages = func(self.args)
+            else:
+                self.args = ('n',) + self.args
+                self.command = 'n'
+                func = self.name
+                # Execute the function
+                messages = func(self.args)
+            # Send messages
+            return messages
+        except Exception as err:
+            traceback.print_exc()
+            return list(err.args)
 
     def help(self, args):
         return [self.dialog('all')]
@@ -212,7 +219,7 @@ class CharacterCommand():
     def character_list(self, args):
         characters = Character().get_by_user(self.user)
         if len(characters) == 0:
-            return ['You don\'t have any characters.\nTry this: ".d c n Name"']
+            return ['You don\'t have any characters.\nTry this: ```css\n.d c CHARACTER_NAME```']
         else:
             return [f'{c.get_short_string(self.user)}\n' for c in characters]
 
@@ -228,7 +235,7 @@ class CharacterCommand():
             search = ' '.join(args[1:])
             self.char = Character().find(self.user, search, self.ctx.guild.name, None, 'Character', False)
         if not self.char:
-            return [f'{search} was not found. No changes made.\nTry this: ".d c n Name"']
+            return [f'{search} was not found. No changes made.\nTry this: ```css\n.d c CHARACTER_NAME```']
         else:
             search = self.char.name
             parent_id = str(self.char.parent_id) if self.char.parent_id else ''
@@ -244,7 +251,7 @@ class CharacterCommand():
         if len(args) == 1:
             messages.append('No description provided')
         if not self.char:
-            messages.append('You don\'t have an active character.\nTry this: ".d c n Name"')
+            messages.append('You don\'t have an active character.\nTry this: ```css\n.d c CHARACTER_NAME```')
         else:
             description = ' '.join(args[1:])
             self.char.description = description
@@ -259,7 +266,7 @@ class CharacterCommand():
         if len(args) == 2 or (len(args) == 1 and args[1].lower() != 'concept'):
             messages.append('No high concept provided')
         if not self.char:
-            messages.append('You don\'t have an active character.\nTry this: ".d c n Name"')
+            messages.append('You don\'t have an active character.\nTry this: ```css\n.d c CHARACTER_NAME```')
         else:
             hc = ''
             if args[1].lower() == 'concept':
@@ -278,7 +285,7 @@ class CharacterCommand():
         if len(args) == 1:
             messages.append('No trouble provided')
         if not self.char:
-            messages.append('You don\'t have an active character.\nTry this: ".d c n Name"')
+            messages.append('You don\'t have an active character.\nTry this: ```css\n.d c CHARACTER_NAME```')
         else:
             trouble = ' '.join(args[1:])
             self.char.trouble = trouble
@@ -290,21 +297,58 @@ class CharacterCommand():
 
     def fate(self, args):
         if not self.char:
-            return ['You don\'t have an active character.\nTry this: ".d c n Name"']
-        elif len(args) == 2 and (args[1] == 'refresh' or args[1] == 'r'):
+            return ['You don\'t have an active character.\nTry this: ```css\n.d c CHARACTER_NAME```']
+        elif args[1].lower() in ['refresh', 'r']:
             if not self.char.refresh:
                 self.char.refresh = 3
+            refresh = int(args[2]) if len(args) == 3 and args[2].isdigit() else self.char.refresh
+            self.char.refresh = refresh
             self.char.fate_points = self.char.refresh
-        elif len(args) == 2 and args[1] == '+':
+        elif args[1] == '+':
             if not self.char.fate_points:
                 self.char.fate_points = 0
-            self.char.fate_points += 1 if self.char.fate_points < 5 else 0
-        elif len(args) == 2 and args[1] == '-':
+            points = int(args[2]) if len(args) == 3 and args[2].isdigit() else 1
+            self.char.fate_points += points if self.char.fate_points < 5 else 0
+        elif args[1] == '-':
             if not self.char.fate_points:
                 self.char.fate_points = 2
-            self.char.fate_points -= 1 if self.char.fate_points > 0 else 0
+            points = int(args[2]) if len(args) == 3 and args[2].isdigit() else 1
+            self.char.fate_points += points if self.char.fate_points < 5 else 0
         self.save()
         return [f'Fate Points: {self.char.fate_points}']
+
+    def custom(self, args):
+        if not self.char:
+            raise Exception('You don\'t have an active character.\nTry this: ```css\n.d c CHARACTER_NAME```')
+        messages = []
+        if len(args) == 1:
+            raise Exception('No custom name provided. Try this: ```css\n.d c custom CUSTOM_NAME\n/* EXAMPLE:\n.d c custom Home World */```')
+        if len(args) == 2:
+            raise Exception('No custom property information provided. Try this: ```css\n.d c custom CUSTOM_NAME_ABBREVIATION CUSTOM_PROPERTY_INFORMATION\n/* EXAMPLE:\n.d c custom Home Earth (alternate history) */```')
+        if args[1] in ['delete', 'd']:
+            custom_properties = copy.deepcopy(self.char.custom_properties) if self.char.custom_properties else {}
+            display_name = TextUtils.clean(args[2])
+            property_name = display_name.lower().replace(' ', '_')
+            if property_name not in custom_properties:
+                raise Exception('***{self.char.name}*** does not have a custom property named {display_name}')
+            custom_properties.pop(property_name, None)
+        else:
+            display_name = TextUtils.clean(args[1])
+            property_name = display_name.lower().replace(' ', '_')
+            property_value = ' '.join(args[2:])
+            custom_properties = copy.deepcopy(self.char.custom_properties) if self.char.custom_properties else {}
+            custom_properties[property_name] = {
+                'display_name': display_name,
+                'property_value': property_value
+            }
+        self.char.custom_properties = custom_properties
+        self.save()
+        messages.append(self.dialog('active_character'))
+        messages.append(f'\n\n_Is ***{self.char.name}*** not the character name you wanted?_\
+            ```css\n.d c rename NEW_NAME```_Want to remove ***{self.char.name}***?_\
+            ```css\n.d c delete {self.char.name}```')
+        messages.append(self.dialog(''))
+        return messages
 
     def approach(self, args):
         messages = []
@@ -315,7 +359,7 @@ class CharacterCommand():
             messages.append('Approach syntax: .d (app)roach {approach} {bonus}')
         else:
             if not self.char:
-                messages.append('You don\'t have an active character.\nTry this: ".d c n Name"')
+                messages.append('You don\'t have an active character.\nTry this: ```css\n.d c CHARACTER_NAME```')
             else:
                 if args[1].lower() == 'delete' or args[1].lower() == 'd':
                     skill = [s for s in APPROACHES if args[2][0:2].lower() == s[0:2].lower()]
@@ -351,7 +395,7 @@ class CharacterCommand():
             messages.append('Skill syntax: .d (sk)ill {skill} {bonus}')
         else:
             if not self.char:
-                messages.append('You don\'t have an active character.\nTry this: ".d c n Name"')
+                messages.append('You don\'t have an active character.\nTry this: ```css\n.d c CHARACTER_NAME```')
             else:
                 if args[1].lower() == 'delete' or args[1].lower() == 'd':
                     skill = [s for s in SKILLS if args[2][0:2].lower() == s[0:2].lower()]
@@ -379,10 +423,10 @@ class CharacterCommand():
         messages = []
         if len(args) == 1:
             if not self.asp:
-                return ['You don\'t have an active aspect.\nTry this: ".d c a {aspect}"']
+                return ['You don\'t have an active aspect.\nTry this: ```css\n.d c a {aspect}```']
             messages.append(f'{self.asp.get_string(self.char)}')
         if not self.char:
-            return ['You don\'t have an active character.\nTry this: ".d c n Name"']
+            return ['You don\'t have an active character.\nTry this: ```css\n.d c CHARACTER_NAME```']
         elif args[1].lower() == 'list':
             return [self.char.get_string_aspects(self.user)]
         elif args[1].lower() == 'delete' or args[1].lower() == 'd':
@@ -395,7 +439,7 @@ class CharacterCommand():
             messages.append(self.char.get_string_aspects(self.user))
         elif args[1].lower() in ['character', 'char', 'c']:
             if not self.asp:
-                return ['You don\'t have an active aspect.\nTry this: ".d c a {aspect}"']
+                return ['You don\'t have an active aspect.\nTry this: ```css\n.d c a {aspect}```']
             self.user.active_character = str(self.asp.id)
             self.save_user()
             self.char.active_aspect = str(self.asp.id)
@@ -416,10 +460,10 @@ class CharacterCommand():
         messages = []
         if len(args) == 1:
             if not self.stu:
-                return ['You don\'t have an active stunt.\nTry this: ".d c a {aspect}"']
+                return ['You don\'t have an active stunt.\nTry this: ```css\n.d c a {aspect}```']
             messages.append(f'{self.stu.get_string(self.char)}')
         if not self.char:
-            return ['You don\'t have an active character.\nTry this: ".d c n Name"']
+            return ['You don\'t have an active character.\nTry this: ```css\n.d c CHARACTER_NAME```']
         elif args[1].lower() == 'list':
             return [self.char.get_string_stunts(self.user)]
         elif args[1].lower() == 'delete' or args[1].lower() == 'd':
@@ -466,7 +510,7 @@ class CharacterCommand():
         [stress_checks.append(t.lower()) for t in stress_titles]
         stress_check_types = ' or '.join([f'({t[0:2 ].lower()}){t[2:].lower()}' for t in stress_titles])
         if not self.char:
-            messages.append('You don\'t have an active character.\nTry this: ".d c n Name"')
+            messages.append('You don\'t have an active character.\nTry this: ```css\n.d c CHARACTER_NAME```')
             return messages
         if len(args) == 1:
             messages.append(f'{self.char.get_string_name(self.user)}{self.char.get_string_stress()}')
@@ -505,6 +549,12 @@ class CharacterCommand():
                 elif total == "FATE":
                     self.char.stress = STRESS
                     self.char.stress_titles = None
+                elif total == "FAE":
+                    self.char.stress = SETUP.stress_FAE
+                    self.char.stress_titles = SETUP.stress_titles_FAE
+                elif total == "Core":
+                    self.char.stress = SETUP.stress_Core
+                    self.char.stress_titles = SETUP.stress_titles_Core
                 else:
                     if not total.isdigit():
                         messages.append('Stress shift must be a positive integer')
@@ -554,8 +604,7 @@ class CharacterCommand():
                 messages.append(f'{args[2].lower()} is not a valid stress type for ***{self.char.name}*** - {stress_check_types}')
                 return messages
             if len(args) == 3:
-                messages.append('Missing stress shift number - 1,2,3')
-                return messages
+                args = args + ('1',)
             if len(args) == 4:
                 shift = args[3]
                 if not shift.isdigit():
@@ -579,8 +628,7 @@ class CharacterCommand():
                 messages.append(f'{self.char.get_string_stress()}')
         else:
             if len(args) == 2:
-                messages.append('Missing stress shift number - 1,2,3')
-                return messages
+                args = args + ('1',)
             if args[1].lower() not in stress_checks:
                 messages.append(f'{args[1].lower()} is not a valid stress type for ***{self.char.name}*** - {stress_check_types}')
                 return messages

@@ -37,6 +37,8 @@ class RollCommand():
         try:
             if len(self.args) > 1 and self.args[1] == 'help':
                 raise Exception(ROLL_HELP)
+            if not self.char:
+                raise Exception('No active character. Try this: ```css\n.d c CHARACTER_NAME```')
             self.messages = [self.char.get_string_name(self.user)]
             self.last_roll = None
             # parse skill from args

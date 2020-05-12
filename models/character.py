@@ -43,6 +43,7 @@ class Character(Document):
     consequences_shifts = ListField()
     is_boost = BooleanField()
     has_stress = BooleanField()
+    custom_properties = DynamicField()
     archived = BooleanField(default=False)
     created = DateTimeField(required=True)
     updated = DateTimeField(required=True)
@@ -145,6 +146,15 @@ class Character(Document):
         refresh = f' (_Refresh:_ {self.refresh})' if self.refresh else ''
         return f'{self.sep()}**Fate Points:** {self.fate_points}{refresh}' if self.fate_points is not None else ''
 
+    def get_string_custom(self):
+        custom = []
+        if self.custom_properties:
+            for cp in self.custom_properties:
+                display_name = self.custom_properties[cp]['display_name']
+                property_value = self.custom_properties[cp]['property_value']
+                custom.append(f'**{display_name}:** {property_value}')
+        return self.sep() + self.sep().join([c for c in custom]) if self.custom_properties else ''
+
     def get_invokable_objects(self, char=None):
         char = char if char else self
         available = []
@@ -239,12 +249,13 @@ class Character(Document):
         description = f'{self.sep()}"{self.description}"' if self.description else ''
         high_concept = f'{self.sep()}**High Concept:** {self.high_concept}' if self.high_concept else ''
         trouble = f'{self.sep()}**Trouble:** {self.trouble}' if self.trouble else ''
+        custom = self.get_string_custom()
         aspects = self.get_string_aspects(user)
         stunts = self.get_string_stunts(user)
         skills = self.get_string_skills()
         stress = self.get_string_stress()
         consequenses = self.get_string_consequences()
-        return f'{name}{description}{high_concept}{trouble}{fate_points}{skills}{stress}{aspects}{stunts}{consequenses}'
+        return f'{name}{description}{high_concept}{trouble}{fate_points}{custom}{skills}{stress}{aspects}{stunts}{consequenses}'
 
     def get_short_string(self, user=None):
         name = self.get_string_name(user)

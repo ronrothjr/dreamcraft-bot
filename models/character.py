@@ -150,9 +150,6 @@ class Character(Document):
         available = []
         if char.high_concept or char.trouble:
             available.append({'char': char, 'parent': char})
-        
-        if char.category in ['Aspect', 'Stunt']:
-            available.append({'char': char, 'parent': char})
         children = Character().get_by_parent(char, '', '')
         for child in children:
             if child.category in ['Aspect', 'Stunt']:

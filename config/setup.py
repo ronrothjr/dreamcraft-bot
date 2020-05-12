@@ -306,7 +306,11 @@ class Setup():
     x = '[X]'
     o = '[   ]'
     stress = [[['1', o],['1', o],['1', o]],[['1', o],['1', o],['1', o]]]
+    stress_FAE = [[['1', o]],[['2', o]],[['3', o]]]
+    stress_Core = [[['1', o],['1', o]],[['1', o],['1', o]]]
     stress_titles = ['Physical', 'Mental']
+    stress_titles_FAE = ['1', '2', '3']
+    stress_titles_Core = ['Physical', 'Mental']
     consequences = [['2', o],['4', o],['6', o]]
     consequences_titles = ['Mild', 'Moderate', 'Severe']
     consequence_shifts = ['2', '4', '6']

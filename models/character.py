@@ -264,3 +264,85 @@ class Character(Document):
         high_concept = f'{self.nl()}**High Concept:** {self.high_concept}' if self.high_concept else ''
         trouble = f'{self.nl()}**Trouble:** {self.trouble}' if self.trouble else ''
         return f'{name}{description}{high_concept}{trouble}{fate_points}'
+
+    def get_guilds(self, options={}):
+        pipeline = []
+        match = {}
+        if 'guild' in options and options['guild'] and len(options['guild']) > 0:
+            match.update(guild={"$in":options['guild']})
+        if 'user' in options and options['user'] and len(options['user']) > 0:
+            match.update(user={"$in":options['user']})
+        if match:
+            pipeline.append({"$match": match})
+        pipeline.append({ "$group": {"_id": {"guild": "$guild"}}})
+        pipeline.append({"$project": {"guild": "$_id.guild"}})
+        pipeline.append({"$sort": {"guild": 1}})
+        guilds = list(Character.objects.aggregate(*pipeline))
+        return guilds
+
+    def get_stats(self, guild):
+        guild = '' if guild.lower() == 'all' else guild
+
+        pipeline = []
+        if guild:
+            pipeline.append({"$match": {"guild": guild}})
+        pipeline.append({ "$group": {"_id": {"guild": "$guild"}}})
+        pipeline.append({"$project": {"guild": "$_id.guild"}})
+        pipeline.append({"$sort": {"guild": 1}})
+        guilds = list(Character.objects.aggregate(*pipeline))
+
+        pipeline = []
+        pipeline.append({"$match": {'category': {"$in":['Scenario']}}})
+        pipeline.append({ "$group": {"_id": {"guild": "$guild"}, "total": {"$sum": 1}}})
+        pipeline.append({"$project": {"guild": "$_id.guild", "total": "$total"}})
+        pipeline.append({"$sort": {"guild": 1, "total": 1}})
+        scenarios_per_guild = list(Character.objects.aggregate(*pipeline))
+
+        pipeline = []
+        pipeline.append({"$match": {'category': {"$in":['Scene']}}})
+        pipeline.append({ "$group": {"_id": {"guild": "$guild"}, "total": {"$sum": 1}}})
+        pipeline.append({"$project": {"guild": "$_id.guild", "total": "$total"}})
+        pipeline.append({"$sort": {"guild": 1, "total": 1}})
+        scenes_per_guild = list(Character.objects.aggregate(*pipeline))
+
+        pipeline = []
+        pipeline.append({"$match": {'category': {"$in":['Zone']}}})
+        pipeline.append({ "$group": {"_id": {"guild": "$guild"}, "total": {"$sum": 1}}})
+        pipeline.append({"$project": {"guild": "$_id.guild", "total": "$total"}})
+        pipeline.append({"$sort": {"guild": 1, "total": 1}})
+        zones_per_guild = list(Character.objects.aggregate(*pipeline))
+
+        pipeline = []
+        pipeline.append({"$match": {'category': {"$in":['Character']}}})
+        pipeline.append({ "$group": {"_id": {"guild": "$guild"}, "total": {"$sum": 1}}})
+        pipeline.append({"$project": {"guild": "$_id.guild", "total": "$total"}})
+        pipeline.append({"$sort": {"guild": 1, "total": 1}})
+        characters_per_guild = list(Character.objects.aggregate(*pipeline))
+
+        pipeline = []
+        pipeline.append({"$match": {'category': {"$in":['Aspect']}}})
+        pipeline.append({ "$group": {"_id": {"guild": "$guild"}, "total": {"$sum": 1}}})
+        pipeline.append({"$project": {"guild": "$_id.guild", "total": "$total"}})
+        pipeline.append({"$sort": {"guild": 1, "total": 1}})
+        aspects_per_guild = list(Character.objects.aggregate(*pipeline))
+
+        pipeline = []
+        pipeline.append({"$match": {'category': {"$in":['Stunt']}}})
+        pipeline.append({ "$group": {"_id": {"guild": "$guild"}, "total": {"$sum": 1}}})
+        pipeline.append({"$project": {"guild": "$_id.guild", "total": "$total"}})
+        pipeline.append({"$sort": {"guild": 1, "total": 1}})
+        stunts_per_guild = list(Character.objects.aggregate(*pipeline))
+
+        totals = {}
+        for g in guilds:
+            if g['guild']:
+                guild = g['guild']
+                totals[guild] = {
+                    'Scenarios': next((c['total'] for c in scenarios_per_guild if guild == c['guild']), 0),
+                    'Scenes': next((c['total'] for c in scenes_per_guild if guild == c['guild']), 0),
+                    'Zones': next((c['total'] for c in zones_per_guild if guild == c['guild']), 0),
+                    'Characters': next((c['total'] for c in characters_per_guild if guild == c['guild']), 0),
+                    'Aspects': next((c['total'] for c in aspects_per_guild if guild == c['guild']), 0),
+                    'Stunts': next((c['total'] for c in stunts_per_guild if guild == c['guild']), 0),
+                }
+        return totals

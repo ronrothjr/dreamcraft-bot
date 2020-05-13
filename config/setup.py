@@ -1,12 +1,10 @@
 # config.py
 
 class Setup():
-    start = '***Dreamcraft Bot:***\
-            \n**CREATE A CHARACTER**```css\n.d character YOUR_CHARACTER\'S_NAME```\
+    start = '**CREATE A CHARACTER**```css\n.d character YOUR_CHARACTER\'S_NAME```\
             \n**Character Help:**```css\n.d c help```**Additional Help:**```css\n.d help```Display condensed game instructions```css\n.d cheat\n.d cheat SEARCH_TEXT```'
 
-    help = '***Dreamcraft Bot:***\
-            \n***ADDITIONAL INSTRUCTIONS***\n\
+    help = '\n***ADDITIONAL INSTRUCTIONS***\n\
             \n**Character Setup:**```css\n.d c help\n/* Display active character */\n.d character\n.d c```\
             \n**Roll Help**```css\n.d roll help```\
             \n**User Setup:**```css\n.d u help\n/* Display user info */\n.d user```\

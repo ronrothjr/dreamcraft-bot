@@ -7,6 +7,7 @@ class User(Document):
     guild = StringField(required=True)
     active_character = StringField()
     time_zone = StringField()
+    question = StringField()
     created = DateTimeField(required=True)
     updated = DateTimeField(required=True)
 

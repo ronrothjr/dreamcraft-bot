@@ -13,7 +13,8 @@ class UserCommand():
         self.ctx = ctx
         self.args = args[1:]
         self.command = self.args[0].lower() if len(self.args) > 0 else 'u'
-        self.user = User().get_or_create(ctx.author.name, ctx.guild.name)
+        self.guild = ctx.guild if ctx.guild else ctx.author
+        self.user = User().get_or_create(ctx.author.name, self.guild.name)
 
     def run(self):
         switcher = {
@@ -40,16 +41,17 @@ class UserCommand():
         return [self.user.get_string()]
     
     def time_zone(self):
+        tz_help = 'Try this:```css\n.d u timezone ZONE_SEARCH\n/* ZONE_SEARCH must be at least 3 characters */```'
         if len(self.args) == 0:
             if not self.user:
                 return ['No active user or name provided']
-        if len(self.args) < 1:
-            return ['No time zone provided']
+        if len(self.args) < 2:
+            return [f'No time zone provided. {tz_help}']
         if self.args[1] in ['list', 'l']:
             if len(self.args) <3:
-                return ['No time zone search term provided']
+                return [f'No time zone search term provided. {tz_help}']
             if len(self.args[2]) <3:
-                return ['No time zone search term must be at least 3 characters']
+                return ['No time zone search term must be at least 3 characters```css\n/* EXAMPLES */\n.d u timezone New York\n.d u timezone London```']
             search = self.args[2].lower()
             tz = [tz for tz in pytz.all_timezones if search in tz.lower()]
             if len(tz) == 0:
@@ -65,13 +67,11 @@ class UserCommand():
             if len(', '.join([t for t in tz])) > 1920:
                 return [f'Results too large: please narrow your search']
             if len(tz) > 1:
-                return [
-                    f'Time zone search \'{search}\' returned more than one:',
-                    ', '.join([t for t in tz])
-                ]
+                timezones = '\n'.join([f'.d u tz {t}' for t in tz])
+                return [f'Time zone search \'{search}\' returned more than one. Try one of these:```css\n{timezones}```']
             self.user.time_zone = tz[0]
             if (not self.user.created):
                 self.user.created = datetime.datetime.utcnow()
             self.user.updated = datetime.datetime.utcnow()
             self.user.save()
-        return [f'Saved time zone {tz[0]}', self.user.get_string()]
+        return [f'Saved time zone as _{tz[0]}\n\n{self.user.get_string()}_']

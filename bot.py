@@ -3,6 +3,7 @@ import os
 from mongoengine import *
 
 from discord.ext import commands
+from discord import Embed
 from dotenv import load_dotenv
 
 from config.setup import Setup
@@ -27,11 +28,11 @@ async def command_handler(ctx, *args):
     """
 
     if len(args) == 0:
-        await ctx.send(START)
+        await ctx.send(embed=Embed(title='Dreamcraft Bot', colour=13400320, description=START))
         return
 
     if len(args) == 1 and args[0].lower() in ['h','help']:
-        await ctx.send(HELP)
+        await ctx.send(embed=Embed(title='Dreamcraft Bot', colour=13400320, description=HELP))
         return
     
     handler = DreamcraftHandler(ctx, args)

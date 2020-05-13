@@ -16,10 +16,11 @@ class SceneCommand():
         self.ctx = ctx
         self.args = args[1:]
         self.command = self.args[0].lower() if len(self.args) > 0 else 'n'
-        self.channel = Channel().get_or_create(self.ctx.channel.name, self.ctx.guild.name)
+        self.guild = ctx.guild if ctx.guild else ctx.author
+        self.channel = Channel().get_or_create(self.ctx.channel.name, self.guild.name)
         self.scenario = Scenario().get_by_id(self.channel.active_scenario) if self.channel and self.channel.active_scenario else None
         self.sc = Scene().get_by_id(self.channel.active_scene) if self.channel and self.channel.active_scene else None
-        self.user = User().get_or_create(ctx.author.name, ctx.guild.name)
+        self.user = User().get_or_create(ctx.author.name, self.guild.name)
         self.char = Character().get_by_id(self.user.active_character) if self.user and self.user.active_character else None
 
     def run(self):

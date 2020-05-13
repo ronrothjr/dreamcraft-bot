@@ -8,7 +8,7 @@
             "name": "Dreamcraft Bot",
             "type": "python",
             "request": "launch",
-            "pythonPath": "${config:python.pythonPath}",
+            "pythonPath": "${config:python.interpreterPath}",
             "program": "${workspaceFolder}/bot.py",
             "console": "externalTerminal"
         }

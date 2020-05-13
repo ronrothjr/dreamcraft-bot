@@ -218,7 +218,7 @@ class CharacterCommand():
         if len(characters) == 0:
             return ['You don\'t have any characters.\nTry this: ```css\n.d c CHARACTER_NAME```']
         else:
-            return [f'{c.get_short_string(self.user)}\n' for c in characters]
+            return [f'{c.get_short_string(self.user)}\n' for c in characters if c.category == 'Character']
 
     def copy_character(self, args):
         messages = []
@@ -281,7 +281,11 @@ class CharacterCommand():
             else:
                 self.user.question = 'c ' + ' '.join(args)
                 char_svc.save_user(self.user)
-                messages.append(f'Are you sure you want to delete ***{self.char.name}***?\n\nREPEAT THE COMMAND\n\n***OR***\n\nREPLY TO CONFIRM:```css\n.d YES /* to confirm the command */\n.d NO /* to cancel the command */```')
+                messages.extend([
+                    f'Are you sure you want to delete this {self.char.category}?\n\n{self.char.get_string()}',
+                    f'\nREPEAT THE COMMAND\n\n***OR***\n\nREPLY TO CONFIRM:',
+                    '```css\n.d YES /* to confirm the command */\n.d NO /* to cancel the command */```'
+                ])
             if parent_id:
                 messages.extend(char_svc.get_parent_by_id(self.char, self.user, parent_id))
         return messages

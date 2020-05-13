@@ -25,7 +25,7 @@ class ChannelCommand():
         }
         # Get the function from switcher dictionary
         if self.command in switcher:
-            func = switcher.get(self.command, lambda: self.character)
+            func = switcher.get(self.command, lambda: self.chan)
             # Execute the function
             messages = func()
         else:

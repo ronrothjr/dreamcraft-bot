@@ -493,7 +493,7 @@ class CharacterCommand():
         return messages
 
     def get_available_stress(self, stress_type):
-        return sum([1 for s in self.char.stress[stress_type] if s[1] == O])
+        return sum([1 for s in self.char.stress[stress_type] if s[1] == O]) if self.char.stress else 0
 
     def stress(self, args, check_user=None):
         messages = []

@@ -84,6 +84,6 @@ class Channel(Document):
 
     def get_string(self):
         users = f'\n{self.get_users_string()}' if self.users else ''
-        scenarios = f'\n{self.get_sscenarios_string()}' if self.users else ''
+        scenarios = f'\n{self.get_scenarios_string()}' if self.users else ''
         scenes = f'\n{self.get_scenes_string()}' if self.users else ''
         return f'***Guild:*** {self.guild}\n***Channel:*** {self.name}{users}{scenarios}{scenes}'

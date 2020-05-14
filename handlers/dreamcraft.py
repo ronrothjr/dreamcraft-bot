@@ -53,7 +53,7 @@ class DreamcraftHandler():
             # 'concede': RollCommand
         }
 
-        self.answer()        
+        self.answer()
         if not self.messages:
             self.shortcuts()
             # Get the function from switcher dictionary
@@ -73,7 +73,15 @@ class DreamcraftHandler():
 
     async def send(self, message):
         if message:
-            await self.ctx.send(embed=Embed(title='Dreamcraft Bot', colour=13400320, description=message))
+            image_split = message.split('!image')
+            message = image_split[0]
+            if len(image_split) > 2:
+                 message += ''.join(image_split[2:])
+            embed = Embed(type='rich', colour=13400320, description=message)
+            # embed.set_author(name='Dreamcraft Bot', icon_url='http://drive.google.com/uc?export=view&id=1jSmg-SJx5YwjgIepYA6SYjtPZ_aNQnNr')
+            if len(image_split) > 1:
+                embed.set_image(url=image_split[1])
+            await self.ctx.send(embed=embed)
     
     def answer(self):
         self.messages = []

@@ -18,7 +18,8 @@ class ZoneCommand():
         self.args = args[1:]
         self.command = self.args[0].lower() if len(self.args) > 0 else 'n'
         self.guild = ctx.guild if ctx.guild else ctx.author
-        self.channel = Channel().get_or_create(self.ctx.channel.name, self.guild.name)
+        channel = 'private' if ctx.channel.type.name == 'private' else ctx.channel.name
+        self.channel = Channel().get_or_create(channel, self.guild.name)
         self.scenario = Scenario().get_by_id(self.channel.active_scenario) if self.channel and self.channel.active_scenario else None
         self.sc = Scene().get_by_id(self.channel.active_scene) if self.channel and self.channel.active_scene else None
         self.zone = Zone().get_by_id(self.channel.active_zone) if self.channel and self.channel.active_zone else None

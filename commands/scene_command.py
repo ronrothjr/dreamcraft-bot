@@ -1,4 +1,5 @@
 # scene_command
+import traceback
 import datetime
 from commands import CharacterCommand
 from models.channel import Channel
@@ -17,53 +18,58 @@ class SceneCommand():
         self.args = args[1:]
         self.command = self.args[0].lower() if len(self.args) > 0 else 'n'
         self.guild = ctx.guild if ctx.guild else ctx.author
-        self.channel = Channel().get_or_create(self.ctx.channel.name, self.guild.name)
+        channel = 'private' if ctx.channel.type.name == 'private' else ctx.channel.name
+        self.channel = Channel().get_or_create(channel, self.guild.name)
         self.scenario = Scenario().get_by_id(self.channel.active_scenario) if self.channel and self.channel.active_scenario else None
         self.sc = Scene().get_by_id(self.channel.active_scene) if self.channel and self.channel.active_scene else None
         self.user = User().get_or_create(ctx.author.name, self.guild.name)
         self.char = Character().get_by_id(self.user.active_character) if self.user and self.user.active_character else None
 
     def run(self):
-        switcher = {
-            'help': self.help,
-            'name': self.name,
-            'n': self.name,
-            'description': self.description,
-            'desc': self.description,
-            'character': self.character,
-            'char': self.character,
-            'c': self.character,
-            'players': self.player,
-            'player': self.player,
-            'p': self.player,
-            'list': self.scene_list,
-            'l': self.scene_list,
-            'delete': self.delete_scene,
-            'd': self.delete_scene
-        }
-        # Get the function from switcher dictionary
-        if self.command in switcher:
-            func = switcher.get(self.command, lambda: self.name)
-            # Execute the function
-            messages = func(self.args)
-        else:
-            self.args = ('n',) + self.args
-            self.command = 'n'
-            func = self.name
-            # Execute the function
-            messages = func(self.args)
-        # Send messages
-        return messages
+        try:
+            switcher = {
+                'help': self.help,
+                'name': self.name,
+                'n': self.name,
+                'description': self.description,
+                'desc': self.description,
+                'character': self.character,
+                'char': self.character,
+                'c': self.character,
+                'players': self.player,
+                'player': self.player,
+                'p': self.player,
+                'list': self.scene_list,
+                'l': self.scene_list,
+                'delete': self.delete_scene,
+                'd': self.delete_scene
+            }
+            # Get the function from switcher dictionary
+            if self.command in switcher:
+                func = switcher.get(self.command, lambda: self.name)
+                # Execute the function
+                messages = func(self.args)
+            else:
+                self.args = ('n',) + self.args
+                self.command = 'n'
+                func = self.name
+                # Execute the function
+                messages = func(self.args)
+            # Send messages
+            return messages
+        except Exception as err:
+            traceback.print_exc()
+            return list(err.args)
 
     def help(self, args):
         return [SCENE_HELP]
     
     def name(self, args):
+        if not self.scenario:
+            raise Exception('No active scenario or name provided. Try this:```css\n.d scenario SCENARIO_NAME```')
         if len(args) == 0:
-            if not self.scenario:
-                return ['No active scenario or name provided;\ntry this: ".d scenario name {name}"']
             if not self.sc:
-                return ['No active scene or name provided']
+                raise Exception('No active scene or name provided. Try this:```css\n.d scene SCENE_NAME```')
             else:
                 scene_args = ['c']
                 scene_args.extend(args[1:])
@@ -83,16 +89,16 @@ class SceneCommand():
     def scene_list(self, args):
         scenes = Scene().get_by_channel(self.channel)
         if len(scenes) == 0:
-            return ['You don\'t have any scenes.\nTry this: ".d scene name {name}"']
+            raise Exception('You don\'t have any scenes. Try this:```css\n.d scene SCENE_NAME```')
         else:
             scenes_string = ''.join([s.get_string(self.channel) for s in scenes])
             return [f'Scenes:{scenes_string}\n        ']
 
     def description(self, args):
         if len(args) == 1:
-            return ['No description provided']
+            raise Exception('No description provided')
         if not self.sc:
-            return ['You don\'t have an active scene.\nTry this: ".d s name {name}"']
+            raise Exception('You don\'t have an active scene. Try this:```css\n.d scene SCENE_NAME```')
         else:
             description = ' '.join(args[1:])
             self.sc.description = description
@@ -117,9 +123,9 @@ class SceneCommand():
 
     def player(self, args):
         if len(args) == 1:
-            return ['No characters added']
+            raise Exception('No characters added')
         if not self.sc:
-            return ['You don\'t have an active scene.\nTry this: ".d s name {name}"']
+            raise Exception('You don\'t have an active scene. Try this:```css\n.d scene SCENE_NAME```')
         elif args[1].lower() == 'list' or args[1].lower() == 'l':
             return [self.sc.get_string_characters(self.channel)]
         elif args[1].lower() == 'delete' or args[1].lower() == 'd':
@@ -154,7 +160,7 @@ class SceneCommand():
         search = ''
         if len(args) == 1:
             if not self.sc:
-                return ['No scene provided for deletion']
+                raise Exception('No scene provided for deletion')
         else:
             search = ' '.join(args[1:])
             self.sc = Scene().find(str(self.channel.id), str(self.scenario.id), search)

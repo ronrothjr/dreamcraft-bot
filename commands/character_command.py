@@ -43,6 +43,7 @@ class CharacterCommand():
                 'p': self.parent,
                 'name': self.name,
                 'n': self.name,
+                'image': self.image,
                 'list': self.character_list,
                 'l': self.character_list,
                 'delete': self.delete_character,
@@ -121,6 +122,7 @@ class CharacterCommand():
         dialog = {
             'create_character': '**CREATE or SELECT A CHARACTER**```css\n.d character YOUR_CHARACTER\'S_NAME```',
             'active_character': f'***THIS IS YOUR ACTIVE CHARACTER:***\n:point_down:\n\n{get_string}',
+            'rename_delete': f'\n\n_Is ***{name}*** not the {char.category.lower()} name you wanted?_```css\n.d c rename NEW_NAME```_Want to remove ***{name}***?_```css\n.d c delete {name}```',
             'active_character_short': f'***THIS IS YOUR ACTIVE CHARACTER:***\n:point_down:\n\n{get_short_string}',
             'add_more_info': f'Add more information about ***{name}***```css\n.d c description CHARACTER_DESCRIPTION\n.d c high concept HIGH_CONCEPT\n.d c trouble TROUBLE```',
             'add_skills': '' +
@@ -147,6 +149,7 @@ class CharacterCommand():
         if dialog_text == 'all':
             if not char:
                 dialog_string += dialog.get('create_character')
+            dialog_string += dialog.get('rename_delete')
             dialog_string += dialog.get('add_more_info')
             dialog_string += dialog.get('add_skills')
             dialog_string += dialog.get('add_aspects_and_stunts')
@@ -156,6 +159,8 @@ class CharacterCommand():
             if dialog_text:
                 dialog_string += dialog.get(dialog_text, '')
             else:
+                dialog_string += dialog.get('active_character')
+                dialog_string += dialog.get('rename_delete')
                 if not char.high_concept or not char.trouble:
                     dialog_string += dialog.get('add_more_info')
                 if not char.skills:                    
@@ -166,11 +171,15 @@ class CharacterCommand():
                 if not char.consequences_titles:
                     dialog_string += dialog.get('manage_conditions')
         else:
-            dialog_string += dialog.get('active_character')
-            dialog_string += dialog.get('go_back_to_parent')
-            dialog_string += dialog.get('add_aspects_and_stunts')
-            dialog_string += dialog.get('manage_stress')
-            dialog_string += dialog.get('manage_conditions')
+            if dialog_text:
+                dialog_string += dialog.get(dialog_text, '')
+            else:
+                dialog_string += dialog.get('active_character')
+                dialog_string += dialog.get('rename_delete')
+                dialog_string += dialog.get('go_back_to_parent')
+                dialog_string += dialog.get('add_aspects_and_stunts')
+                dialog_string += dialog.get('manage_stress')
+                dialog_string += dialog.get('manage_conditions')
         return dialog_string
 
     def name(self, args):
@@ -206,10 +215,6 @@ class CharacterCommand():
                 self.char = Character().get_or_create(self.user, char_name, self.guild.name)
                 self.user.set_active_character(self.char)
                 char_svc.save_user(self.user)
-            messages.append(self.dialog('active_character'))
-            messages.append(f'\n\n_Is ***{self.char.name}*** not the character name you wanted?_\
-                ```css\n.d c rename NEW_NAME```_Want to remove ***{self.char.name}***?_\
-                ```css\n.d c delete {self.char.name}```')
             messages.append(self.dialog(''))
         return messages
 
@@ -218,42 +223,51 @@ class CharacterCommand():
         if len(characters) == 0:
             return ['You don\'t have any characters.\nTry this: ```css\n.d c CHARACTER_NAME```']
         else:
-            return [f'{c.get_short_string(self.user)}\n' for c in characters]
+            return [f'{c.get_short_string(self.user)}\n' for c in characters if c.category == 'Character']
 
     def copy_character(self, args):
         messages = []
         search = ''
+        if not self.char:
+            raise Exception('No active character for deletion')
+        if self.char.category != 'Character':
+            category = ('an ' if self.char.category[0:1].lower() in ['a','e','i','o','u'] else 'a ') + self.char.category
+            raise Exception(f'You may only copy characters. ***{self.char.name}*** is {category}.')
         guilds = [g['guild'] for g in Character().get_guilds() if g['guild'] and g['guild'].lower() not in self.guild.name.lower()]
         if not guilds:
             raise Exception('You may not copy until you have created a character on another server')
         guild_list = f'***Guilds:***\n' + '\n'.join([f'    ***{g}***' for g in guilds])
+        guild_commands = '\n'.join([f'.d c copy to {g}' for g in guilds[0:5]])
+        guild_commands_str = f'\nTry one of these:```css\n{guild_commands}```'
+        incorrect_syntax = f'Copy character syntax inccorect{guild_commands_str}'
         if len(args) == 1:
-            if not self.char:
-                raise Exception('No active character for deletion')
-            raise Exception(f'No guild name search text provided (try one of these):\n\n{guild_list}')
-        else:
-            search = ' '.join(args[1:])
-            guild = next((g for g in guilds if search.lower() in g.lower()), None)
-            if not guild:
-                raise Exception(f'_{search}_ not found in guilds\n\n{guild_list}')
-            if Character().find(self.user, self.char.name, guild, None, 'Character'):
-                raise Exception(f'***{self.char.name}*** is already a character in ***{guild}***')
-            user = User().find(self.user.name, guild)
-            if not user:
-                raise Exception(f'You may not copy until you have created a character on ***{guild}***')
-            char = copy.deepcopy(self.char)
-            char.id = None
-            char.user = user.id
-            char.guild = guild
-            char_svc.save(char)
-            for child in Character().get_by_parent(self.char):
-                new_child = copy.deepcopy(child)
-                new_child.id = None
-                new_child.user = user.id
-                new_child.parent_id = str(char.id)
-                new_child.guild = guild
-                char_svc.save(new_child)
-            messages.append(f'***{self.char.name}*** copied to ***{guild}***')
+            raise Exception(incorrect_syntax)
+        if len(args) == 2 or (len(args) == 3 and args[1].lower() != 'to'):
+            raise Exception(incorrect_syntax)
+        search = ' '.join(args[2:])
+        guild = next((g for g in guilds if search.lower() in g.lower()), None)
+        if not guild:
+            raise Exception(f'_{search}_ not found in guilds\n\n{guild_list}')
+        user = User().find(self.user.name, guild)
+        if not user:
+            raise Exception(f'You may not copy until you have created a character in ***{guild}***')
+        existing = Character().find(user, self.char.name, guild, None, 'Character')
+        if existing:
+            raise Exception(f'***{self.char.name}*** is already a character in ***{guild}***')
+        children = Character().get_by_parent(self.char)
+        char = copy.deepcopy(self.char)
+        char.id = None
+        char.user = user.id
+        char.guild = guild
+        char_svc.save(char)
+        for child in children:
+            new_child = copy.deepcopy(child)
+            new_child.id = None
+            new_child.user = user.id
+            new_child.parent_id = str(char.id)
+            new_child.guild = guild
+            char_svc.save(new_child)
+        messages.append(f'***{self.char.name}*** copied to ***{guild}***')
         return messages
 
     def delete_character(self, args):
@@ -281,7 +295,11 @@ class CharacterCommand():
             else:
                 self.user.question = 'c ' + ' '.join(args)
                 char_svc.save_user(self.user)
-                messages.append(f'Are you sure you want to delete ***{self.char.name}***?\n\nREPEAT THE COMMAND\n\n***OR***\n\nREPLY TO CONFIRM:```css\n.d YES /* to confirm the command */\n.d NO /* to cancel the command */```')
+                messages.extend([
+                    f'Are you sure you want to delete this {self.char.category}?\n\n{self.char.get_string()}',
+                    f'\nREPEAT THE COMMAND\n\n***OR***\n\nREPLY TO CONFIRM:',
+                    '```css\n.d YES /* to confirm the command */\n.d NO /* to cancel the command */```'
+                ])
             if parent_id:
                 messages.extend(char_svc.get_parent_by_id(self.char, self.user, parent_id))
         return messages
@@ -383,10 +401,30 @@ class CharacterCommand():
             }
         self.char.custom_properties = custom_properties
         char_svc.save(self.char)
-        messages.append(self.dialog('active_character'))
-        messages.append(f'\n\n_Is ***{self.char.name}*** not the character name you wanted?_\
-            ```css\n.d c rename NEW_NAME```_Want to remove ***{self.char.name}***?_\
-            ```css\n.d c delete {self.char.name}```')
+        messages.append(self.dialog(''))
+        return messages
+
+    def image(self, args):
+        if not self.char:
+            raise Exception('You don\'t have an active character.\nTry this: ```css\n.d c CHARACTER_NAME```')
+        messages = []
+        if len(args) == 1:
+            raise Exception(''.join([
+                'No image url provided. Try this: ```css\n.d c image IMAGE_URL```\n',
+                '***How to host an image on Google Drive:***\n',
+                '* Upload to your Drive Folder.\n',
+                '* Click the Share button and click \'Anyone with link\' and then \'Copy link\'\n',
+                '* Take the id portion of your link (highlighted in bold below)\n',
+                '*     drive.google.com/file/d/ ***1DALW-DtsdPg47cj4kybi6ng9DkiVdtaf*** /view?usp=sharing\n',
+                '* Make a new link as follows with your id from above:\n',
+                '* http://drive.google.com/uc?export=view&id=1DALW-DtsdPg47cj4kybi6ng9DkiVdtaf\n',
+                '* Use this as the IMAGE_URL'
+            ]))
+        if args[1] in ['delete', 'd']:
+            self.char.image_url = None
+        else:
+            self.char.image_url = args[1]
+        char_svc.save(self.char)
         messages.append(self.dialog(''))
         return messages
 

@@ -41,6 +41,7 @@ class Character(Document):
     consequences = DynamicField()
     consequences_titles = ListField()
     consequences_shifts = ListField()
+    image_url = StringField()
     is_boost = BooleanField()
     has_stress = BooleanField()
     custom_properties = DynamicField()
@@ -201,20 +202,20 @@ class Character(Document):
     def get_string_aspects(self, user=None):
         aspects = Character().get_by_parent(self, '', 'Aspect')
         aspects_string = self.sep().join([a.get_string(user) for a in aspects]) if aspects else ''
-        return f'{self.nl()}**Aspects:**{self.sep()}{aspects_string}' if aspects_string else ''
+        return f'{self.nl()}{self.nl()}**Aspects:**{self.sep()}{aspects_string}' if aspects_string else ''
 
     def get_string_stunts(self, user=None):
         stunts = Character().get_by_parent(self, '', 'Stunt')
         stunts_string = self.sep().join([s.get_string(self) for s in stunts]) if stunts else ''
-        return f'{self.nl()}**Stunts:**{self.sep()}{stunts_string}' if stunts_string else ''
+        return f'{self.nl()}{self.nl()}**Stunts:**{self.sep()}{stunts_string}' if stunts_string else ''
 
     def get_string_skills(self):
         title = 'Approaches' if self.use_approaches else 'Skills'
         skills_string = self.sep().join([f'{self.skills[key]} - {key}' for key in self.skills])
-        return f'{self.sep()}**{title}:**{self.sep()}{skills_string}' if skills_string else ''
+        return f'{self.sep()}{self.sep()}**{title}:**{self.sep()}{skills_string}' if skills_string else ''
 
     def get_string_stress(self):
-        stress_name = '**_Stress_** '
+        stress_name = '**_Stress:_** '
         stress_string = ''
         if self.stress:
             if self.stress_titles and len(self.stress_titles) == 1:
@@ -227,7 +228,7 @@ class Character(Document):
                     for s in range(0, len(self.stress[t])):
                         stress[t] += f' {self.stress[t][s][1]}'
                 stress_string = self.sep() + self.sep().join(stress)
-        return f'{self.nl()}{stress_name}{stress_string}' if stress_string else ''
+        return f'{self.nl()}{self.nl()}{stress_name}{stress_string}' if stress_string else ''
 
     def get_string_consequences(self):
         consequences_name = '**_Consequences:_** '
@@ -241,7 +242,7 @@ class Character(Document):
                 description = f' - {self.consequences[c][2]}' if self.consequences[c][1] and len(self.consequences[c]) == 3 else ''
                 consequences_strings.append(f'{check} _{self.consequences[c][0]}_ {consequences[c]}{description}')
             consequences_string = self.sep().join([c for c in consequences_strings])
-        return f'{self.nl()}{consequences_name}{self.sep()}{consequences_string}' if consequences_string else ''
+        return f'{self.nl()}{self.nl()}{consequences_name}{self.sep()}{consequences_string}' if consequences_string else ''
 
     def get_string(self, user=None):
         name = self.get_string_name(user)
@@ -255,7 +256,8 @@ class Character(Document):
         skills = self.get_string_skills()
         stress = self.get_string_stress()
         consequenses = self.get_string_consequences()
-        return f'{name}{description}{high_concept}{trouble}{fate_points}{custom}{skills}{stress}{aspects}{stunts}{consequenses}'
+        image = f'!image{self.image_url}!image' if self.image_url else ''
+        return f'{name}{description}{high_concept}{trouble}{fate_points}{custom}{skills}{stress}{aspects}{stunts}{consequenses}{image}'
 
     def get_short_string(self, user=None):
         name = self.get_string_name(user)

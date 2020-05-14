@@ -67,19 +67,19 @@ class Channel(Document):
         self.save()
 
     def get_users_string(self):
-        users_string = '***Players:***\n        ' + '\n        '.join([f'_{u}_ ' for u in self.users]) if self.users else ''
+        users_string = '\n***Players:***\n        ' + '\n        '.join([f'_{u}_ ' for u in self.users]) if self.users else ''
         return f'{users_string}'
 
     def get_scenarios_string(self):
         scenario_list = Scenario.filter(channel_id=str(self.id)).all()
         scenarios = [s.character.get_string() for s in scenario_list]
-        scenarios_string = '***Scenarios:***\n        ' + '\n        '.join([s for s in scenarios]) if scenarios else ''
+        scenarios_string = '\n***Scenarios:***\n        ' + '\n        '.join([s for s in scenarios]) if scenarios else ''
         return f'{scenarios_string}'
 
     def get_scenes_string(self):
         scene_list = Scene.filter(channel_id=str(self.id)).all()
         scenes = [s.character.get_string() for s in scene_list]
-        scenes_string = '***Scenes:***\n        ' + '\n        '.join([s for s in scenes]) if scenes else ''
+        scenes_string = '\n***Scenes:***\n        ' + '\n        '.join([s for s in scenes]) if scenes else ''
         return f'{scenes_string}'
 
     def get_string(self):

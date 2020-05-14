@@ -13,7 +13,8 @@ SETUP = Setup()
 ZONE_HELP = SETUP.zone_help
 
 class ZoneCommand():
-    def __init__(self, ctx, args):
+    def __init__(self, parent, ctx, args):
+        self.parent = parent
         self.ctx = ctx
         self.args = args[1:]
         self.command = self.args[0].lower() if len(self.args) > 0 else 'n'
@@ -115,7 +116,7 @@ class ZoneCommand():
                 self.user.created = datetime.datetime.utcnow()
             self.user.updated = datetime.datetime.utcnow()
             self.user.save()
-        command = CharacterCommand(self.ctx, args, self.zone.character)
+        command = CharacterCommand(self.parent, self.ctx, args, self.zone.character)
         return command.run()
 
     def player(self, args):

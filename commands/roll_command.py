@@ -15,7 +15,8 @@ SKILLS = SETUP.skills
 FATE_DICE = SETUP.fate_dice
 
 class RollCommand():
-    def __init__(self, ctx, args):
+    def __init__(self, parent, ctx, args):
+        self.parent = parent
         self.ctx = ctx
         self.args = args
         self.invoke_index = [i for i in range(0, len(self.args)) if self.args[i] in ['invoke', 'i']]
@@ -114,7 +115,7 @@ class RollCommand():
             for invoke in self.invokes:
                 if invoke['stress_titles']:
                     for i in range(0, len(invoke['stress_titles'])):
-                        command = CharacterCommand(self.ctx, self.args, invoke['stress_targets'][i])
+                        command = CharacterCommand(self.parent, self.ctx, self.args, invoke['stress_targets'][i])
                         stress_messages = command.stress(['st', invoke['stress_titles'][i], invoke['stress'][i][0][0]])
                         if 'cannot absorb' in ''.join(stress_messages):
                             raise Exception(*stress_messages)
@@ -203,7 +204,7 @@ class RollCommand():
             has_stress = []
             for target in targets:
                 stress_target = copy.deepcopy(target['char'])
-                command = CharacterCommand(self.ctx, self.args, stress_target)
+                command = CharacterCommand(self.parent, self.ctx, self.args, stress_target)
                 target_errors = command.stress(['st', stress_titles[s], stress[s][0][0]], stress_target)
                 if target_errors:
                     for error in target_errors:

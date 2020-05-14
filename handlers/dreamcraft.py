@@ -21,6 +21,14 @@ class DreamcraftHandler():
         self.messages = []
 
     async def handle(self):
+        self.messages = self.get_messages()
+        # Concatenate messages and send
+        if self.command == 'cheat':
+            [await self.send(f'{m}\n') for m in self.messages]
+        else:
+            await self.send('\n'.join(self.messages))
+
+    def get_messages(self):
         switcher = {
             'cheat': CheatCommand,
             'user': UserCommand,
@@ -52,7 +60,8 @@ class DreamcraftHandler():
             # 'combine': RollCommand,
             # 'concede': RollCommand
         }
-
+        self.messages = []
+        self.search = str(self.args[0])
         self.answer()
         if not self.messages:
             self.shortcuts()
@@ -60,16 +69,12 @@ class DreamcraftHandler():
             if self.command in switcher:
                 func = switcher.get(self.command, lambda: CharacterCommand)
                 # Execute the function and store the returned messages
-                instance = func(self.ctx, self.args)      
+                instance = func(ctx=self.ctx, args=self.args, parent=self)      
                 # Call the run() method for the command
                 self.messages = instance.run()
             else:
-                self.messages = [f'Unknown command: {self.command}']  
-        # Concatenate messages and send
-        if self.command == 'cheat':
-            [await self.send(f'{m}\n') for m in self.messages]
-        else:
-            await self.send('\n'.join(self.messages))
+                self.messages = [f'Unknown command: {self.command}']
+        return self.messages
 
     async def send(self, message):
         if message:
@@ -82,31 +87,19 @@ class DreamcraftHandler():
             if len(image_split) > 1:
                 embed.set_image(url=image_split[1])
             await self.ctx.send(embed=embed)
-    
+
     def answer(self):
-        self.messages = []
-        self.search = str(self.args[0])
-        if self.search.lower() in ['yes', 'y']:
-            guild = self.ctx.guild if self.ctx.guild else self.ctx.author
-            user = User().find(self.ctx.author.name, guild.name)
-            if user.question:
-                self.args = tuple(user.question.split(' '))
-                self.search = str(self.args[0])
-                self.command = self.args[0].lower()
-            else:
-                self.messages.append('You have no pending questions to answer')
-        elif self.search.lower() in ['no', 'n']:
-            guild = self.ctx.guild if self.ctx.guild else self.ctx.author
-            user = User().find(self.ctx.author.name, guild.name)
-            if user.question:
-                self.messages.append(f'_{user.question}_ command canceled')
-                user.question = ''
-                if (not user.created):
-                    user.created = datetime.datetime.utcnow()
-                user.updated = datetime.datetime.utcnow()
-                user.save()
-            else:
-                self.messages.append('You have no pending questions')
+        guild = self.ctx.guild if self.ctx.guild else self.ctx.author
+        user = User().find(self.ctx.author.name, guild.name)
+        if user and user.command:
+            answer = ' '.join(self.args[0:])
+            self.args = tuple(user.command.split(' '))
+            self.command = self.args[0].lower()
+            if (not user.created):
+                user.created = datetime.datetime.utcnow()
+            user.answer = answer
+            user.updated = datetime.datetime.utcnow()
+            user.save()
 
     def shortcuts(self):
         # shortcut for updating approaches on a character (must enter full name)

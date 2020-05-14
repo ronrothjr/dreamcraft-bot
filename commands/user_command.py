@@ -9,7 +9,8 @@ SETUP = Setup()
 USER_HELP = SETUP.user_help
 
 class UserCommand():
-    def __init__(self, ctx, args):
+    def __init__(self, parent, ctx, args):
+        self.parent = parent
         self.ctx = ctx
         self.args = args[1:]
         self.command = self.args[0].lower() if len(self.args) > 0 else 'u'

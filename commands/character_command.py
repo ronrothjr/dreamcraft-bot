@@ -24,13 +24,15 @@ CONSEQUENCES_TITLES = SETUP.consequences_titles
 CONSEQUENCES_SHIFTS = SETUP.consequence_shifts
 
 class CharacterCommand():
-    def __init__(self, ctx, args, char=None):
+    def __init__(self, parent, ctx, args, char=None):
+        self.parent = parent
         self.ctx = ctx
         self.args = args[1:] if args[0] in ['character', 'char', 'c'] else args
         self.command = self.args[0].lower() if len(self.args) > 0 else 'n'
         self.guild = ctx.guild if ctx.guild else ctx.author
         self.user = User().get_or_create(ctx.author.name, self.guild.name)
         self.char = char if char else (Character().get_by_id(self.user.active_character) if self.user and self.user.active_character else None)
+        self.can_edit = str(self.user.id) == str(self.char.user.id) or self.user.role == 'Game Master' if self.user and self.char else True
         self.asp = Character().get_by_id(self.char.active_aspect) if self.char and self.char.active_aspect else None
         self.stu = Character().get_by_id(self.char.active_stunt) if self.char and self.char.active_stunt else None
 
@@ -119,67 +121,70 @@ class CharacterCommand():
 
     def dialog(self, dialog_text, char=None):
         char, name, get_string, get_short_string = char_svc.get_char_info(self.char, self.user)
-        dialog = {
-            'create_character': '**CREATE or SELECT A CHARACTER**```css\n.d character YOUR_CHARACTER\'S_NAME```',
-            'active_character': f'***THIS IS YOUR ACTIVE CHARACTER:***\n:point_down:\n\n{get_string}',
-            'rename_delete': f'\n\n_Is ***{name}*** not the {char.category.lower()} name you wanted?_```css\n.d c rename NEW_NAME```_Want to remove ***{name}***?_```css\n.d c delete {name}```',
-            'active_character_short': f'***THIS IS YOUR ACTIVE CHARACTER:***\n:point_down:\n\n{get_short_string}',
-            'add_more_info': f'Add more information about ***{name}***```css\n.d c description CHARACTER_DESCRIPTION\n.d c high concept HIGH_CONCEPT\n.d c trouble TROUBLE```',
-            'add_skills': '' +
-                f'Add approaches or skills for ***{name}***```css\n.d c approach Forceful +4 Clever +2 Quick +1 ...\n/* GET LIST OF APPROACHES or ADD YOUR OWN */\n.d c approach help\n\n\n.d c skill Will +4 Rapport +2 Lore +1 ...\n/* GET LIST OF SKILLS or ADD YOUR OWN */\n.d c skill help```',
-            'add_aspects_and_stunts': '' +
-                f'Add an aspect or two for ***{name}***```css\n.d c aspect ASPECT_NAME```' +
-                f'Give  ***{name}*** some cool stunts```css\n.d c stunt STUNT_NAME```',
-            'edit_active_aspect': '' +
-                f'***You can edit this aspect as if it were a character***```css\n.d c aspect character\n/* THIS WILL SHOW THE ASPECT IS THE ACTIVE CHARACTER */\n.d c```',
-            'edit_active_stunt': '' +
-                f'***You can edit this stunt as if it were a character***```css\n.d c stunt character\n/* THIS WILL SHOW THE STUNT IS THE ACTIVE CHARACTER */\n.d c```',
-            'manage_stress': '' +
-                f'***Modify the stress tracks.\n' +
-                'Here\'s an example to add and remove stress tracks***' +
-                '```css\n.d c stress title 4 Ammo\n.d c stress title delete Ammo\n.d c stress title FATE /* also use FAE or Core */```',
-            'manage_conditions': '' +
-                f'***Modify the conditions tracks.\n' +
-                'Here\'s an example to add and remove consequence tracks***' +
-                '```css\n.d c consequences title 2 Injured\n.d c consequences title delete Injured\n.d c consequences title FATE /* also use FAE or Core */```',
-            'go_back_to_parent': '' +
-                f'\n\n***You can GO BACK to the parent character, aspect, or stunt***```css\n.d c parent\n.d c p```'
-        }
+        if self.char:
+            dialog = {
+                'create_character': '**CREATE or SELECT A CHARACTER**```css\n.d character YOUR_CHARACTER\'S_NAME```',
+                'active_character': f'***THIS IS YOUR ACTIVE CHARACTER:***\n:point_down:\n\n{get_string}',
+                'rename_delete': f'\n\n_Is ***{name}*** not the {char.category.lower()} name you wanted?_```css\n.d c rename NEW_NAME```_Want to remove ***{name}***?_```css\n.d c delete {name}```',
+                'active_character_short': f'***THIS IS YOUR ACTIVE CHARACTER:***\n:point_down:\n\n{get_short_string}',
+                'add_more_info': f'Add more information about ***{name}***```css\n.d c description CHARACTER_DESCRIPTION\n.d c high concept HIGH_CONCEPT\n.d c trouble TROUBLE```',
+                'add_skills': '' +
+                    f'Add approaches or skills for ***{name}***```css\n.d c approach Forceful +4 Clever +2 Quick +1 ...\n/* GET LIST OF APPROACHES or ADD YOUR OWN */\n.d c approach help\n\n\n.d c skill Will +4 Rapport +2 Lore +1 ...\n/* GET LIST OF SKILLS or ADD YOUR OWN */\n.d c skill help```',
+                'add_aspects_and_stunts': '' +
+                    f'Add an aspect or two for ***{name}***```css\n.d c aspect ASPECT_NAME```' +
+                    f'Give  ***{name}*** some cool stunts```css\n.d c stunt STUNT_NAME```',
+                'edit_active_aspect': '' +
+                    f'***You can edit this aspect as if it were a character***```css\n.d c aspect character\n/* THIS WILL SHOW THE ASPECT IS THE ACTIVE CHARACTER */\n.d c```',
+                'edit_active_stunt': '' +
+                    f'***You can edit this stunt as if it were a character***```css\n.d c stunt character\n/* THIS WILL SHOW THE STUNT IS THE ACTIVE CHARACTER */\n.d c```',
+                'manage_stress': '' +
+                    f'***Modify the stress tracks.\n' +
+                    'Here\'s an example to add and remove stress tracks***' +
+                    '```css\n.d c stress title 4 Ammo\n.d c stress title delete Ammo\n.d c stress title FATE /* also use FAE or Core */```',
+                'manage_conditions': '' +
+                    f'***Modify the conditions tracks.\n' +
+                    'Here\'s an example to add and remove consequence tracks***' +
+                    '```css\n.d c consequences title 2 Injured\n.d c consequences title delete Injured\n.d c consequences title FATE /* also use FAE or Core */```',
+                'go_back_to_parent': '' +
+                    f'\n\n***You can GO BACK to the parent character, aspect, or stunt***```css\n.d c parent\n.d c p```'
+            }
+        else:
+            dialog = {}
         dialog_string = ''
         if dialog_text == 'all':
             if not char:
-                dialog_string += dialog.get('create_character')
-            dialog_string += dialog.get('rename_delete')
-            dialog_string += dialog.get('add_more_info')
-            dialog_string += dialog.get('add_skills')
-            dialog_string += dialog.get('add_aspects_and_stunts')
-            dialog_string += dialog.get('manage_stress')
-            dialog_string += dialog.get('manage_conditions')
+                dialog_string += dialog.get('create_character', '')
+            dialog_string += dialog.get('rename_delete', '') if self.can_edit else ''
+            dialog_string += dialog.get('add_more_info', '') if self.can_edit else ''
+            dialog_string += dialog.get('add_skills', '') if self.can_edit else ''
+            dialog_string += dialog.get('add_aspects_and_stunts', '') if self.can_edit else ''
+            dialog_string += dialog.get('manage_stress', '') if self.can_edit else ''
+            dialog_string += dialog.get('manage_conditions', '') if self.can_edit else ''
         elif char.category == 'Character':
             if dialog_text:
                 dialog_string += dialog.get(dialog_text, '')
             else:
-                dialog_string += dialog.get('active_character')
-                dialog_string += dialog.get('rename_delete')
+                dialog_string += dialog.get('active_character', '')
+                dialog_string += dialog.get('rename_delete', '') if self.can_edit else ''
                 if not char.high_concept or not char.trouble:
-                    dialog_string += dialog.get('add_more_info')
+                    dialog_string += dialog.get('add_more_info', '') if self.can_edit else ''
                 if not char.skills:                    
-                    dialog_string += dialog.get('add_skills')
-                dialog_string += dialog.get('add_aspects_and_stunts')
+                    dialog_string += dialog.get('add_skills', '') if self.can_edit else ''
+                dialog_string += dialog.get('add_aspects_and_stunts', '') if self.can_edit else ''
                 if not char.stress_titles:
-                    dialog_string += dialog.get('manage_stress')
+                    dialog_string += dialog.get('manage_stress', '') if self.can_edit else ''
                 if not char.consequences_titles:
-                    dialog_string += dialog.get('manage_conditions')
+                    dialog_string += dialog.get('manage_conditions', '') if self.can_edit else ''
         else:
             if dialog_text:
                 dialog_string += dialog.get(dialog_text, '')
             else:
-                dialog_string += dialog.get('active_character')
-                dialog_string += dialog.get('rename_delete')
-                dialog_string += dialog.get('go_back_to_parent')
-                dialog_string += dialog.get('add_aspects_and_stunts')
-                dialog_string += dialog.get('manage_stress')
-                dialog_string += dialog.get('manage_conditions')
+                dialog_string += dialog.get('active_character', '') if self.can_edit else ''
+                dialog_string += dialog.get('rename_delete', '') if self.can_edit else ''
+                dialog_string += dialog.get('go_back_to_parent', '') if self.can_edit else ''
+                dialog_string += dialog.get('add_aspects_and_stunts', '') if self.can_edit else ''
+                dialog_string += dialog.get('manage_stress', '') if self.can_edit else ''
+                dialog_string += dialog.get('manage_conditions', '') if self.can_edit else ''
         return dialog_string
 
     def name(self, args):
@@ -192,8 +197,10 @@ class CharacterCommand():
                 ]
             messages.append(self.dialog('active_character') + '\n')
         else:
-            if len(args) == 1 and args[1].lower() == 'short':
+            if len(args) == 1 and args[0].lower() == 'short':
                 return [self.dialog('active_character_short')]
+            if len(args) == 1 and self.char:
+                return [self.dialog('')]
             char_name = ' '.join(args[1:])
             if len(args) > 1 and args[1] == 'rename':
                 char_name = ' '.join(args[2:])
@@ -212,24 +219,126 @@ class CharacterCommand():
                         self.char.name = char_name
                         char_svc.save(self.char)
             else:
-                self.char = Character().get_or_create(self.user, char_name, self.guild.name)
-                self.user.set_active_character(self.char)
-                char_svc.save_user(self.user)
-            messages.append(self.dialog(''))
+                chars = []
+                chars.extend(Character.filter(name=char_name, guild=self.guild.name, archived=False).all())
+                if chars and len(chars) > 1:
+                    prompt = ''. join ([
+                        '\n\nSELECT A CHARACTER USING:```css\n',
+                        '.d CHARACTER_NUMBER\n',
+                        '/* EXAMPLE .d 2 */```\n',
+                        'OR\n\n',
+                        'YOU CAN CANCEL THE COMAND:',
+                        '```css\n.d CANCEL```'
+                    ])
+                    selections = '\n\n'.join([f'CHARACTER {i + 1}\n{chars[i].get_short_string()}' for i in range(0, len(chars))])
+                    command = 'c ' + ' '.join(args)
+                    if self.user.command != command:
+                        question = f'{selections}{prompt}'
+                        messages.append(question)
+                        self.user.command = command
+                        self.user.question = question
+                        self.user.answer = ''
+                        char_svc.save_user(self.user)
+                    else:
+                        answer = self.user.answer
+                        if answer.lower() in ['cancel','c']:
+                            self.user.command = ''
+                            self.user.question = ''
+                            self.user.answer = ''
+                            self.user.set_active_character(self.char)
+                            char_svc.save_user(self.user)
+                            messages.append('Comand canceled')
+                        elif answer.isdigit():
+                            char_num = int(answer)
+                            if char_num > len(chars) or char_num < 1:
+                                Exception(f'Character number {char_num} does not exist')
+                            self.char = chars[int(answer)-1]
+                            self.user.command = ''
+                            self.user.question = ''
+                            self.user.answer = ''
+                            self.user.set_active_character(self.char)
+                            char_svc.save_user(self.user)
+                            messages.append(self.dialog(''))
+                        else:
+                            raise Exception(prompt)
+                else:
+                    if chars and len(chars) == 1:
+                        self.char = chars[0]
+                    else:
+                        self.char = Character().get_or_create(self.user, char_name, self.guild.name)
+                    self.user.set_active_character(self.char)
+                    char_svc.save_user(self.user)
+                    messages.append(self.dialog(''))
         return messages
 
     def character_list(self, args):
-        characters = Character().get_by_user(self.user)
+        characters = Character.filter(category='Character', guild=self.guild.name).all()
         if len(characters) == 0:
-            return ['You don\'t have any characters.\nTry this: ```css\n.d c CHARACTER_NAME```']
+            return ['There are no characters.\nTry this: ```css\n.d c CHARACTER_NAME```']
         else:
-            return [f'{c.get_short_string(self.user)}\n' for c in characters if c.category == 'Character']
+            char_list = [f'{c.get_short_string(self.user)}\n' for c in characters if c.category == 'Character']
+            char_pages = []
+            page_size = 1000
+            page_num = 1
+            if len('\n'.join(char_list)) < page_size:
+                return char_list
+            char_list_str, i = '', 0
+            # Loop through to build character list pages
+            while i < len(char_list):
+                if i == len(char_list) or len(char_list_str) > page_size:
+                    char_pages.append(char_list_str)
+                    char_list_str = ''
+                else:
+                    char_list_str += f'{char_list[i]}\n'
+                i += 1
+            command = 'c ' + ' '.join(args)
+            question = ''
+            if self.user.command == command:
+                answer = self.user.answer
+                question = self.user.question
+                if answer and (answer in ['<','>'] or answer.isdigit()):
+                    page_num_str = question[question.find('Page ')+5:question.find(' of ')]
+                    page_num = int(page_num_str)
+                    if answer.isdigit():
+                        page_num = int(answer)
+                        if page_num > len(char_pages) or page_num < 1:
+                            Exception(f'Page number {page_num} does not exist')
+                    elif answer == '<' and page_num > 1:
+                        page_num -= 1
+                    elif answer == '>' and page_num < len(char_pages):
+                        page_num += 1
+                    question = ''.join([
+                        f'Page {page_num} of {len(char_pages)} - Enter page number, **\'<\'** or **\'>\'**:',
+                        '```css\n.d 1 /* to jump to a page */\n.d > /* to go to the next page */\n.d < /* to go to the previous page */```'
+                    ])
+                    self.user.question = question
+                    self.user.answer = ''
+                    char_svc.save_user(self.user)
+                else:
+                    self.user.command = ''
+                    self.user.question = ''
+                    self.user.answer = ''
+                    char_svc.save_user(self.user)
+                    self.parent.args = answer.split(' ')
+                    self.parent.command = self.parent.args[0]
+                    return self.parent.get_messages()
+            else:
+                question = ''.join([
+                    f'Page {page_num} of {len(char_pages)} - Enter page number, **\'<\'** or **\'>\'**:',
+                    '```css\n.d 1 /* to jump to a page */\n.d > /* to go to the next page */\n.d < /* to go to the previous page */```'
+                ])
+                self.user.command = command
+                self.user.question = question
+                char_svc.save_user(self.user)
+            return [f'{char_pages[page_num-1]}\n{question}']
 
     def copy_character(self, args):
         messages = []
         search = ''
         if not self.char:
             raise Exception('No active character for deletion')
+        if not self.can_edit:
+            raise Exception('You do not have permission to edit this character')
         if self.char.category != 'Character':
             category = ('an ' if self.char.category[0:1].lower() in ['a','e','i','o','u'] else 'a ') + self.char.category
             raise Exception(f'You may only copy characters. ***{self.char.name}*** is {category}.')
@@ -278,6 +387,8 @@ class CharacterCommand():
                 return ['No active character for deletion']
             search = self.char.name
             self.char = Character().find(self.user, search, self.guild.name, None, self.char.category, False)
+        elif not self.can_edit:
+            raise Exception('You do not have permission to edit this character')
         else:
             search = ' '.join(args[1:])
             self.char = Character().find(self.user, search, self.guild.name, None, 'Character', False)
@@ -286,20 +397,36 @@ class CharacterCommand():
         else:
             search = self.char.name
             parent_id = str(self.char.parent_id) if self.char.parent_id else ''
-            if self.user.question == 'c ' + ' '.join(args):
-                self.char.reverse_delete()
-                self.char.delete()
-                self.user.question = ''
-                char_svc.save_user(self.user)
-                messages.append(f'***{search}*** removed')
+            command = 'c ' + ' '.join(args)
+            question = ''.join([
+                f'Are you sure you want to delete this {self.char.category}?\n\n{self.char.get_string()}',
+                f'\n\nREPEAT THE COMMAND\n\n***OR***\n\nREPLY TO CONFIRM:',
+                '```css\n.d YES /* to confirm the command */\n.d NO /* to reject the command */\n.d CANCEL /* to cancel the command */```'
+            ])
+            if self.user.command == command:
+                answer = self.user.answer
+                if answer:
+                    if answer.lower() in ['yes', 'y']:
+                        search = self.char.name
+                        self.char.reverse_delete()
+                        self.char.delete()
+                        messages.append(f'***{search}*** removed')
+                    elif answer.lower() in ['no', 'n', 'cancel', 'c']:
+                        messages.append(f'Command ***"{command}"*** canceled')
+                    else:
+                        raise Exception(f'Please answer the question regarding ***"{command}"***:\n\n{question}')
+                    self.user.command = ''
+                    self.user.question = ''
+                    self.user.answer = ''
+                    char_svc.save_user(self.user)
+                else:
+                    Exception(f'No answer was received to command ***"{command}"***')
             else:
-                self.user.question = 'c ' + ' '.join(args)
+                self.user.command = command
+                self.user.question = question
+                self.user.answer = ''
                 char_svc.save_user(self.user)
-                messages.extend([
-                    f'Are you sure you want to delete this {self.char.category}?\n\n{self.char.get_string()}',
-                    f'\nREPEAT THE COMMAND\n\n***OR***\n\nREPLY TO CONFIRM:',
-                    '```css\n.d YES /* to confirm the command */\n.d NO /* to cancel the command */```'
-                ])
+                messages.extend([question])
             if parent_id:
                 messages.extend(char_svc.get_parent_by_id(self.char, self.user, parent_id))
         return messages
@@ -310,6 +437,8 @@ class CharacterCommand():
             messages.append('No description provided')
         if not self.char:
             messages.append('You don\'t have an active character.\nTry this: ```css\n.d c CHARACTER_NAME```')
+        elif not self.can_edit:
+            raise Exception('You do not have permission to edit this character')
         else:
             description = ' '.join(args[1:])
             self.char.description = description
@@ -325,6 +454,8 @@ class CharacterCommand():
             messages.append('No high concept provided')
         if not self.char:
             messages.append('You don\'t have an active character.\nTry this: ```css\n.d c CHARACTER_NAME```')
+        elif not self.can_edit:
+            raise Exception('You do not have permission to edit this character')
         else:
             hc = ''
             if args[1].lower() == 'concept':
@@ -340,6 +471,8 @@ class CharacterCommand():
 
     def trouble(self, args):
         messages = []
+        if not self.can_edit:
+            raise Exception('You do not have permission to edit this character')
         if len(args) == 1:
             messages.append('No trouble provided')
         if not self.char:
@@ -356,6 +489,8 @@ class CharacterCommand():
     def fate(self, args):
         if not self.char:
             return ['You don\'t have an active character.\nTry this: ```css\n.d c CHARACTER_NAME```']
+        elif not self.can_edit:
+            raise Exception('You do not have permission to edit this character')
         elif args[1].lower() in ['refresh', 'r']:
             if not self.char.refresh:
                 self.char.refresh = 3
@@ -378,6 +513,8 @@ class CharacterCommand():
     def custom(self, args):
         if not self.char:
             raise Exception('You don\'t have an active character.\nTry this: ```css\n.d c CHARACTER_NAME```')
+        if not self.can_edit:
+            raise Exception('You do not have permission to edit this character')
         messages = []
         if len(args) == 1:
             raise Exception('No custom name provided. Try this: ```css\n.d c custom CUSTOM_NAME\n/* EXAMPLE:\n.d c custom Home World */```')
@@ -407,12 +544,14 @@ class CharacterCommand():
     def image(self, args):
         if not self.char:
             raise Exception('You don\'t have an active character.\nTry this: ```css\n.d c CHARACTER_NAME```')
+        if not self.can_edit:
+            raise Exception('You do not have permission to edit this character')
         messages = []
         if len(args) == 1:
             raise Exception(''.join([
                 'No image url provided. Try this: ```css\n.d c image IMAGE_URL```\n',
                 '***How to host an image on Google Drive:***\n',
-                '* Upload to your Drive Folder.\n',
+                '* Upload to your Drive Folder and select your uploaded file.\n',
                 '* Click the Share button and click \'Anyone with link\' and then \'Copy link\'\n',
                 '* Take the id portion of your link (highlighted in bold below)\n',
                 '*     drive.google.com/file/d/ ***1DALW-DtsdPg47cj4kybi6ng9DkiVdtaf*** /view?usp=sharing\n',
@@ -438,6 +577,8 @@ class CharacterCommand():
         else:
             if not self.char:
                 messages.append('You don\'t have an active character.\nTry this: ```css\n.d c CHARACTER_NAME```')
+            elif not self.can_edit:
+                raise Exception('You do not have permission to edit this character')
             else:
                 if args[1].lower() == 'delete' or args[1].lower() == 'd':
                     skill = [s for s in APPROACHES if args[2][0:2].lower() == s[0:2].lower()]
@@ -474,6 +615,8 @@ class CharacterCommand():
         else:
             if not self.char:
                 messages.append('You don\'t have an active character.\nTry this: ```css\n.d c CHARACTER_NAME```')
+            elif not self.can_edit:
+                raise Exception('You do not have permission to edit this character')
             else:
                 if args[1].lower() == 'delete' or args[1].lower() == 'd':
                     skill = [s for s in SKILLS if args[2][0:2].lower() == s[0:2].lower()]
@@ -505,6 +648,8 @@ class CharacterCommand():
             messages.append(f'{self.asp.get_string(self.char)}')
         if not self.char:
             return ['You don\'t have an active character.\nTry this: ```css\n.d c CHARACTER_NAME```']
+        elif not self.can_edit:
+            raise Exception('You do not have permission to edit this character')
         elif args[1].lower() == 'list':
             return [self.char.get_string_aspects(self.user)]
         elif args[1].lower() == 'delete' or args[1].lower() == 'd':
@@ -523,7 +668,7 @@ class CharacterCommand():
             self.char.active_aspect = str(self.asp.id)
             self.char.active_character = str(self.asp.id)
             char_svc.save(self.char)
-            command = CharacterCommand(self.ctx, args[1:], self.asp)
+            command = CharacterCommand(self.parent, self.ctx, args[1:], self.asp)
             messages.extend(command.run())
         else:
             aspect = ' '.join(args[1:])
@@ -542,6 +687,8 @@ class CharacterCommand():
             messages.append(f'{self.stu.get_string(self.char)}')
         if not self.char:
             return ['You don\'t have an active character.\nTry this: ```css\n.d c CHARACTER_NAME```']
+        elif not self.can_edit:
+            raise Exception('You do not have permission to edit this character')
         elif args[1].lower() == 'list':
             return [self.char.get_string_stunts(self.user)]
         elif args[1].lower() == 'delete' or args[1].lower() == 'd':
@@ -558,7 +705,7 @@ class CharacterCommand():
             self.char.active_stunt = str(self.stu.id)
             self.char.active_character = str(self.stu.id)
             char_svc.save(self.char)
-            command = CharacterCommand(self.ctx, args[1:], self.stu)
+            command = CharacterCommand(self.parent, self.ctx, args[1:], self.stu)
             messages.extend(command.run())
         else:
             stunt = ' '.join(args[1:])
@@ -590,6 +737,8 @@ class CharacterCommand():
         if not self.char:
             messages.append('You don\'t have an active character.\nTry this: ```css\n.d c CHARACTER_NAME```')
             return messages
+        if not self.can_edit:
+            raise Exception('You do not have permission to edit this character')
         if len(args) == 1:
             messages.append(f'{self.char.get_string_name(self.user)}{self.char.get_string_stress()}')
             return messages
@@ -751,6 +900,11 @@ class CharacterCommand():
         [consequences_checks.append(t[0:2].lower()) for t in consequences_titles]
         [consequences_checks.append(t.lower()) for t in consequences_titles]
         consequences_check_types = ' or '.join([f'({t[0:2].lower()}){t[2:].lower()}' for t in consequences_titles])
+        if not self.char:
+            messages.append('You don\'t have an active character.\nTry this: ```css\n.d c CHARACTER_NAME```')
+            return messages
+        if not self.can_edit:
+            raise Exception('You do not have permission to edit this character')
         if len(args) == 1:
             messages.append(f'{self.char.get_string_name(self.user)}{self.char.get_string_consequences()}')
             return messages

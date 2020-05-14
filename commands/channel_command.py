@@ -3,7 +3,8 @@ import datetime
 from models import Channel, User, Character, Scene
 
 class ChannelCommand():
-    def __init__(self, ctx, args):
+    def __init__(self, parent, ctx, args):
+        self.parent = parent
         self.ctx = ctx
         self.args = args[1:]
         self.command = self.args[0].lower() if len(self.args) > 0 else 'c'

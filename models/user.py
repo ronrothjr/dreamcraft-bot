@@ -5,9 +5,12 @@ from mongoengine import *
 class User(Document):
     name = StringField(required=True)
     guild = StringField(required=True)
+    role = StringField()
     active_character = StringField()
     time_zone = StringField()
+    command =  StringField()
     question = StringField()
+    answer = StringField()
     created = DateTimeField(required=True)
     updated = DateTimeField(required=True)
 

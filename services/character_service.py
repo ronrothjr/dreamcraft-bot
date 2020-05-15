@@ -3,7 +3,7 @@ import traceback
 import datetime
 import copy
 from bson.objectid import ObjectId
-from models import User, Character, Stunt
+from models import User, Character
 from config.setup import Setup
 from utils.text_utils import TextUtils
 
@@ -22,10 +22,11 @@ CONSEQUENCES_TITLES = SETUP.consequences_titles
 CONSEQUENCES_SHIFTS = SETUP.consequence_shifts
 
 class CharacterService():
-    def save(self, char):
+    def save(self, char, user):
         if char:
             if (not char.created):
                 char.created = datetime.datetime.utcnow()
+            char.updated_by = str(user.id)
             char.updated = datetime.datetime.utcnow()
             char.save()
 
@@ -33,6 +34,7 @@ class CharacterService():
         if user:
             if (not user.created):
                 user.created = datetime.datetime.utcnow()
+            user.updated_by = str(user.id)
             user.updated = datetime.datetime.utcnow()
             user.save()
 

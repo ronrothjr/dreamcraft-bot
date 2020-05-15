@@ -1,11 +1,12 @@
 # character.py
 import datetime
 from mongoengine import *
+from mongoengine import signals
 from bson.objectid import ObjectId
 
 from models.user import User
-from models.stunt import Stunt
 from config.setup import Setup
+from models.log import Log
 from utils.text_utils import TextUtils
 
 SETUP = Setup()
@@ -31,7 +32,6 @@ class Character(Document):
     active_stunt = StringField()
     active_aspect = StringField()
     skills = DictField()
-    stunts = ListField(StringField())
     use_approaches = BooleanField()
     fate_points = IntField()
     refresh = IntField()
@@ -46,8 +46,16 @@ class Character(Document):
     has_stress = BooleanField()
     custom_properties = DynamicField()
     archived = BooleanField(default=False)
+    created_by = StringField()
     created = DateTimeField(required=True)
+    updated_by = StringField()
     updated = DateTimeField(required=True)
+
+    @classmethod
+    def post_save(cls, sender, document, **kwargs):
+        changes = document._delta()[0]
+        Log().create_new(str(document.id), document.updated_by, document.guild, document.category, changes)
+        print(changes)
 
     @staticmethod
     def query():
@@ -70,8 +78,7 @@ class Character(Document):
             params.update(parent_id=str(parent.id))
         if category:
             params.update(category=category)
-        if archived:
-            params.update(archived=archived)
+        params.update(archived=archived)
         character = cls.filter(**params).first()
         return character
 
@@ -114,7 +121,9 @@ class Character(Document):
             self.consequences = CONSEQUENCES
         if parent_id:
             self.parent_id = parent_id
+        self.created_by = str(user.id)
         self.created = datetime.datetime.utcnow()
+        self.updated_by = str(user.id)
         self.updated = datetime.datetime.utcnow()
         self.save()
         return self
@@ -125,10 +134,13 @@ class Character(Document):
             character = self.create_new(user, name, guild, str(parent.id) if parent else None, category, archived)
         return character
 
-    def reverse_delete(self):
+    def reverse_delete(self, user):
         for c in Character().get_by_parent(self):
-            c.reverse_delete()
-            c.delete()
+            c.reverse_delete(self.user)
+            c.archived = True
+            c.updated_by = str(user.id)
+            self.updated = datetime.datetime.utcnow()
+            c.save()
 
     def get_string_name(self, user=None):
         active = ''
@@ -348,3 +360,6 @@ class Character(Document):
                     'Stunts': next((c['total'] for c in stunts_per_guild if guild == c['guild']), 0),
                 }
         return totals
+
+
+signals.post_save.connect(Character.post_save, sender=Character)

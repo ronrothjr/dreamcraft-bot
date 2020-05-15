@@ -98,6 +98,7 @@ class DreamcraftHandler():
             if (not user.created):
                 user.created = datetime.datetime.utcnow()
             user.answer = answer
+            user.updated_by = str(user.id)
             user.updated = datetime.datetime.utcnow()
             user.save()
 

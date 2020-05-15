@@ -1,10 +1,12 @@
 # channel.py
 import datetime
 from mongoengine import *
+from mongoengine import signals
 
 from models.scenario import Scenario
 from models.scene import Scene
 from models.zone import Zone
+from models.log import Log
 
 class Channel(Document):
     name = StringField(required=True)
@@ -13,8 +15,16 @@ class Channel(Document):
     active_scene = StringField()
     active_zone = StringField()
     users = ListField(StringField())
+    created_by = StringField()
     created = DateTimeField(required=True)
+    updated_by = StringField()
     updated = DateTimeField(required=True)
+
+    @classmethod
+    def post_save(cls, sender, document, **kwargs):
+        changes = document._delta()[0]
+        Log().create_new(str(document.id), document.updated_by, document.guild, 'Channel', changes)
+        print(changes)
 
     @staticmethod
     def query():
@@ -24,10 +34,12 @@ class Channel(Document):
     def filter(**params):
         return Channel.objects.filter(**params)
 
-    def create_new(self, name, guild):
+    def create_new(self, name, guild, user):
         self.name = name
         self.guild = guild
+        self.created_by = str(user.id)
         self.created = datetime.datetime.utcnow()
+        self.updated_by = str(user.id)
         self.updated = datetime.datetime.utcnow()
         self.save()
         return self
@@ -35,34 +47,37 @@ class Channel(Document):
     def find(self, name, guild):
         return Channel.objects(name=name, guild=guild).first()
 
-    def get_or_create(self, name, guild):
+    def get_or_create(self, name, guild, user):
         channel = self.find(name, guild)
         if channel is None:
-            channel = self.create_new(name, guild)
+            channel = self.create_new(name, guild, user)
         return channel
 
     def get_by_id(self, id):
         channel = Channel.filter(id=id).first()
         return channel
 
-    def set_active_scenario(self, scenario):
+    def set_active_scenario(self, scenario, user):
         self.active_scenario = str(scenario.id)
         if (not self.created):
             self.created = datetime.datetime.utcnow()
+        self.updated_by = str(user.id)
         self.updated = datetime.datetime.utcnow()
         self.save()
 
-    def set_active_scene(self, scene):
+    def set_active_scene(self, scene, user):
         self.active_scene = str(scene.id)
         if (not self.created):
             self.created = datetime.datetime.utcnow()
+        self.updated_by = str(user.id)
         self.updated = datetime.datetime.utcnow()
         self.save()
 
-    def set_active_zone(self, zone):
+    def set_active_zone(self, zone, user):
         self.active_zone = str(zone.id)
         if (not self.created):
             self.created = datetime.datetime.utcnow()
+        self.updated_by = str(user.id)
         self.updated = datetime.datetime.utcnow()
         self.save()
 
@@ -87,3 +102,6 @@ class Channel(Document):
         scenarios = f'\n{self.get_scenarios_string()}' if self.users else ''
         scenes = f'\n{self.get_scenes_string()}' if self.users else ''
         return f'***Guild:*** {self.guild}\n***Channel:*** {self.name}{users}{scenarios}{scenes}'
+
+
+signals.post_save.connect(Channel.post_save, sender=Channel)

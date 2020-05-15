@@ -73,6 +73,7 @@ class UserCommand():
             self.user.time_zone = tz[0]
             if (not self.user.created):
                 self.user.created = datetime.datetime.utcnow()
+            self.user.updated_by = str(self.user.id)
             self.user.updated = datetime.datetime.utcnow()
             self.user.save()
         return [f'Saved time zone as _{tz[0]}\n\n{self.user.get_string()}_']

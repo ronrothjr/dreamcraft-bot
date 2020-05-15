@@ -9,13 +9,14 @@ class ChannelCommand():
         self.args = args[1:]
         self.command = self.args[0].lower() if len(self.args) > 0 else 'c'
         self.guild = ctx.guild if ctx.guild else ctx.author
-        channel = 'private' if ctx.channel.type.name == 'private' else ctx.channel.name
-        self.channel = Channel().get_or_create(channel, self.guild.name)
         self.user = User().get_or_create(self.ctx.author.name, self.guild.name)
+        channel = 'private' if ctx.channel.type.name == 'private' else ctx.channel.name
+        self.channel = Channel().get_or_create(channel, self.guild.name, self.user)
         if self.user.name not in self.channel.users:
             self.channel.users.append(self.user.name)
             if (not self.channel.created):
                 self.channel.created = datetime.datetime.utcnow()
+            self.channel.updated_by = str(self.user.id)
             self.channel.updated = datetime.datetime.utcnow()
             self.channel.save()
         self.char = Character().get_by_id(self.user.active_character) if self.user and self.user.active_character else None

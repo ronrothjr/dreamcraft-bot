@@ -28,12 +28,12 @@ class Log(Document):
         return log
 
     @classmethod
-    def get_by_user_id(cls, user_id, page=1, items_per_page=5):
-        if page:
-            offset = (page - 1) * 5
-            logs = cls.filter(created_by=user_id).order_by('-created').skip( offset ).limit( items_per_page ).all()
+    def get_by_page(cls, params, page_num=1, page_size=5):
+        if page_num:
+            offset = (page_num - 1) * 5
+            logs = cls.filter(**params).order_by('-created').skip(offset).limit(page_size).all()
         else:
-            logs = cls.filter(created_by=user_id).order_by('-created').all()
+            logs = cls.filter(**params).order_by('-created').all()
         return logs
 
     @classmethod
@@ -46,10 +46,11 @@ class Log(Document):
             params.update(category=category)
         return logs
 
-    def create_new(self, parent_id, user_id, guild, category, data):
+    def create_new(self, parent_id, name, user_id, guild, category, data):
         self.parent_id = parent_id
         self.user_id = user_id
         self.guild = guild
+        self.name = name
         self.category = category
         self.data = data
         self.created_by = str(user_id)

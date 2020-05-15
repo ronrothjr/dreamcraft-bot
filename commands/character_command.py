@@ -7,6 +7,7 @@ from services import CharacterService
 from models import User, Channel, Character
 from config.setup import Setup
 from utils.text_utils import TextUtils
+from utils import Pager
 
 char_svc = CharacterService()
 SETUP = Setup()
@@ -314,71 +315,35 @@ class CharacterCommand():
         return messages
 
     def character_list(self, args):
-        characters = Character.filter(category='Character', guild=self.guild.name).all()
-        if len(characters) == 0:
-            return ['There are no characters.\nTry this: ```css\n.d c CHARACTER_NAME```']
-        else:
-            char_list = [f'{c.get_short_string(self.user)}\n' for c in characters if c.category == 'Character']
-            char_pages = []
-            page_size = 1000
-            page_num = 1
-            if len('\n'.join(char_list)) < page_size:
-                return char_list
-            char_list_str, i = '', 0
-            # Loop through to build character list pages
-            while i < len(char_list):
-                if i == len(char_list) or len(char_list_str) > page_size:
-                    char_pages.append(char_list_str)
-                    char_list_str = ''
-                else:
-                    char_list_str += f'{char_list[i]}\n'
-                i += 1
-            command = 'c ' + ' '.join(args)
-            question = ''
-            if self.user.command == command:
-                answer = self.user.answer
-                question = self.user.question
-                if answer and (answer in ['<','>'] or answer.isdigit()):
-                    page_num_str = question[question.find('Page ')+5:question.find(' of ')]
-                    page_num = int(page_num_str)
-                    if answer.isdigit():
-                        page_num = int(answer)
-                        if page_num > len(char_pages) or page_num < 1:
-                            Exception(f'Page number {page_num} does not exist')
-                    elif answer == '<' and page_num > 1:
-                        page_num -= 1
-                    elif answer == '>' and page_num < len(char_pages):
-                        page_num += 1
-                    question = ''.join([
-                        f'Page {page_num} of {len(char_pages)} - Enter page number, **\'<\'** or **\'>\'**:',
-                        '```css\n.d 1 /* to jump to a page */\n.d > /* to go to the next page */\n.d < /* to go to the previous page */```'
-                    ])
-                    self.user.question = question
-                    self.user.answer = ''
-                    char_svc.save_user(self.user)
-                else:
-                    self.user.command = ''
-                    self.user.question = ''
-                    self.user.answer = ''
-                    char_svc.save_user(self.user)
-                    args = answer.split(' ')
-                    if args[0] in {'character', 'char', 'c'}:
-                        self.args = tuple(args[1:])
-                        self.command = self.args[0]
-                        return self.run()
-                    else:
-                        self.parent.args = tuple(args)
-                        self.parent.command = self.parent.args[0]
-                        return self.parent.get_messages()
+        command = 'c ' + (' '.join(args))
+        def format(c):
+            return f'{c.get_short_string(self.user)}\n'
+        cancel_args, results = Pager(char_svc).manage_paging(
+            title='Undo History',
+            command=command,
+            user=self.user,
+            data_getter={
+                'method': Character.get_by_page,
+                'params': {
+                    'params': {
+                        'guild': self.guild.name,
+                        'category': 'Character',
+                        'archived': False
+                    }
+                }
+            },
+            formatter=format)
+        if cancel_args:
+            if cancel_args[0].lower() in ['character','char','c']:
+                self.args = cancel_args[1:]
+                self.command = self.args[0]
+                return self.run()
             else:
-                question = ''.join([
-                    f'Page {page_num} of {len(char_pages)} - Enter page number, **\'<\'** or **\'>\'**:',
-                    '```css\n.d 1 /* to jump to a page */\n.d > /* to go to the next page */\n.d < /* to go to the previous page */```'
-                ])
-                self.user.command = command
-                self.user.question = question
-                char_svc.save_user(self.user)
-            return [f'{char_pages[page_num-1]}\n{question}']
+                self.parent.args = cancel_args
+                self.parent.command = self.parent.args[0]
+                return self.parent.get_messages()
+        else:
+            return [results]
 
     def copy_character(self, args):
         messages = []

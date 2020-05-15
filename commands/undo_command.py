@@ -1,7 +1,9 @@
 # undo_command
 import datetime
+import math
 from commands import CharacterCommand
 from models import Channel, Scenario, Scene, Zone, Character, User, Log
+from utils import Pager
 from config.setup import Setup
 from services.character_service import CharacterService
 
@@ -47,15 +49,40 @@ class UndoCommand():
     def help(self, args):
         return [UNDO_HELP]
 
-    def format(self, undo):
-        return ''.join([
-            f'***{undo.category}', undo.name if undo.name else '', f'*** ({undo.updated})\n{undo.data}\n'
-        ])
-
     def undo_list(self, args):
-        logs = Log().get_by_user_id(str(self.user.id))
-        if not logs:
-            return ['You don\'t have any history to undo.']
+        command = 'undo ' + (' '.join(args))
+        def format(undo):
+            data = ''
+            if undo.data:
+                for d in undo.data:
+                    if d not in ['updated_by', 'created_by', 'updated', 'created']:
+                        cleaned = d.replace('_', ' ')
+                        data += f'\n    _{cleaned}:_ {undo.data[d]}'
+            return ''.join([
+                f'**{undo.name}** _({undo.category})_' if undo.name else f'**{undo.category}**',
+                f' _updated on: {undo.updated.strftime("%m/%d/%Y, %H:%M:%S")}_{data}\n'
+        ])
+        cancel_args, results = Pager(char_svc).manage_paging(
+            title='Undo History',
+            command=command,
+            user=self.user,
+            data_getter={
+                'method': Log.get_by_page,
+                'params': {
+                    'params': {'user_id': str(self.user.id)}
+                }
+            },
+            formatter=format)
+        if cancel_args:
+            if cancel_args[0].lower() == 'undo':
+                self.args = cancel_args[1:]
+                self.command = self.args[0]
+                return self.run()
+            else:
+                self.parent.args = cancel_args
+                self.parent.command = self.parent.args[0]
+                return self.parent.get_messages()
         else:
-            logs_string = '\n'.join([self.format(log) for log in logs])
-            return [f'Undo history:\n\n{logs_string}\n        ']
+            return [results]
+        
+

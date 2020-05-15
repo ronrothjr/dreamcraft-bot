@@ -93,6 +93,15 @@ class Character(Document):
         return characters
 
     @classmethod
+    def get_by_page(cls, params, page_num=1, page_size=5):
+        if page_num:
+            offset = (page_num - 1) * 5
+            logs = cls.filter(**params).order_by('name', 'created').skip(offset).limit(page_size).all()
+        else:
+            logs = cls.filter(**params).order_by('name', 'created').all()
+        return logs
+
+    @classmethod
     def get_by_parent(cls, parent, name='', category=''):
         characters = []
         params = {}

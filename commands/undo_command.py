@@ -52,16 +52,7 @@ class UndoCommand():
     def undo_list(self, args):
         command = 'undo ' + (' '.join(args))
         def format(undo):
-            data = ''
-            if undo.data:
-                for d in undo.data:
-                    if d not in ['updated_by', 'created_by', 'updated', 'created']:
-                        cleaned = d.replace('_', ' ')
-                        data += f'\n    _{cleaned}:_ {undo.data[d]}'
-            return ''.join([
-                f'**{undo.name}** _({undo.category})_' if undo.name else f'**{undo.category}**',
-                f' _updated on: {undo.updated.strftime("%m/%d/%Y, %H:%M:%S")}_{data}\n'
-        ])
+            return undo.get_string()
         cancel_args, results = Pager(char_svc).manage_paging(
             title='Undo History',
             command=command,

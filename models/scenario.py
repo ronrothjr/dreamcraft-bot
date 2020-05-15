@@ -22,7 +22,12 @@ class Scenario(Document):
     @classmethod
     def post_save(cls, sender, document, **kwargs):
         changes = document._delta()[0]
-        Log().create_new(str(document.id), document.name, document.updated_by, document.guild, 'Scenario', changes)
+        action = 'updated'
+        if 'created' in kwargs:
+            action = 'created' if kwargs['created'] else action
+        if action == 'updated' and 'archived' in changes:
+            action = 'archived' if changes['archived'] else 'restored'
+        Log().create_new(str(document.id), document.name, document.updated_by, document.guild, document.category, changes, action)
         print(changes)
 
     @staticmethod

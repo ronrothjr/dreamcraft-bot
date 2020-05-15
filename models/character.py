@@ -54,7 +54,12 @@ class Character(Document):
     @classmethod
     def post_save(cls, sender, document, **kwargs):
         changes = document._delta()[0]
-        Log().create_new(str(document.id), document.name, document.updated_by, document.guild, document.category, changes)
+        action = 'updated'
+        if 'created' in kwargs:
+            action = 'created' if kwargs['created'] else action
+        if action == 'updated' and 'archived' in changes:
+            action = 'archived' if changes['archived'] else 'restored'
+        Log().create_new(str(document.id), document.name, document.updated_by, document.guild, document.category, changes, action)
         print(changes)
 
     @staticmethod
@@ -274,6 +279,7 @@ class Character(Document):
         return f'{self.nl()}{self.nl()}{consequences_name}{self.sep()}{consequences_string}' if consequences_string else ''
 
     def get_string(self, user=None):
+        archived = '```css\nARCHIVED```' if self.archived else ''
         name = self.get_string_name(user)
         fate_points = self.get_string_fate()
         description = f'{self.sep()}"{self.description}"' if self.description else ''
@@ -286,15 +292,16 @@ class Character(Document):
         stress = self.get_string_stress()
         consequenses = self.get_string_consequences()
         image = f'!image{self.image_url}!image' if self.image_url else ''
-        return f'{name}{description}{high_concept}{trouble}{fate_points}{custom}{skills}{stress}{aspects}{stunts}{consequenses}{image}'
+        return f'{archived}{name}{description}{high_concept}{trouble}{fate_points}{custom}{skills}{stress}{aspects}{stunts}{consequenses}{image}'
 
     def get_short_string(self, user=None):
+        archived = '```css\nARCHIVED```' if self.archived else ''
         name = self.get_string_name(user)
         fate_points = self.get_string_fate()
         description = f'{self.nl()}"{self.description}"' if self.description else ''
         high_concept = f'{self.nl()}**High Concept:** {self.high_concept}' if self.high_concept else ''
         trouble = f'{self.nl()}**Trouble:** {self.trouble}' if self.trouble else ''
-        return f'{name}{description}{high_concept}{trouble}{fate_points}'
+        return f'{archived}{name}{description}{high_concept}{trouble}{fate_points}'
 
     def get_guilds(self, options={}):
         pipeline = []

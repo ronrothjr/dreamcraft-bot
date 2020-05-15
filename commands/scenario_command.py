@@ -68,7 +68,7 @@ class ScenarioCommand():
                 return self.character(scenario_args)
         else:
             scenario_name = ' '.join(args[1:])
-            self.scenario = Scenario().get_or_create(self.user, self.channel, scenario_name)
+            self.scenario = Scenario().get_or_create(self.user, self.guild.name, self.channel, scenario_name)
             self.channel.set_active_scenario(self.scenario, self.user)
             if self.user:
                 self.user.active_character = str(self.scenario.character.id)

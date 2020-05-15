@@ -4,7 +4,7 @@ import datetime
 import copy
 from bson.objectid import ObjectId
 from services import CharacterService
-from models import User, Character, Stunt
+from models import User, Channel, Character
 from config.setup import Setup
 from utils.text_utils import TextUtils
 
@@ -31,6 +31,8 @@ class CharacterCommand():
         self.command = self.args[0].lower() if len(self.args) > 0 else 'n'
         self.guild = ctx.guild if ctx.guild else ctx.author
         self.user = User().get_or_create(ctx.author.name, self.guild.name)
+        channel = 'private' if ctx.channel.type.name == 'private' else ctx.channel.name
+        self.channel = Channel().get_or_create(channel, self.guild.name, self.user)
         self.char = char if char else (Character().get_by_id(self.user.active_character) if self.user and self.user.active_character else None)
         self.can_edit = str(self.user.id) == str(self.char.user.id) or self.user.role == 'Game Master' if self.user and self.char else True
         self.asp = Character().get_by_id(self.char.active_aspect) if self.char and self.char.active_aspect else None
@@ -42,13 +44,14 @@ class CharacterCommand():
                 'help': self.help,
                 'stats': self.stats,
                 'parent': self.parent,
-                'p': self.parent,
+                'p': self.get_parent,
                 'name': self.name,
                 'n': self.name,
                 'image': self.image,
                 'list': self.character_list,
                 'l': self.character_list,
                 'delete': self.delete_character,
+                'restore': self.restore_character,
                 'copy': self.copy_character,
                 'description': self.description,
                 'desc': self.description,
@@ -111,7 +114,7 @@ class CharacterCommand():
                 stats_str += f'\n{stats[s][t]}  _{t}_'
         return [stats_str]
 
-    def parent(self, args):
+    def get_parent(self, args):
         messages = []
         if (self.user and self.char and self.char.parent_id):
             messages.extend(char_svc.get_parent_by_id(self.char, self.user, self.char.parent_id))
@@ -121,45 +124,43 @@ class CharacterCommand():
 
     def dialog(self, dialog_text, char=None):
         char, name, get_string, get_short_string = char_svc.get_char_info(self.char, self.user)
-        if self.char:
-            dialog = {
-                'create_character': '**CREATE or SELECT A CHARACTER**```css\n.d character YOUR_CHARACTER\'S_NAME```',
-                'active_character': f'***THIS IS YOUR ACTIVE CHARACTER:***\n:point_down:\n\n{get_string}',
-                'rename_delete': f'\n\n_Is ***{name}*** not the {char.category.lower()} name you wanted?_```css\n.d c rename NEW_NAME```_Want to remove ***{name}***?_```css\n.d c delete {name}```',
-                'active_character_short': f'***THIS IS YOUR ACTIVE CHARACTER:***\n:point_down:\n\n{get_short_string}',
-                'add_more_info': f'Add more information about ***{name}***```css\n.d c description CHARACTER_DESCRIPTION\n.d c high concept HIGH_CONCEPT\n.d c trouble TROUBLE```',
-                'add_skills': '' +
-                    f'Add approaches or skills for ***{name}***```css\n.d c approach Forceful +4 Clever +2 Quick +1 ...\n/* GET LIST OF APPROACHES or ADD YOUR OWN */\n.d c approach help\n\n\n.d c skill Will +4 Rapport +2 Lore +1 ...\n/* GET LIST OF SKILLS or ADD YOUR OWN */\n.d c skill help```',
-                'add_aspects_and_stunts': '' +
-                    f'Add an aspect or two for ***{name}***```css\n.d c aspect ASPECT_NAME```' +
-                    f'Give  ***{name}*** some cool stunts```css\n.d c stunt STUNT_NAME```',
-                'edit_active_aspect': '' +
-                    f'***You can edit this aspect as if it were a character***```css\n.d c aspect character\n/* THIS WILL SHOW THE ASPECT IS THE ACTIVE CHARACTER */\n.d c```',
-                'edit_active_stunt': '' +
-                    f'***You can edit this stunt as if it were a character***```css\n.d c stunt character\n/* THIS WILL SHOW THE STUNT IS THE ACTIVE CHARACTER */\n.d c```',
-                'manage_stress': '' +
-                    f'***Modify the stress tracks.\n' +
-                    'Here\'s an example to add and remove stress tracks***' +
-                    '```css\n.d c stress title 4 Ammo\n.d c stress title delete Ammo\n.d c stress title FATE /* also use FAE or Core */```',
-                'manage_conditions': '' +
-                    f'***Modify the conditions tracks.\n' +
-                    'Here\'s an example to add and remove consequence tracks***' +
-                    '```css\n.d c consequences title 2 Injured\n.d c consequences title delete Injured\n.d c consequences title FATE /* also use FAE or Core */```',
-                'go_back_to_parent': '' +
-                    f'\n\n***You can GO BACK to the parent character, aspect, or stunt***```css\n.d c parent\n.d c p```'
-            }
-        else:
-            dialog = {}
+        category = char.category if char else 'Character'
+        dialog = {
+            'create_character': '**CREATE or SELECT A CHARACTER**```css\n.d character YOUR_CHARACTER\'S_NAME```',
+            'active_character': f'***THIS IS YOUR ACTIVE CHARACTER:***\n:point_down:\n\n{get_string}',
+            'rename_delete': f'\n\n_Is ***{name}*** not the {category.lower()} name you wanted?_```css\n.d c rename NEW_NAME```_Want to remove ***{name}***?_```css\n.d c delete {name}```',
+            'active_character_short': f'***THIS IS YOUR ACTIVE CHARACTER:***\n:point_down:\n\n{get_short_string}',
+            'add_more_info': f'Add more information about ***{name}***```css\n.d c description CHARACTER_DESCRIPTION\n.d c high concept HIGH_CONCEPT\n.d c trouble TROUBLE```',
+            'add_skills': '' +
+                f'Add approaches or skills for ***{name}***```css\n.d c approach Forceful +4 Clever +2 Quick +1 ...\n/* GET LIST OF APPROACHES or ADD YOUR OWN */\n.d c approach help\n\n\n.d c skill Will +4 Rapport +2 Lore +1 ...\n/* GET LIST OF SKILLS or ADD YOUR OWN */\n.d c skill help```',
+            'add_aspects_and_stunts': '' +
+                f'Add an aspect or two for ***{name}***```css\n.d c aspect ASPECT_NAME```' +
+                f'Give  ***{name}*** some cool stunts```css\n.d c stunt STUNT_NAME```',
+            'edit_active_aspect': '' +
+                f'***You can edit this aspect as if it were a character***```css\n.d c aspect character\n/* THIS WILL SHOW THE ASPECT IS THE ACTIVE CHARACTER */\n.d c```',
+            'edit_active_stunt': '' +
+                f'***You can edit this stunt as if it were a character***```css\n.d c stunt character\n/* THIS WILL SHOW THE STUNT IS THE ACTIVE CHARACTER */\n.d c```',
+            'manage_stress': '' +
+                f'***Modify the stress tracks.\n' +
+                'Here\'s an example to add and remove stress tracks***' +
+                '```css\n.d c stress title 4 Ammo\n.d c stress title delete Ammo\n.d c stress title FATE /* also use FAE or Core */```',
+            'manage_conditions': '' +
+                f'***Modify the conditions tracks.\n' +
+                'Here\'s an example to add and remove consequence tracks***' +
+                '```css\n.d c consequences title 2 Injured\n.d c consequences title delete Injured\n.d c consequences title FATE /* also use FAE or Core */```',
+            'go_back_to_parent': '' +
+                f'\n\n***You can GO BACK to the parent character, aspect, or stunt***```css\n.d c parent\n.d c p```'
+        }
         dialog_string = ''
         if dialog_text == 'all':
             if not char:
                 dialog_string += dialog.get('create_character', '')
-            dialog_string += dialog.get('rename_delete', '') if self.can_edit else ''
-            dialog_string += dialog.get('add_more_info', '') if self.can_edit else ''
-            dialog_string += dialog.get('add_skills', '') if self.can_edit else ''
-            dialog_string += dialog.get('add_aspects_and_stunts', '') if self.can_edit else ''
-            dialog_string += dialog.get('manage_stress', '') if self.can_edit else ''
-            dialog_string += dialog.get('manage_conditions', '') if self.can_edit else ''
+            dialog_string += dialog.get('rename_delete', '')
+            dialog_string += dialog.get('add_more_info', '')
+            dialog_string += dialog.get('add_skills', '')
+            dialog_string += dialog.get('add_aspects_and_stunts', '')
+            dialog_string += dialog.get('manage_stress', '')
+            dialog_string += dialog.get('manage_conditions', '')
         elif char.category == 'Character':
             if dialog_text:
                 dialog_string += dialog.get(dialog_text, '')
@@ -245,7 +246,7 @@ class CharacterCommand():
                             self.user.command = ''
                             self.user.question = ''
                             self.user.answer = ''
-                            self.user.set_active_character(self.char)
+                            self.user.set_active_character(self.char,)
                             char_svc.save_user(self.user)
                             messages.append('Comand canceled')
                         elif answer.isdigit():
@@ -319,9 +320,15 @@ class CharacterCommand():
                     self.user.question = ''
                     self.user.answer = ''
                     char_svc.save_user(self.user)
-                    self.parent.args = answer.split(' ')
-                    self.parent.command = self.parent.args[0]
-                    return self.parent.get_messages()
+                    args = answer.split(' ')
+                    if args[0] in {'character', 'char', 'c'}:
+                        self.args = tuple(args[1:])
+                        self.command = self.args[0]
+                        return self.run()
+                    else:
+                        self.parent.args = tuple(args)
+                        self.parent.command = self.parent.args[0]
+                        return self.parent.get_messages()
             else:
                 question = ''.join([
                     f'Page {page_num} of {len(char_pages)} - Enter page number, **\'<\'** or **\'>\'**:',
@@ -368,14 +375,14 @@ class CharacterCommand():
         char.id = None
         char.user = user.id
         char.guild = guild
-        char_svc.save(char)
+        char_svc.save(char, user)
         for child in children:
             new_child = copy.deepcopy(child)
             new_child.id = None
             new_child.user = user.id
             new_child.parent_id = str(char.id)
             new_child.guild = guild
-            char_svc.save(new_child)
+            char_svc.save(new_child, user)
         messages.append(f'***{self.char.name}*** copied to ***{guild}***')
         return messages
 
@@ -393,6 +400,10 @@ class CharacterCommand():
             search = ' '.join(args[1:])
             self.char = Character().find(self.user, search, self.guild.name, None, 'Character', False)
         if not self.char:
+            self.user.command = ''
+            self.user.question = ''
+            self.user.answer = ''
+            char_svc.save_user(self.user)
             return [f'{search} was not found. No changes made.\nTry this: ```css\n.d c CHARACTER_NAME```']
         else:
             search = self.char.name
@@ -408,8 +419,9 @@ class CharacterCommand():
                 if answer:
                     if answer.lower() in ['yes', 'y']:
                         search = self.char.name
-                        self.char.reverse_delete()
-                        self.char.delete()
+                        self.char.reverse_delete(self.user)
+                        self.char.archived = True
+                        char_svc.save(self.char, self.user)
                         messages.append(f'***{search}*** removed')
                     elif answer.lower() in ['no', 'n', 'cancel', 'c']:
                         messages.append(f'Command ***"{command}"*** canceled')
@@ -431,6 +443,69 @@ class CharacterCommand():
                 messages.extend(char_svc.get_parent_by_id(self.char, self.user, parent_id))
         return messages
 
+    def restore_character(self, args):
+        messages = []
+        char_name = ' '.join(args[1:])
+        chars = []
+        chars.extend(Character.filter(name=char_name, guild=self.guild.name, archived=True).all())
+        if not chars:
+            self.user.command = ''
+            self.user.question = ''
+            self.user.answer = ''
+            char_svc.save_user(self.user)
+            return [f'{char_name} was not found. No changes made.\nTry this: ```css\n.d c CHARACTER_NAME```']
+        else:
+            if chars and len(chars) > 1:
+                prompt = ''. join ([
+                    '\n\nSELECT A CHARACTER USING:```css\n',
+                    '.d CHARACTER_NUMBER\n',
+                    '/* EXAMPLE .d 2 */```\n',
+                    'OR\n\n',
+                    'YOU CAN CANCEL THE COMAND:',
+                    '```css\n.d CANCEL```'
+                ])
+                selections = '\n\n'.join([f'CHARACTER {i + 1}\n{chars[i].get_short_string()}' for i in range(0, len(chars))])
+                command = 'c ' + ' '.join(args)
+                if self.user.command != command:
+                    question = f'{selections}{prompt}'
+                    messages.append(question)
+                    self.user.command = command
+                    self.user.question = question
+                    self.user.answer = ''
+                    char_svc.save_user(self.user)
+                else:
+                    answer = self.user.answer
+                    if answer.lower() in ['cancel','c']:
+                        self.user.command = ''
+                        self.user.question = ''
+                        self.user.answer = ''
+                        self.user.set_active_character(self.char)
+                        char_svc.save_user(self.user)
+                        messages.append('Comand canceled')
+                    elif answer.isdigit():
+                        char_num = int(answer)
+                        if char_num > len(chars) or char_num < 1:
+                            Exception(f'Character number {char_num} does not exist')
+                        self.char = chars[int(answer)-1]
+                        self.user.command = ''
+                        self.user.question = ''
+                        self.user.answer = ''
+                        self.user.set_active_character(self.char)
+                        char_svc.save_user(self.user)
+                        self.char.archived = False
+                        char_svc.save(self.char, self.user)
+                        messages.append(self.dialog(''))
+                    else:
+                        raise Exception(prompt)
+            else:
+                self.char = chars[0]
+                self.user.set_active_character(self.char)
+                char_svc.save_user(self.user)
+                self.char.archived = False
+                char_svc.save(self.char, self.user)
+                messages.append(self.dialog(''))
+        return messages
+
     def description(self, args):
         messages = []
         if len(args) == 1:
@@ -442,7 +517,7 @@ class CharacterCommand():
         else:
             description = ' '.join(args[1:])
             self.char.description = description
-            char_svc.save(self.char)
+            char_svc.save(self.char, self.user)
             messages.append(f'Description updated to {description}\n')
             messages.append(self.dialog('active_character_short') + '\n')
             messages.append(self.dialog(''))
@@ -463,7 +538,7 @@ class CharacterCommand():
             else:
                 hc = ' '.join(args[1:])
             self.char.high_concept = hc
-            char_svc.save(self.char)
+            char_svc.save(self.char, self.user)
             messages.append(f'High Concept updated to _{hc}_\n')
             messages.append(self.dialog('active_character_short') + '\n')
             messages.append(self.dialog(''))
@@ -480,7 +555,7 @@ class CharacterCommand():
         else:
             trouble = ' '.join(args[1:])
             self.char.trouble = trouble
-            char_svc.save(self.char)
+            char_svc.save(self.char, self.user)
             messages.append(f'Trouble updated to _{trouble}_\n')
             messages.append(self.dialog('active_character_short') + '\n')
             messages.append(self.dialog(''))
@@ -507,7 +582,7 @@ class CharacterCommand():
                 self.char.fate_points = 2
             points = int(args[2]) if len(args) == 3 and args[2].isdigit() else 1
             self.char.fate_points += points if self.char.fate_points < 5 else 0
-        char_svc.save(self.char)
+        char_svc.save(self.char, self.user)
         return [f'Fate Points: {self.char.fate_points}']
 
     def custom(self, args):
@@ -537,7 +612,7 @@ class CharacterCommand():
                 'property_value': property_value
             }
         self.char.custom_properties = custom_properties
-        char_svc.save(self.char)
+        char_svc.save(self.char, self.user)
         messages.append(self.dialog(''))
         return messages
 
@@ -563,7 +638,7 @@ class CharacterCommand():
             self.char.image_url = None
         else:
             self.char.image_url = args[1]
-        char_svc.save(self.char)
+        char_svc.save(self.char, self.user)
         messages.append(self.dialog(''))
         return messages
 
@@ -589,7 +664,7 @@ class CharacterCommand():
                             if key != skill:
                                 new_skills[key] = self.char.skills[key]
                         self.char.skills = new_skills
-                    char_svc.save(self.char)
+                    char_svc.save(self.char, self.user)
                     messages.append(f'Removed {skill}')
                 else:
                     for i in range(1, len(args), 2):
@@ -600,7 +675,7 @@ class CharacterCommand():
                         self.char.skills[skill] = val
                         messages.append(f'Updated {skill} to {val}')
                     self.char.use_approaches = True
-                    char_svc.save(self.char)
+                    char_svc.save(self.char, self.user)
                 messages.append(self.char.get_string_skills() + '\n')
                 messages.append(self.dialog(''))
         return messages
@@ -627,14 +702,14 @@ class CharacterCommand():
                             if key != skill:
                                 new_skills[key] = self.char.skills[key]
                         self.char.skills = new_skills
-                    char_svc.save(self.char)
+                    char_svc.save(self.char, self.user)
                     messages.append(f'Removed {skill} skill') 
                 else:
                     skill = [s for s in SKILLS if args[1][0:2].lower() == s[0:2].lower()]
                     skill = skill[0].split(' - ')[0] if skill else args[1]
                     self.char.skills[skill] = args[2]
                     self.char.use_approaches = False
-                    char_svc.save(self.char)
+                    char_svc.save(self.char, self.user)
                     messages.append(f'Updated {skill} to {args[2]}')                
                 messages.append(self.char.get_string_skills() + '\n')
                 messages.append(self.dialog(''))
@@ -656,8 +731,9 @@ class CharacterCommand():
             aspect = ' '.join(args[2:])
             for a in Character().get_by_parent(self.char, aspect, 'Aspect'):
                 aspect = str(a.name)
-                a.reverse_delete()
-                a.delete()
+                a.reverse_delete(self.user)
+                a.archived = True
+                char_svc.save(a, self.user)
             messages.append(f'"{aspect}" removed from aspects')
             messages.append(self.char.get_string_aspects(self.user))
         elif args[1].lower() in ['character', 'char', 'c']:
@@ -667,14 +743,14 @@ class CharacterCommand():
             char_svc.save_user(self.user)
             self.char.active_aspect = str(self.asp.id)
             self.char.active_character = str(self.asp.id)
-            char_svc.save(self.char)
+            char_svc.save(self.char, self.user)
             command = CharacterCommand(self.parent, self.ctx, args[1:], self.asp)
             messages.extend(command.run())
         else:
             aspect = ' '.join(args[1:])
             self.asp = Character().get_or_create(self.user, aspect, self.guild.name, self.char, 'Aspect')
             self.char.active_aspect = str(self.asp.id)
-            char_svc.save(self.char)
+            char_svc.save(self.char, self.user)
             messages.append(self.char.get_string_aspects(self.user) + '\n')
             messages.append(self.dialog('edit_active_aspect'))
         return messages
@@ -695,8 +771,9 @@ class CharacterCommand():
             stunt = ' '.join(args[2:])
             for s in Character().get_by_parent(self.char, stunt, 'Stunt'):
                 stunt = str(s.name)
-                s.reverse_delete()
-                s.delete()
+                s.reverse_delete(self.user)
+                s.archived = True
+                char_svc.save(s, self.user)
             messages.append(f'"{stunt}" removed from stunts')
             messages.append(self.char.get_string_stunts(self.user))
         elif args[1].lower() in ['character', 'char', 'c']:
@@ -704,7 +781,7 @@ class CharacterCommand():
             char_svc.save_user(self.user)
             self.char.active_stunt = str(self.stu.id)
             self.char.active_character = str(self.stu.id)
-            char_svc.save(self.char)
+            char_svc.save(self.char, self.user)
             command = CharacterCommand(self.parent, self.ctx, args[1:], self.stu)
             messages.extend(command.run())
         else:
@@ -712,7 +789,7 @@ class CharacterCommand():
             self.stu = Character().get_or_create(self.user, stunt, self.guild.name, self.char, 'Stunt')
             self.char.active_stunt = str(self.stu.id)
             self.char.active_character = str(self.stu.id)
-            char_svc.save(self.char)
+            char_svc.save(self.char, self.user)
             messages.append(self.char.get_string_stunts(self.user) + '\n')
         messages.append(self.dialog(''))
         return messages
@@ -883,7 +960,7 @@ class CharacterCommand():
         if check_user:
             return messages
         else:
-            char_svc.save(self.char)
+            char_svc.save(self.char, self.user)
         return messages
 
     def consequence(self, args):
@@ -1015,5 +1092,5 @@ class CharacterCommand():
             messages.extend(self.aspect(['a', aspect]))
             self.char.consequences = modified
         messages.append(f'{self.char.get_string_consequences()}')
-        char_svc.save(self.char)
+        char_svc.save(self.char, self.user)
         return messages

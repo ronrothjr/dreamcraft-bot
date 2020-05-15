@@ -1,6 +1,7 @@
 # user.py
 import datetime
 from mongoengine import *
+from mongoengine import signals
 
 class User(Document):
     name = StringField(required=True)
@@ -12,7 +13,7 @@ class User(Document):
     question = StringField()
     answer = StringField()
     created = DateTimeField(required=True)
-    updated = DateTimeField(required=True)
+    updated = DateTimeField(required=True)\
 
     def create_new(self, name, guild):
         self.guild = guild

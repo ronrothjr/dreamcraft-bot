@@ -1,14 +1,11 @@
 # zone_command
 import datetime
 from commands import CharacterCommand
-from models.channel import Channel
-from models.scenario import Scenario
-from models.scene import Scene
-from models.zone import Zone
-from models.character import Character
-from models.user import User
+from models import Channel, Scenario, Scene, Zone, Character, User
 from config.setup import Setup
+from services.character_service import CharacterService
 
+char_svc = CharacterService()
 SETUP = Setup()
 ZONE_HELP = SETUP.zone_help
 
@@ -19,12 +16,12 @@ class ZoneCommand():
         self.args = args[1:]
         self.command = self.args[0].lower() if len(self.args) > 0 else 'n'
         self.guild = ctx.guild if ctx.guild else ctx.author
+        self.user = User().get_or_create(ctx.author.name, self.guild.name)
         channel = 'private' if ctx.channel.type.name == 'private' else ctx.channel.name
-        self.channel = Channel().get_or_create(channel, self.guild.name)
+        self.channel = Channel().get_or_create(channel, self.guild.name, self.user)
         self.scenario = Scenario().get_by_id(self.channel.active_scenario) if self.channel and self.channel.active_scenario else None
         self.sc = Scene().get_by_id(self.channel.active_scene) if self.channel and self.channel.active_scene else None
         self.zone = Zone().get_by_id(self.channel.active_zone) if self.channel and self.channel.active_zone else None
-        self.user = User().get_or_create(ctx.author.name, self.guild.name)
         self.char = Character().get_by_id(self.user.active_character) if self.user and self.user.active_character else None
 
     def run(self):
@@ -74,12 +71,13 @@ class ZoneCommand():
                 return self.character(zone_args)
         else:
             zone_name = ' '.join(args[1:])
-            self.zone = Zone().get_or_create(self.user, self.channel, self.sc, zone_name)
-            self.channel.set_active_zone(self.zone)
+            self.zone = Zone().get_or_create(self.user, self.guild.name, self.channel, self.sc, zone_name)
+            self.channel.set_active_zone(self.zone, self.user)
             if self.user:
                 self.user.active_character = str(self.zone.character.id)
                 if (not self.user.created):
                     self.user.created = datetime.datetime.utcnow()
+                self.user.updated_by = str(self.user.id)
                 self.user.updated = datetime.datetime.utcnow()
                 self.user.save()
         return [self.zone.get_string(self.channel)]
@@ -102,6 +100,7 @@ class ZoneCommand():
             self.zone.description = description
             if (not self.zone.created):
                 self.zone.created = datetime.datetime.utcnow()
+            self.zone.updated_by = str(self.user.id)
             self.zone.updated = datetime.datetime.utcnow()
             self.zone.save()
             return [
@@ -114,6 +113,7 @@ class ZoneCommand():
             self.user.active_character = str(self.zone.character.id)
             if (not self.user.created):
                 self.user.created = datetime.datetime.utcnow()
+            self.user.updated_by = str(self.user.id)
             self.user.updated = datetime.datetime.utcnow()
             self.user.save()
         command = CharacterCommand(self.parent, self.ctx, args, self.zone.character)
@@ -131,6 +131,7 @@ class ZoneCommand():
             [self.zone.characters.remove(s) for s in self.zone.characters if char.lower() in s.lower()]
             if (not self.zone.created):
                 self.zone.created = datetime.datetime.utcnow()
+            self.zone.updated_by = str(self.user.id)
             self.zone.updated = datetime.datetime.utcnow()
             self.zone.save()
             return [
@@ -146,6 +147,7 @@ class ZoneCommand():
                 return [f'***{search}*** not found. No character added to _{self.zone.name}_']
             if (not self.zone.created):
                 self.zone.created = datetime.datetime.utcnow()
+            self.zone.updated_by = str(self.user.id)
             self.zone.updated = datetime.datetime.utcnow()
             self.zone.save()
             return [
@@ -161,16 +163,20 @@ class ZoneCommand():
                 return ['No zone provided for deletion']
         else:
             search = ' '.join(args[1:])
-            self.zone = Zone().find(str(self.channel.id), str(self.sc.id), search)
+            self.zone = Zone().find(self.guild.name, str(self.channel.id), str(self.sc.id), search)
         if not self.zone:
             return [f'{search} was not found. No changes made.']
         else:
             search = str(self.zone.name)
             scene_id = str(self.zone.scene_id) if self.zone.scene_id else ''
             channel_id = str(self.zone.channel_id) if self.zone.channel_id else ''
-            self.zone.character.reverse_delete()
-            self.zone.character.delete()
-            self.zone.delete()
+            self.zone.character.reverse_delete(self.user)
+            self.zone.character.archived = True
+            char_svc.save(self.zone.character, self.user)
+            self.zone.archived = True
+            self.zone.updated_by = str(self.user.id)
+            self.zone.updated = datetime.datetime.utcnow()
+            self.zone.save()
             messages.append(f'***{search}*** removed')
             if scene_id:
                 secenario = Scene().get_by_id(scene_id)

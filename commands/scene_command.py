@@ -2,13 +2,11 @@
 import traceback
 import datetime
 from commands import CharacterCommand
-from models.channel import Channel
-from models.scenario import Scenario
-from models.scene import Scene
-from models.character import Character
-from models.user import User
+from models import Channel, Scenario, Scene, Character, User
 from config.setup import Setup
+from services.character_service import CharacterService
 
+char_svc = CharacterService()
 SETUP = Setup()
 SCENE_HELP = SETUP.scene_help
 
@@ -19,11 +17,11 @@ class SceneCommand():
         self.args = args[1:]
         self.command = self.args[0].lower() if len(self.args) > 0 else 'n'
         self.guild = ctx.guild if ctx.guild else ctx.author
+        self.user = User().get_or_create(ctx.author.name, self.guild.name)
         channel = 'private' if ctx.channel.type.name == 'private' else ctx.channel.name
-        self.channel = Channel().get_or_create(channel, self.guild.name)
+        self.channel = Channel().get_or_create(channel, self.guild.name, self.user)
         self.scenario = Scenario().get_by_id(self.channel.active_scenario) if self.channel and self.channel.active_scenario else None
         self.sc = Scene().get_by_id(self.channel.active_scene) if self.channel and self.channel.active_scene else None
-        self.user = User().get_or_create(ctx.author.name, self.guild.name)
         self.char = Character().get_by_id(self.user.active_character) if self.user and self.user.active_character else None
 
     def run(self):
@@ -77,12 +75,13 @@ class SceneCommand():
                 return self.character(scene_args)
         else:
             scene_name = ' '.join(args[1:])
-            self.sc = Scene().get_or_create(self.user, self.channel, self.scenario, scene_name)
-            self.channel.set_active_scene(self.sc)
+            self.sc = Scene().get_or_create(self.user, self.guild.name, self.channel, self.scenario, scene_name)
+            self.channel.set_active_scene(self.sc, self.user)
             if self.user:
                 self.user.active_character = str(self.sc.character.id)
                 if (not self.user.created):
                     self.user.created = datetime.datetime.utcnow()
+                self.user.updated_by = str(self.user.id)
                 self.user.updated = datetime.datetime.utcnow()
                 self.user.save()
         return [self.sc.get_string(self.channel)]
@@ -105,6 +104,7 @@ class SceneCommand():
             self.sc.description = description
             if (not self.sc.created):
                 self.sc.created = datetime.datetime.utcnow()
+            self.sc.updated_by = str(self.user.id)
             self.sc.updated = datetime.datetime.utcnow()
             self.sc.save()
             return [
@@ -117,6 +117,7 @@ class SceneCommand():
             self.user.active_character = str(self.sc.character.id)
             if (not self.user.created):
                 self.user.created = datetime.datetime.utcnow()
+            self.channel.updated_by = str(self.user.id)
             self.user.updated = datetime.datetime.utcnow()
             self.user.save()
         command = CharacterCommand(self.parent, self.ctx, args, self.sc.character)
@@ -134,6 +135,7 @@ class SceneCommand():
             [self.sc.characters.remove(s) for s in self.sc.characters if char.lower() in s.lower()]
             if (not self.sc.created):
                 self.sc.created = datetime.datetime.utcnow()
+            self.sc.updated_by = str(self.user.id)
             self.sc.updated = datetime.datetime.utcnow()
             self.sc.save()
             return [
@@ -149,6 +151,7 @@ class SceneCommand():
                 return [f'***{search}*** not found. No character added to _{self.sc.name}_']
             if (not self.sc.created):
                 self.sc.created = datetime.datetime.utcnow()
+            self.sc.updated_by = str(self.user.id)
             self.sc.updated = datetime.datetime.utcnow()
             self.sc.save()
             return [
@@ -164,16 +167,20 @@ class SceneCommand():
                 raise Exception('No scene provided for deletion')
         else:
             search = ' '.join(args[1:])
-            self.sc = Scene().find(str(self.channel.id), str(self.scenario.id), search)
+            self.sc = Scene().find(self.guild.name, str(self.channel.id), str(self.scenario.id), search)
         if not self.sc:
             return [f'{search} was not found. No changes made.']
         else:
             search = str(self.sc.name)
             scenario_id = str(self.sc.scenario_id) if self.sc.scenario_id else ''
             channel_id = str(self.sc.channel_id) if self.sc.channel_id else ''
-            self.sc.character.reverse_delete()
-            self.sc.character.delete()
-            self.sc.delete()
+            self.sc.character.reverse_delete(self.user)
+            self.sc.character.archived = True
+            char_svc.save(self.sc.character, self.user)
+            self.sc.archived = True
+            self.sc.updated_by = str(self.user.id)
+            self.sc.updated = datetime.datetime.utcnow()
+            self.sc.save()
             messages.append(f'***{search}*** removed')
             if scenario_id:
                 secenario = Scenario().get_by_id(scenario_id)

@@ -23,12 +23,12 @@ class RollCommand():
         self.compel_index = [i for i in range(0, len(self.args)) if self.args[i] in ['compel', 'c']]
         self.command = args[0].lower()
         self.guild = ctx.guild if ctx.guild else ctx.author
+        self.user = User().get_or_create(self.ctx.author.name, self.guild.name)
         channel = 'private' if ctx.channel.type.name == 'private' else ctx.channel.name
-        self.channel = Channel().get_or_create(channel, self.guild.name)
+        self.channel = Channel().get_or_create(channel, self.guild.name, self.user)
         self.scenario = Scenario().get_by_id(self.channel.active_scenario) if self.channel and self.channel.active_scenario else None
         self.sc = Scene().get_by_id(self.channel.active_scene) if self.channel and self.channel.active_scene else None
         self.zone = Zone().get_by_id(self.channel.active_zone) if self.channel and self.channel.active_zone else None
-        self.user = User().get_or_create(self.ctx.author.name, self.guild.name)
         self.char = Character().get_by_id(self.user.active_character) if self.user and self.user.active_character else None
         self.skill = self.args[1] if len(args) > 1 else ''
         self.messages = []
@@ -84,6 +84,7 @@ class RollCommand():
     def save_char(self):
         if (not self.char.created):
             self.char.created = datetime.datetime.utcnow()
+        self.char.updated_by = str(self.user.id)
         self.char.updated = datetime.datetime.utcnow()
         self.char.save()
 

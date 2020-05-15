@@ -31,6 +31,7 @@ class DreamcraftHandler():
     def get_messages(self):
         switcher = {
             'cheat': CheatCommand,
+            'undo': UndoCommand,
             'user': UserCommand,
             'u': UserCommand,
             'channel': ChannelCommand,

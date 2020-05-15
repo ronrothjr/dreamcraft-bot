@@ -6,6 +6,7 @@ class Log(Document):
     parent_id = StringField(required=True)
     user_id = StringField()
     guild = StringField()
+    name = StringField()
     category = StringField()
     data = DynamicField()
     created_by = StringField()
@@ -27,8 +28,12 @@ class Log(Document):
         return log
 
     @classmethod
-    def get_by_user_id(cls, user_id):
-        logs = cls.filter(user_id=user_id).all()
+    def get_by_user_id(cls, user_id, page=1, items_per_page=5):
+        if page:
+            offset = (page - 1) * 5
+            logs = cls.filter(created_by=user_id).order_by('-created').skip( offset ).limit( items_per_page ).all()
+        else:
+            logs = cls.filter(created_by=user_id).order_by('-created').all()
         return logs
 
     @classmethod

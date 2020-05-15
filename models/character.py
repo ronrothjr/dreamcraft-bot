@@ -54,7 +54,7 @@ class Character(Document):
     @classmethod
     def post_save(cls, sender, document, **kwargs):
         changes = document._delta()[0]
-        Log().create_new(str(document.id), document.updated_by, document.guild, document.category, changes)
+        Log().create_new(str(document.id), document.name, document.updated_by, document.guild, document.category, changes)
         print(changes)
 
     @staticmethod
@@ -134,12 +134,20 @@ class Character(Document):
             character = self.create_new(user, name, guild, str(parent.id) if parent else None, category, archived)
         return character
 
-    def reverse_delete(self, user):
+    def reverse_archive(self, user):
         for c in Character().get_by_parent(self):
-            c.reverse_delete(self.user)
+            c.reverse_archive(self.user)
             c.archived = True
             c.updated_by = str(user.id)
-            self.updated = datetime.datetime.utcnow()
+            c.updated = datetime.datetime.utcnow()
+            c.save()
+
+    def reverse_restore(self, user):
+        for c in Character().get_by_parent(self):
+            c.reverse_restore(self.user)
+            c.archived = False
+            c.updated_by = str(user.id)
+            c.updated = datetime.datetime.utcnow()
             c.save()
 
     def get_string_name(self, user=None):

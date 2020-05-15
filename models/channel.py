@@ -23,7 +23,7 @@ class Channel(Document):
     @classmethod
     def post_save(cls, sender, document, **kwargs):
         changes = document._delta()[0]
-        Log().create_new(str(document.id), document.updated_by, document.guild, 'Channel', changes)
+        Log().create_new(str(document.id), document.name, document.updated_by, document.guild, 'Channel', changes)
         print(changes)
 
     @staticmethod

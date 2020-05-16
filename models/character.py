@@ -167,6 +167,13 @@ class Character(Document):
             character = self.create_new(user, name, guild, str(parent.id) if parent else None, category, archived)
         return character
 
+    def archive(self, user):
+            self.reverse_archive(self.user)
+            self.archived = True
+            self.updated_by = str(user.id)
+            self.updated = datetime.datetime.utcnow()
+            self.save()
+
     def reverse_archive(self, user):
         for c in Character().get_by_parent(self):
             c.reverse_archive(self.user)
@@ -174,6 +181,13 @@ class Character(Document):
             c.updated_by = str(user.id)
             c.updated = datetime.datetime.utcnow()
             c.save()
+
+    def reverse(self, user):
+            self.reverse_restore(self.user)
+            self.archived = False
+            self.updated_by = str(user.id)
+            self.updated = datetime.datetime.utcnow()
+            self.save()
 
     def reverse_restore(self, user):
         for c in Character().get_by_parent(self):

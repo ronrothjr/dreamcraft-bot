@@ -3,7 +3,7 @@ import datetime
 import math
 from commands import CharacterCommand
 from models import Channel, Scenario, Scene, Zone, Character, User, Log
-from utils import Pager, TextUtils
+from utils import Dialog, TextUtils
 from config.setup import Setup
 from services.character_service import CharacterService
 
@@ -50,22 +50,16 @@ class UndoCommand():
     def help(self, args):
         return [UNDO_HELP]
 
+    def set_dialog(self, command='', question='', answer=''):
+        self.user.command = command
+        self.user.question = question
+        self.user.answer = answer
+        char_svc.save_user(self.user)
+
     def undo_list(self, args):
+        messages =[]
         command = 'undo ' + (' '.join(args))
-        def format(undo):
-            return undo.get_string()
-        cancel_args, results = Pager(char_svc).manage_paging(
-            title='Undo List',
-            command=command,
-            user=self.user,
-            data_getter={
-                'method': Log.get_by_page,
-                'params': {
-                    'params': {'user_id': str(self.user.id)}
-                }
-            },
-            formatter=format)
-        if cancel_args:
+        def canceler(cancel_args):
             if cancel_args[0].lower() in ['redo','undo']:
                 self.args = cancel_args
                 self.command = self.args[0]
@@ -74,8 +68,25 @@ class UndoCommand():
                 self.parent.args = cancel_args
                 self.parent.command = self.parent.args[0]
                 return self.parent.get_messages()
-        else:
-            return [results]
+        response = Dialog({
+            'svc': char_svc,
+            'user': self.user,
+            'title': 'Undo List',
+            'type': 'view',
+            'type_name': 'Undo History',
+            'command': command,
+            'user': self.user,
+            'getter': {
+                'method': Log.get_by_page,
+                'params': {
+                    'params': {'user_id': str(self.user.id)}
+                }
+            },
+            'formatter': lambda undo, num: f'_Undo #{num+1}_\n{undo.get_string()}',
+            'cancel': canceler
+        }).open()
+        messages.extend(response)
+        return messages
 
     def get_undo(self, undo):
         switcher = {
@@ -97,29 +108,6 @@ class UndoCommand():
         if not item:
             item = model()
         return changes, item, undo_changes_str
-
-    def undo_changes(self, undo):
-        changes, item, undo_changes_str = self.get_undo(undo)
-        undos = list(Log.get_by_page(params={'parent_id': undo.parent_id, 'updated__lt': undo.updated}, page_num=1, page_size=5000))
-        if changes and undos:
-            for c in changes:
-                match = next(filter(lambda u: c in u.data, undos), None)
-                if match and str(match.id) != str(undo.id):
-                    setattr(item, c, match.data[c])
-                else:
-                    setattr(item, c, None)
-            item.history_id = str(undos[0].id)
-            item.updated_by = str(self.user.id)
-            item.save()
-            return f'{undo.category} {TextUtils.clean(item.name)} has been rolled back:\n\n{item.get_string()}'
-        elif undo.action == 'created':
-            history = Log.get_by_page(params={'updated__lt': undo.updated}, page_num=1, page_size=5000).first()
-            item.history_id = str(history.id)
-            item.updated_by = str(self.user.id)
-            item.save()
-            response = f'{undo.category} {TextUtils.clean(item.name)} has been deleted:\n\n{item.get_string()}'
-            item.delete()
-            return response
 
     def last(self, args):
         messages = []
@@ -149,37 +137,35 @@ class UndoCommand():
                     messages.append(f'Command ***"{command}"*** canceled')
                 else:
                     raise Exception(f'Please answer the question regarding ***"{command}"***:\n\n{question}')
-                self.user.command = ''
-                self.user.question = ''
-                self.user.answer = ''
-                char_svc.save_user(self.user)
+                self.set_dialog()
             else:
                 Exception(f'No answer was received to command ***"{command}"***')
         else:
-            self.user.command = command
-            self.user.question = question
-            self.user.answer = ''
-            char_svc.save_user(self.user)
+            self.set_dialog(command, question)
             messages.extend([question])
         return messages
 
-    def redo_changes(self, redo):
-        changes, item, undo_changes_str = self.get_undo(redo)
-        if changes and item:
-            [setattr(item, c, changes[c]) for c in changes]
+    def undo_changes(self, undo):
+        changes, item, undo_changes_str = self.get_undo(undo)
+        undos = list(Log.get_by_page(params={'parent_id': undo.parent_id, 'updated__lt': undo.updated}, page_num=0))
+        if changes and undos:
+            for c in changes:
+                match = next(filter(lambda u: c in u.data, undos), None)
+                if match and str(match.id) != str(undo.id):
+                    setattr(item, c, match.data[c])
+                else:
+                    setattr(item, c, None)
+            item.history_id = str(undos[0].id)
             item.updated_by = str(self.user.id)
             item.save()
-            redo.parent_id = str(item.id)
-            redo.save()
-            action = 'restored' if redo.action == 'created' else 'updated'
-            return f'{redo.category} {TextUtils.clean(item.name)} has been {action}:\n\n{item.get_string()}'
-        elif redo.action == 'created':
-            history = Log.get_by_page(params={'updated__lt': redo.updated}, page_num=1, page_size=5000).first()
+            return f'{undo.category} {TextUtils.clean(item.name)} has been rolled back:\n\n{item.get_string()}'
+        elif undo.action == 'created':
+            history = Log.get_by_page(params={'updated__lt': undo.updated}, page_num=0).first()
             item.history_id = str(history.id)
             item.updated_by = str(self.user.id)
             item.save()
-            response = f'{redo.category} {TextUtils.clean(item.name)} has been deleted:\n\n{item.get_string()}'
-            item.delete()
+            response = f'{undo.category} {TextUtils.clean(item.name)} has been archived:\n\n{item.get_string()}'
+            item.archive(self.user)
             return response
 
     def next(self, args):
@@ -209,16 +195,30 @@ class UndoCommand():
                     messages.append(f'Command ***"{command}"*** canceled')
                 else:
                     raise Exception(f'Please answer the question regarding ***"{command}"***:\n\n{question}')
-                self.user.command = ''
-                self.user.question = ''
-                self.user.answer = ''
+                self.set_dialog()
                 char_svc.save_user(self.user)
             else:
                 Exception(f'No answer was received to command ***"{command}"***')
         else:
-            self.user.command = command
-            self.user.question = question
-            self.user.answer = ''
-            char_svc.save_user(self.user)
+            self.set_dialog(command, question)
             messages.extend([question])
         return messages
+
+    def redo_changes(self, redo):
+        changes, item, undo_changes_str = self.get_undo(redo)
+        if changes and item:
+            [setattr(item, c, changes[c]) for c in changes]
+            item.updated_by = str(self.user.id)
+            item.save()
+            redo.parent_id = str(item.id)
+            redo.save()
+            action = 'restored' if redo.action == 'created' else 'updated'
+            return f'{redo.category} {TextUtils.clean(item.name)} has been {action}:\n\n{item.get_string()}'
+        elif redo.action == 'created':
+            history = Log.get_by_page(params={'updated__lt': redo.updated}, page_num=0).first()
+            item.history_id = str(history.id)
+            item.updated_by = str(self.user.id)
+            item.save()
+            response = f'{redo.category} {TextUtils.clean(item.name)} has been deleted:\n\n{item.get_string()}'
+            item.archive(self.user)
+            return response

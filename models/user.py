@@ -2,6 +2,7 @@
 import datetime
 from mongoengine import *
 from mongoengine import signals
+from bson.objectid import ObjectId
 
 class User(Document):
     name = StringField(required=True)
@@ -12,8 +13,12 @@ class User(Document):
     command =  StringField()
     question = StringField()
     answer = StringField()
+    archived = BooleanField(default=False)
+    history_id = StringField()
+    created_by = StringField()
     created = DateTimeField(required=True)
-    updated = DateTimeField(required=True)\
+    updated_by = StringField()
+    updated = DateTimeField(required=True)
 
     def create_new(self, name, guild):
         self.guild = guild
@@ -23,10 +28,19 @@ class User(Document):
         self.save()
         return self
 
+    @staticmethod
+    def filter(**params):
+        return User.objects.filter(**params)
+
     def find(self, name, guild):
         filter = User.objects(name=name, guild=guild)
         user = filter.first()
         return user
+
+    @classmethod
+    def get_by_id(cls, id):
+        character = cls.filter(id=ObjectId(id)).first()
+        return character
 
     def get_or_create(self, name, guild):
         user = self.find(name, guild)

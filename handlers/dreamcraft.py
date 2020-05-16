@@ -32,6 +32,7 @@ class DreamcraftHandler():
         switcher = {
             'cheat': CheatCommand,
             'undo': UndoCommand,
+            'redo': UndoCommand,
             'user': UserCommand,
             'u': UserCommand,
             'channel': ChannelCommand,

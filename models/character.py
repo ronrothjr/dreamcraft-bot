@@ -46,21 +46,40 @@ class Character(Document):
     has_stress = BooleanField()
     custom_properties = DynamicField()
     archived = BooleanField(default=False)
+    history_id = StringField()
     created_by = StringField()
     created = DateTimeField(required=True)
     updated_by = StringField()
     updated = DateTimeField(required=True)
 
     @classmethod
+    def pre_save(cls, sender, document, **kwargs):
+        document.updated = datetime.datetime.utcnow()
+
+    @classmethod
     def post_save(cls, sender, document, **kwargs):
-        changes = document._delta()[0]
-        action = 'updated'
-        if 'created' in kwargs:
-            action = 'created' if kwargs['created'] else action
-        if action == 'updated' and 'archived' in changes:
-            action = 'archived' if changes['archived'] else 'restored'
-        Log().create_new(str(document.id), document.name, document.updated_by, document.guild, document.category, changes, action)
-        print(changes)
+        if document.history_id:
+            user = User().get_by_id(document.updated_by)
+            user.history_id = document.history_id
+            user.updated_by = document.updated_by
+            user.updated = document.updated
+            user.save()
+            print({'history_id': document.history_id})
+        else:
+            changes = document._delta()[0]
+            action = 'updated'
+            if 'created' in kwargs:
+                action = 'created' if kwargs['created'] else action
+            if action == 'updated' and 'archived' in changes:
+                action = 'archived' if changes['archived'] else 'restored'
+            Log().create_new(str(document.id), document.name, document.updated_by, document.guild, document.category, changes, action)
+            user = User().get_by_id(document.updated_by)
+            if user.history_id:
+                user.history_id = None
+                user.updated_by = document.updated_by
+                user.updated = document.updated
+                user.save()
+            print(changes)
 
     @staticmethod
     def query():
@@ -386,4 +405,5 @@ class Character(Document):
         return totals
 
 
+signals.pre_save.connect(Character.pre_save, sender=Character)
 signals.post_save.connect(Character.post_save, sender=Character)

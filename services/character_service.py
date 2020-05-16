@@ -28,6 +28,7 @@ class CharacterService():
                 char.created = datetime.datetime.utcnow()
             char.updated_by = str(user.id)
             char.updated = datetime.datetime.utcnow()
+            char.history_id = ''
             char.save()
 
     def save_user(self, user):

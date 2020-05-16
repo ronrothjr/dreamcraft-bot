@@ -260,12 +260,13 @@ class CharacterCommand():
                         ]
                     else:
                         self.char.name = char_name
-                        char_svc.save(self.char)
+                        char_svc.save(self.char, self.user)
+                        messages.append(self.dialog(''))
             else:
                 chars = []
                 chars.extend(Character.filter(name=char_name, guild=self.guild.name, archived=False).all())
                 if chars and len(chars) > 1:
-                    prompt = ''. join ([
+                    prompt = ''.join([
                         '\n\nSELECT A CHARACTER USING:```css\n',
                         '.d CHARACTER_NUMBER\n',
                         '/* EXAMPLE .d 2 */```\n',
@@ -319,7 +320,7 @@ class CharacterCommand():
         def format(c):
             return f'{c.get_short_string(self.user)}\n'
         cancel_args, results = Pager(char_svc).manage_paging(
-            title='Undo History',
+            title='Character List',
             command=command,
             user=self.user,
             data_getter={
@@ -415,6 +416,8 @@ class CharacterCommand():
                     self.char.reverse_archive(self.user)
                     self.char.archived = True
                     char_svc.save(self.char, self.user)
+                    self.user.active_character = None
+                    char_svc.save_user(self.user)
                     messages.append(''.join([
                         f'***{search}*** removed\n\n',
                         'You can restore this character at any time:',

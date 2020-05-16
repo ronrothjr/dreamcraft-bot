@@ -6,8 +6,7 @@ from bson.objectid import ObjectId
 from services import CharacterService
 from models import User, Channel, Character
 from config.setup import Setup
-from utils.text_utils import TextUtils
-from utils import Pager
+from utils import TextUtils, Dialog
 
 char_svc = CharacterService()
 SETUP = Setup()
@@ -263,78 +262,46 @@ class CharacterCommand():
                         char_svc.save(self.char, self.user)
                         messages.append(self.dialog(''))
             else:
-                chars = []
-                chars.extend(Character.filter(name=char_name, guild=self.guild.name, archived=False).all())
-                if chars and len(chars) > 1:
-                    prompt = ''.join([
-                        '\n\nSELECT A CHARACTER USING:```css\n',
-                        '.d CHARACTER_NUMBER\n',
-                        '/* EXAMPLE .d 2 */```\n',
-                        'OR\n\n',
-                        'YOU CAN CANCEL THE COMAND:',
-                        '```css\n.d CANCEL```'
-                    ])
-                    selections = '\n\n'.join([f'CHARACTER {i + 1}\n{chars[i].get_short_string()}' for i in range(0, len(chars))])
-                    command = 'c ' + ' '.join(args)
-                    if self.user.command != command:
-                        question = f'{selections}{prompt}'
-                        messages.append(question)
-                        self.user.command = command
-                        self.user.question = question
-                        self.user.answer = ''
-                        char_svc.save_user(self.user)
+                def canceler(cancel_args):
+                    if cancel_args[0].lower() in ['character','char','c']:
+                        self.args = cancel_args[1:]
+                        self.command = self.args[0]
+                        return self.run()
                     else:
-                        answer = self.user.answer
-                        if answer.lower() in ['cancel','c']:
-                            self.user.command = ''
-                            self.user.question = ''
-                            self.user.answer = ''
-                            self.user.set_active_character(self.char,)
-                            char_svc.save_user(self.user)
-                            messages.append('Comand canceled')
-                        elif answer.isdigit():
-                            char_num = int(answer)
-                            if char_num > len(chars) or char_num < 1:
-                                Exception(f'Character number {char_num} does not exist')
-                            self.char = chars[int(answer)-1]
-                            self.user.command = ''
-                            self.user.question = ''
-                            self.user.answer = ''
-                            self.user.set_active_character(self.char)
-                            char_svc.save_user(self.user)
-                            messages.append(self.dialog(''))
-                        else:
-                            raise Exception(prompt)
-                else:
-                    if chars and len(chars) == 1:
-                        self.char = chars[0]
-                    else:
-                        self.char = Character().get_or_create(self.user, char_name, self.guild.name)
+                        self.parent.args = cancel_args
+                        self.parent.command = self.parent.args[0]
+                        return self.parent.get_messages()
+
+                def selector(selection):
+                    self.char = selection
                     self.user.set_active_character(self.char)
                     char_svc.save_user(self.user)
-                    messages.append(self.dialog(''))
+                    return [self.dialog('')]
+
+                messages.extend(Dialog({
+                    'svc': char_svc,
+                    'user': self.user,
+                    'title': 'Character List',
+                    'command': 'c ' + ' '.join(args),
+                    'type': 'select',
+                    'type_name': 'CHARACTER',
+                    'getter': {
+                        'method': Character.get_by_page,
+                        'params': {'params': {'name': char_name, 'guild': self.guild.name, 'archived': False}}
+                    },
+                    'formatter': lambda item, item_num: f'_CHARACTER #{item_num+1}_\n{item.get_short_string()}',
+                    'cancel': canceler,
+                    'select': selector,
+                    'empty': {
+                        'method': Character().get_or_create,
+                        'params': {'user': self.user, 'name': char_name, 'guild': self.guild.name}
+                    }
+                }).open())
         return messages
 
     def character_list(self, args):
-        command = 'c ' + (' '.join(args))
-        def format(c):
-            return f'{c.get_short_string(self.user)}\n'
-        cancel_args, results = Pager(char_svc).manage_paging(
-            title='Character List',
-            command=command,
-            user=self.user,
-            data_getter={
-                'method': Character.get_by_page,
-                'params': {
-                    'params': {
-                        'guild': self.guild.name,
-                        'category': 'Character',
-                        'archived': False
-                    }
-                }
-            },
-            formatter=format)
-        if cancel_args:
+        messages = []
+        def canceler(cancel_args):
             if cancel_args[0].lower() in ['character','char','c']:
                 self.args = cancel_args[1:]
                 self.command = self.args[0]
@@ -343,8 +310,21 @@ class CharacterCommand():
                 self.parent.args = cancel_args
                 self.parent.command = self.parent.args[0]
                 return self.parent.get_messages()
-        else:
-            return [results]
+
+        messages.extend(Dialog({
+            'svc': char_svc,
+            'user': self.user,
+            'title': 'Character List',
+            'command': 'c ' + (' '.join(args)),
+            'type': 'view',
+            'getter': {
+                'method': Character.get_by_page,
+                'params': {'params': {'guild': self.guild.name, 'category': 'Character', 'archived': False}}
+            },
+            'formatter': lambda item, item_num: f'{item.get_short_string(self.user)}',
+            'cancel': canceler
+        }).open())
+        return messages
 
     def copy_character(self, args):
         messages = []

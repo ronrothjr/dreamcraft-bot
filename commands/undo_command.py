@@ -3,7 +3,7 @@ import datetime
 import math
 from commands import CharacterCommand
 from models import Channel, Scenario, Scene, Zone, Character, User, Log
-from utils import Pager, TextUtils
+from utils import Dialog, TextUtils
 from config.setup import Setup
 from services.character_service import CharacterService
 
@@ -51,21 +51,9 @@ class UndoCommand():
         return [UNDO_HELP]
 
     def undo_list(self, args):
+        messages =[]
         command = 'undo ' + (' '.join(args))
-        def format(undo):
-            return undo.get_string()
-        cancel_args, results = Pager(char_svc).manage_paging(
-            title='Undo List',
-            command=command,
-            user=self.user,
-            data_getter={
-                'method': Log.get_by_page,
-                'params': {
-                    'params': {'user_id': str(self.user.id)}
-                }
-            },
-            formatter=format)
-        if cancel_args:
+        def canceler(cancel_args):
             if cancel_args[0].lower() in ['redo','undo']:
                 self.args = cancel_args
                 self.command = self.args[0]
@@ -74,8 +62,25 @@ class UndoCommand():
                 self.parent.args = cancel_args
                 self.parent.command = self.parent.args[0]
                 return self.parent.get_messages()
-        else:
-            return [results]
+        response = Dialog({
+            'svc': char_svc,
+            'user': self.user,
+            'title': 'Undo List',
+            'type': 'view',
+            'type_name': 'Undo History',
+            'command': command,
+            'user': self.user,
+            'getter': {
+                'method': Log.get_by_page,
+                'params': {
+                    'params': {'user_id': str(self.user.id)}
+                }
+            },
+            'formatter': lambda undo, num: f'_Undo #{num+1}_\n{undo.get_string()}',
+            'cancel': canceler
+        }).open()
+        messages.extend(response)
+        return messages
 
     def get_undo(self, undo):
         switcher = {

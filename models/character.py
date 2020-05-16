@@ -46,16 +46,40 @@ class Character(Document):
     has_stress = BooleanField()
     custom_properties = DynamicField()
     archived = BooleanField(default=False)
+    history_id = StringField()
     created_by = StringField()
     created = DateTimeField(required=True)
     updated_by = StringField()
     updated = DateTimeField(required=True)
 
     @classmethod
+    def pre_save(cls, sender, document, **kwargs):
+        document.updated = datetime.datetime.utcnow()
+
+    @classmethod
     def post_save(cls, sender, document, **kwargs):
-        changes = document._delta()[0]
-        Log().create_new(str(document.id), document.updated_by, document.guild, document.category, changes)
-        print(changes)
+        if document.history_id:
+            user = User().get_by_id(document.updated_by)
+            user.history_id = document.history_id
+            user.updated_by = document.updated_by
+            user.updated = document.updated
+            user.save()
+            print({'history_id': document.history_id})
+        else:
+            changes = document._delta()[0]
+            action = 'updated'
+            if 'created' in kwargs:
+                action = 'created' if kwargs['created'] else action
+            if action == 'updated' and 'archived' in changes:
+                action = 'archived' if changes['archived'] else 'restored'
+            Log().create_new(str(document.id), document.name, document.updated_by, document.guild, document.category, changes, action)
+            user = User().get_by_id(document.updated_by)
+            if user.history_id:
+                user.history_id = None
+                user.updated_by = document.updated_by
+                user.updated = document.updated
+                user.save()
+            print(changes)
 
     @staticmethod
     def query():
@@ -91,6 +115,15 @@ class Character(Document):
     def get_by_user(cls, user):
         characters = cls.filter(user=user.id).all()
         return characters
+
+    @classmethod
+    def get_by_page(cls, params, page_num=1, page_size=5):
+        if page_num:
+            offset = (page_num - 1) * 5
+            logs = cls.filter(**params).order_by('name', 'created').skip(offset).limit(page_size).all()
+        else:
+            logs = cls.filter(**params).order_by('name', 'created').all()
+        return logs
 
     @classmethod
     def get_by_parent(cls, parent, name='', category=''):
@@ -134,12 +167,20 @@ class Character(Document):
             character = self.create_new(user, name, guild, str(parent.id) if parent else None, category, archived)
         return character
 
-    def reverse_delete(self, user):
+    def reverse_archive(self, user):
         for c in Character().get_by_parent(self):
-            c.reverse_delete(self.user)
+            c.reverse_archive(self.user)
             c.archived = True
             c.updated_by = str(user.id)
-            self.updated = datetime.datetime.utcnow()
+            c.updated = datetime.datetime.utcnow()
+            c.save()
+
+    def reverse_restore(self, user):
+        for c in Character().get_by_parent(self):
+            c.reverse_restore(self.user)
+            c.archived = False
+            c.updated_by = str(user.id)
+            c.updated = datetime.datetime.utcnow()
             c.save()
 
     def get_string_name(self, user=None):
@@ -257,6 +298,7 @@ class Character(Document):
         return f'{self.nl()}{self.nl()}{consequences_name}{self.sep()}{consequences_string}' if consequences_string else ''
 
     def get_string(self, user=None):
+        archived = '```css\nARCHIVED```' if self.archived else ''
         name = self.get_string_name(user)
         fate_points = self.get_string_fate()
         description = f'{self.sep()}"{self.description}"' if self.description else ''
@@ -269,15 +311,16 @@ class Character(Document):
         stress = self.get_string_stress()
         consequenses = self.get_string_consequences()
         image = f'!image{self.image_url}!image' if self.image_url else ''
-        return f'{name}{description}{high_concept}{trouble}{fate_points}{custom}{skills}{stress}{aspects}{stunts}{consequenses}{image}'
+        return f'{archived}{name}{description}{high_concept}{trouble}{fate_points}{custom}{skills}{stress}{aspects}{stunts}{consequenses}{image}'
 
     def get_short_string(self, user=None):
+        archived = '```css\nARCHIVED```' if self.archived else ''
         name = self.get_string_name(user)
         fate_points = self.get_string_fate()
         description = f'{self.nl()}"{self.description}"' if self.description else ''
         high_concept = f'{self.nl()}**High Concept:** {self.high_concept}' if self.high_concept else ''
         trouble = f'{self.nl()}**Trouble:** {self.trouble}' if self.trouble else ''
-        return f'{name}{description}{high_concept}{trouble}{fate_points}'
+        return f'{archived}{name}{description}{high_concept}{trouble}{fate_points}'
 
     def get_guilds(self, options={}):
         pipeline = []
@@ -362,4 +405,5 @@ class Character(Document):
         return totals
 
 
+signals.pre_save.connect(Character.pre_save, sender=Character)
 signals.post_save.connect(Character.post_save, sender=Character)

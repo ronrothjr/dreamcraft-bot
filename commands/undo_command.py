@@ -1,0 +1,224 @@
+# undo_command
+import datetime
+import math
+from commands import CharacterCommand
+from models import Channel, Scenario, Scene, Zone, Character, User, Log
+from utils import Pager, TextUtils
+from config.setup import Setup
+from services.character_service import CharacterService
+
+char_svc = CharacterService()
+SETUP = Setup()
+UNDO_HELP = SETUP.undo_help
+
+class UndoCommand():
+    def __init__(self, parent, ctx, args):
+        self.parent = parent
+        self.ctx = ctx
+        self.args = args[1:]
+        self.command = self.args[0].lower() if len(self.args) > 0 else 'undo'
+        self.guild = ctx.guild if ctx.guild else ctx.author
+        self.user = User().get_or_create(ctx.author.name, self.guild.name)
+        channel = 'private' if ctx.channel.type.name == 'private' else ctx.channel.name
+        self.channel = Channel().get_or_create(channel, self.guild.name, self.user)
+        self.scenario = Scenario().get_by_id(self.channel.active_scenario) if self.channel and self.channel.active_scenario else None
+        self.sc = Scene().get_by_id(self.channel.active_scene) if self.channel and self.channel.active_scene else None
+        self.zone = Zone().get_by_id(self.channel.active_zone) if self.channel and self.channel.active_zone else None
+        self.char = Character().get_by_id(self.user.active_character) if self.user and self.user.active_character else None
+
+    def run(self):
+        switcher = {
+            'help': self.help,
+            'list': self.undo_list,
+            'last': self.last,
+            'next': self.next
+        }
+        # Get the function from switcher dictionary
+        if self.command in switcher:
+            func = switcher.get(self.command, lambda: self.name)
+            # Execute the function
+            messages = func(self.args)
+        else:
+            self.args = ('help',) + self.args
+            self.command = 'help'
+            func = self.help
+            # Execute the function
+            messages = func(self.args)
+        # Send messages
+        return messages
+
+    def help(self, args):
+        return [UNDO_HELP]
+
+    def undo_list(self, args):
+        command = 'undo ' + (' '.join(args))
+        def format(undo):
+            return undo.get_string()
+        cancel_args, results = Pager(char_svc).manage_paging(
+            title='Undo List',
+            command=command,
+            user=self.user,
+            data_getter={
+                'method': Log.get_by_page,
+                'params': {
+                    'params': {'user_id': str(self.user.id)}
+                }
+            },
+            formatter=format)
+        if cancel_args:
+            if cancel_args[0].lower() in ['redo','undo']:
+                self.args = cancel_args
+                self.command = self.args[0]
+                return self.run()
+            else:
+                self.parent.args = cancel_args
+                self.parent.command = self.parent.args[0]
+                return self.parent.get_messages()
+        else:
+            return [results]
+
+    def get_undo(self, undo):
+        switcher = {
+            'Character': Character,
+            'Stunt': Character,
+            'Aspect': Character,
+            'Channel': Channel,
+            'Scenario': Scenario,
+            'Scene': Scene,
+            'Zone': Zone
+        }
+        model = switcher.get(undo.category, None)
+        if not model:
+            raise Exception(f'Could not find data module for {undo.category}')
+        exclude = ['created', 'updated', 'created_by', 'updated_by']
+        changes = {d: undo.data[d] for d in undo.data if d not in exclude or undo.action == 'created'}
+        undo_changes_str = [f'_{c}:_ {changes[c]}' for c in changes]
+        item = model().get_by_id(undo.parent_id)
+        if not item:
+            item = model()
+        return changes, item, undo_changes_str
+
+    def undo_changes(self, undo):
+        changes, item, undo_changes_str = self.get_undo(undo)
+        undos = list(Log.get_by_page(params={'parent_id': undo.parent_id, 'updated__lt': undo.updated}, page_num=1, page_size=5000))
+        if changes and undos:
+            for c in changes:
+                match = next(filter(lambda u: c in u.data, undos), None)
+                if match and str(match.id) != str(undo.id):
+                    setattr(item, c, match.data[c])
+                else:
+                    setattr(item, c, None)
+            item.history_id = str(undos[0].id)
+            item.updated_by = str(self.user.id)
+            item.save()
+            return f'{undo.category} {TextUtils.clean(item.name)} has been rolled back:\n\n{item.get_string()}'
+        elif undo.action == 'created':
+            history = Log.get_by_page(params={'updated__lt': undo.updated}, page_num=1, page_size=5000).first()
+            item.history_id = str(history.id)
+            item.updated_by = str(self.user.id)
+            item.save()
+            response = f'{undo.category} {TextUtils.clean(item.name)} has been deleted:\n\n{item.get_string()}'
+            item.delete()
+            return response
+
+    def last(self, args):
+        messages = []
+        undos = None
+        if self.user.history_id:
+            current_history = Log.get_by_id(self.user.history_id)
+            if current_history:
+                undos = list(Log.filter(updated__lt=current_history.updated).order_by('-created').all())
+        if not undos:
+            undos = list(Log.get_by_page({'user_id': str(self.user.id)}))
+        if not undos:
+            raise Exception('You have no undo history')
+        undo = undos[0]
+        changes, item, undo_changes_str = self.get_undo(undo)
+        command = 'undo ' + ' '.join(args)
+        question = ''.join([
+            f'Are you sure you want to undo changes to this {undo.category}?\n\n{item.get_string()}\n\n',
+            f'***Changes to Undo:***\n' + '\n'.join(undo_changes_str),
+            '```css\n.d YES /* to confirm the command */\n.d NO /* to reject the command */\n.d CANCEL /* to cancel the command */```'
+        ])
+        if self.user.command == command:
+            answer = self.user.answer
+            if answer:
+                if answer.lower() in ['yes', 'y']:
+                    messages.append(self.undo_changes(undo))
+                elif answer.lower() in ['no', 'n', 'cancel', 'c']:
+                    messages.append(f'Command ***"{command}"*** canceled')
+                else:
+                    raise Exception(f'Please answer the question regarding ***"{command}"***:\n\n{question}')
+                self.user.command = ''
+                self.user.question = ''
+                self.user.answer = ''
+                char_svc.save_user(self.user)
+            else:
+                Exception(f'No answer was received to command ***"{command}"***')
+        else:
+            self.user.command = command
+            self.user.question = question
+            self.user.answer = ''
+            char_svc.save_user(self.user)
+            messages.extend([question])
+        return messages
+
+    def redo_changes(self, redo):
+        changes, item, undo_changes_str = self.get_undo(redo)
+        if changes and item:
+            [setattr(item, c, changes[c]) for c in changes]
+            item.updated_by = str(self.user.id)
+            item.save()
+            redo.parent_id = str(item.id)
+            redo.save()
+            action = 'restored' if redo.action == 'created' else 'updated'
+            return f'{redo.category} {TextUtils.clean(item.name)} has been {action}:\n\n{item.get_string()}'
+        elif redo.action == 'created':
+            history = Log.get_by_page(params={'updated__lt': redo.updated}, page_num=1, page_size=5000).first()
+            item.history_id = str(history.id)
+            item.updated_by = str(self.user.id)
+            item.save()
+            response = f'{redo.category} {TextUtils.clean(item.name)} has been deleted:\n\n{item.get_string()}'
+            item.delete()
+            return response
+
+    def next(self, args):
+        messages = []
+        redo = None
+        if not self.user.history_id:
+            raise Exception('You cannot redo the next undo history. You up to date.')
+        current_history = Log.get_by_id(self.user.history_id)
+        if current_history:
+            redo = Log.filter(updated__gt=current_history.updated).order_by('created').first()
+        if not redo:
+            raise Exception('Cannot find next undo history')
+        changes, item, undo_changes_str = self.get_undo(redo)
+        command = 'redo ' + ' '.join(args)
+        item_string = f'***New {redo.category}***' if redo.action == 'created' else item.get_string()
+        question = ''.join([
+            f'Are you sure you want to redo changes to this {redo.category}?\n\n{item_string}\n\n',
+            f'***Changes to Redo:***\n' + '\n'.join(undo_changes_str),
+            '```css\n.d YES /* to confirm the command */\n.d NO /* to reject the command */\n.d CANCEL /* to cancel the command */```'
+        ])
+        if self.user.command == command:
+            answer = self.user.answer
+            if answer:
+                if answer.lower() in ['yes', 'y']:
+                    messages.append(self.redo_changes(redo))
+                elif answer.lower() in ['no', 'n', 'cancel', 'c']:
+                    messages.append(f'Command ***"{command}"*** canceled')
+                else:
+                    raise Exception(f'Please answer the question regarding ***"{command}"***:\n\n{question}')
+                self.user.command = ''
+                self.user.question = ''
+                self.user.answer = ''
+                char_svc.save_user(self.user)
+            else:
+                Exception(f'No answer was received to command ***"{command}"***')
+        else:
+            self.user.command = command
+            self.user.question = question
+            self.user.answer = ''
+            char_svc.save_user(self.user)
+            messages.extend([question])
+        return messages

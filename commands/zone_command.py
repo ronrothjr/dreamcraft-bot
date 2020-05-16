@@ -170,7 +170,7 @@ class ZoneCommand():
             search = str(self.zone.name)
             scene_id = str(self.zone.scene_id) if self.zone.scene_id else ''
             channel_id = str(self.zone.channel_id) if self.zone.channel_id else ''
-            self.zone.character.reverse_delete(self.user)
+            self.zone.character.reverse_archive(self.user)
             self.zone.character.archived = True
             char_svc.save(self.zone.character, self.user)
             self.zone.archived = True

@@ -6,11 +6,15 @@ class Setup():
 
     help = '\n***ADDITIONAL INSTRUCTIONS***\n\
             \n**Character Setup:**```css\n.d c help\n/* Display active character */\n.d character\n.d c```\
+            \n**Undo Help**```css\n.d undo help```\
             \n**Roll Help**```css\n.d roll help```\
             \n**User Setup:**```css\n.d u help\n/* Display user info */\n.d user```\
             \n**Scenario Setup**```css\n.d scenario help\n/* Display active scenario */\n.d scenario```\
             \n**Scene Setup**```css\n.d s help\n/* Display active scene */\n.d scene```\
             \n**Zone Setup**```css\n.d z help\n/* Display active zone */\n.d zone```'
+
+    undo_help = '\n***UNDO INSTRUCTIONS***\n\
+            \n**Unod List:**```css\n.d undo list\n/* Display a list of changes to undo */```'
 
     roll_help = 'd r help = display rol help\n\
             \nRoll Fate Dice\n\

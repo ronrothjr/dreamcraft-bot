@@ -2,6 +2,7 @@
 import datetime
 from mongoengine import *
 from mongoengine import signals
+from models.character import User
 from models.character import Character
 from models.log import Log
 
@@ -14,6 +15,7 @@ class Scenario(Document):
     active_user = StringField()
     characters = ListField(StringField())
     archived = BooleanField(default=False)
+    history_id = StringField()
     created_by = StringField()
     created = DateTimeField(required=True)
     updated_by = StringField()
@@ -21,9 +23,28 @@ class Scenario(Document):
 
     @classmethod
     def post_save(cls, sender, document, **kwargs):
-        changes = document._delta()[0]
-        Log().create_new(str(document.id), document.updated_by, document.guild, 'Scenario', changes)
-        print(changes)
+        if document.history_id:
+            user = User().get_by_id(document.updated_by)
+            user.history_id = document.history_id
+            user.updated_by = document.updated_by
+            user.updated = document.updated
+            user.save()
+            print({'history_id': document.history_id})
+        else:
+            changes = document._delta()[0]
+            action = 'updated'
+            if 'created' in kwargs:
+                action = 'created' if kwargs['created'] else action
+            if action == 'updated' and 'archived' in changes:
+                action = 'archived' if changes['archived'] else 'restored'
+            Log().create_new(str(document.id), document.name, document.updated_by, document.guild, document.category, changes, action)
+            user = User().get_by_id(document.updated_by)
+            if user.history_id:
+                user.history_id = None
+                user.updated_by = document.updated_by
+                user.updated = document.updated
+                user.save()
+            print(changes)
 
     @staticmethod
     def query():
@@ -80,9 +101,11 @@ class Scenario(Document):
         characters = '***\n                ***'.join(c.name for c in characters if c)
         return f'\n            _Characters:_\n                ***{characters}***'
 
-    def get_string(self, channel):
+    def get_string(self, channel=None):
         name = f'***{self.name}***'
-        active = ' _(Active Scenario)_ ' if str(self.id) == channel.active_scenario else ''
+        active = ''
+        if channel:
+            active = ' _(Active Scenario)_ ' if str(self.id) == channel.active_scenario else ''
         description = f' - "{self.description}"' if self.description else ''
         characters = f'{self.get_string_characters()}' if self.characters else ''
         aspects = ''

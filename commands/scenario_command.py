@@ -166,7 +166,7 @@ class ScenarioCommand():
         else:
             search = str(self.scenario.name)
             channel_id = str(self.scenario.channel_id) if self.scenario.channel_id else ''
-            self.scenario.character.reverse_delete(self.user)
+            self.scenario.character.reverse_archive(self.user)
             self.scenario.character.archived = True
             char_svc.save(self.scenario.character, self.user)
             self.scenario.archived

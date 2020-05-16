@@ -18,11 +18,11 @@ class Dialog(object):
 
     def open(self):
         question = ''
-        select_question = self.get_select_str() if self.select else ''
         paging_question = ''
         items = None
         page_num = 1
         page_count = self.get_page_count()
+        select_question = self.get_select_str() if self.select and page_count and page_count > 0 else ''
         if self.user.command == self.command:
             answer = self.user.answer
             paging_question = self.user.question
@@ -30,21 +30,18 @@ class Dialog(object):
                 page_num_str = paging_question[paging_question.find('Page ')+5:paging_question.find(' of ')]
                 page_num = int(page_num_str)
                 if answer.isdigit():
-                    page_num = int(answer)
-                    if page_num > page_count or page_num < 1:
+                    new_page_num = int(answer)
+                    if new_page_num > page_count or new_page_num < 1:
                         raise Exception(f'Page number {page_num} does not exist')
-                elif answer == '<<' and page_num > 1:
-                    page_num = 1
-                elif answer == '<' and page_num > 1:
-                    page_num -= 1
-                elif answer == '>' and page_num < page_count:
-                    page_num += 1
-                elif answer == '>>' and page_num < page_count:
-                    page_num = page_count
+                else:
+                    options = {'<<': 1, '<': page_num - 1, '>': page_num + 1, '>>': page_count}
+                    new_page_num = options.get(answer, None)
+                if new_page_num and new_page_num > 0 and new_page_num <= page_count:
+                    page_num = new_page_num
                 paging_question = self.get_page_str(page_num, page_count)
                 items = list(self.get_list(page_num))
                 question = f'{select_question}{paging_question}'
-                self.set_user(self.command, question)
+                self.set_dialog(self.command, question)
             elif '=' in answer and self.select:
                 selection = answer[answer.find('=')+1:]
                 if not selection.isdigit():
@@ -53,47 +50,32 @@ class Dialog(object):
                 items = list(self.get_list(page_num))
                 if item_num < 1 or item_num > len(items):
                     raise Exception('Your selection is invalid')
-                self.set_user()
+                self.set_dialog()
                 return self.select(items[item_num-1])
             else:
-                self.set_user()
+                self.set_dialog()
                 if self.cancel:
                     return self.cancel(tuple(answer.split(' ')))
                 else:
                     return [f'***{self.command}*** command cancelled']
         else:
             items = self.get_list(page_num) if page_count else None
-            paging_question = self.get_page_str(page_num, page_count) if page_count > 1 else ''
+            paging_question = self.get_page_str(page_num, page_count) if page_count and page_count > 1 else ''
             question = f'{select_question}{paging_question}'
-            self.set_user(self.command, question)
-        if items:
+            self.set_dialog(self.command if question else '', question)
+        if len(items) == 1 and self.select:
+            return self.select(items[0])
+        elif items:
             content = self.get_content(items)
             return [f'{content}\n{question}']
         else:
-            return self.no_items(items)
+            return self.no_items()
 
-    def set_user(self, command='', question='', answer=''):
+    def set_dialog(self, command='', question='', answer=''):
         self.user.command = command
         self.user.question = question
         self.user.answer = answer
         self.svc.save_user(self.user)
-
-    def no_items(self, items):
-        if self.empty:
-            method = self.empty['method']
-            if not method:
-                raise Exception('No empty method supplied')
-            params = self.empty['params']
-            if not params:
-                raise Exception('No empty params supplied')
-            item = method(**params)
-            if self.select:
-                content = self.select(item)
-            else:
-                content = [item.get_string()]
-            return [content]
-        else:
-            return [f'You don\'t have anything in your {self.title}.']
 
     def get_page_count(self):
         method = self.getter.get('method', None)
@@ -143,3 +125,20 @@ class Dialog(object):
         items_string = '\n\n'.join([self.formatter(items[i], i) for i in range(0, len(items))])
         content = f'***{self.title}:***\n\n{items_string}\n'
         return content
+
+    def no_items(self):
+        if self.empty:
+            method = self.empty['method']
+            if not method:
+                raise Exception('No empty method supplied')
+            params = self.empty['params']
+            if not params:
+                raise Exception('No empty params supplied')
+            item = method(**params)
+            if self.select:
+                content = self.select(item)
+            else:
+                content = [item.get_string()]
+            return [content]
+        else:
+            return [f'You don\'t have anything in your {self.title}.']

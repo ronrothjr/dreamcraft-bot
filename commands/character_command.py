@@ -262,9 +262,7 @@ class CharacterCommand():
             else:
                 def canceler(cancel_args):
                     if cancel_args[0].lower() in ['character','char','c']:
-                        self.args = cancel_args[1:]
-                        self.command = self.args[0]
-                        return self.run()
+                        return CharacterCommand(self.parent, self.ctx, cancel_args).run()
                     else:
                         self.parent.args = cancel_args
                         self.parent.command = self.parent.args[0]
@@ -301,9 +299,7 @@ class CharacterCommand():
         messages = []
         def canceler(cancel_args):
             if cancel_args[0].lower() in ['character','char','c']:
-                self.args = cancel_args[1:]
-                self.command = self.args[0] if self.args else 'n'
-                return self.run()
+                return CharacterCommand(self.parent, self.ctx, cancel_args).run()
             else:
                 self.parent.args = cancel_args
                 self.parent.command = self.parent.args[0]

@@ -254,9 +254,7 @@ class CharacterCommand():
                 else:
                     char = Character().find(self.user, char_name, self.guild.name)
                     if char:
-                        return [
-                            f'Cannot rename to _{char_name}_. Character already exists'
-                        ]
+                        return [f'Cannot rename to _{char_name}_. Character already exists']
                     else:
                         self.char.name = char_name
                         char_svc.save(self.char, self.user)
@@ -304,7 +302,7 @@ class CharacterCommand():
         def canceler(cancel_args):
             if cancel_args[0].lower() in ['character','char','c']:
                 self.args = cancel_args[1:]
-                self.command = self.args[0]
+                self.command = self.args[0] if self.args else 'n'
                 return self.run()
             else:
                 self.parent.args = cancel_args

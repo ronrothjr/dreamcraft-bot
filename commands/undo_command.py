@@ -148,18 +148,7 @@ class UndoCommand():
     def undo_changes(self, undo):
         changes, item, undo_changes_str = self.get_undo(undo)
         undos = list(Log.get_by_page(params={'parent_id': undo.parent_id, 'updated__lt': undo.updated}, page_num=0))
-        if changes and undos:
-            for c in changes:
-                match = next(filter(lambda u: c in u.data, undos), None)
-                if match and str(match.id) != str(undo.id):
-                    setattr(item, c, match.data[c])
-                else:
-                    setattr(item, c, None)
-            item.history_id = str(undos[0].id)
-            item.updated_by = str(self.user.id)
-            item.save()
-            return f'{undo.category} {TextUtils.clean(item.name)} has been rolled back:\n\n{item.get_string()}'
-        elif undo.action == 'created':
+        if undo.action == 'created':
             history = Log.get_by_page(params={'updated__lt': undo.updated}, page_num=0).first()
             item.history_id = str(history.id)
             item.updated_by = str(self.user.id)
@@ -167,12 +156,38 @@ class UndoCommand():
             response = f'{undo.category} {TextUtils.clean(item.name)} has been archived:\n\n{item.get_string()}'
             item.archive(self.user)
             return response
+        elif changes and undos:
+            for c in changes:
+                prop = c.split ('__')
+                match = next(filter(lambda u: c in u.data, undos), None)
+                if match and str(match.id) != str(undo.id):
+                    if len(prop) > 1:
+                        # Get dictionary
+                        attr = getattr(item, prop[0])
+                        # Set key value in dictionary
+                        attr[prop[1]] = match.data[c]
+                        setattr(item, prop[0], attr)
+                    else:
+                        setattr(item, c, match.data[c])
+                else:
+                    if len(prop) > 1:
+                        # Get dictionary
+                        attr = getattr(item, prop[0])
+                        # Remove prop from dictionary
+                        attr = {k: attr[k] for k in attr if k != prop[1]}
+                        setattr(item, prop[0], attr)
+                    else:
+                        setattr(item, c, None)
+            item.history_id = str(undos[0].id)
+            item.updated_by = str(self.user.id)
+            item.save()
+            return f'{undo.category} {TextUtils.clean(item.name)} has been undone:\n\n{item.get_string()}'
 
     def next(self, args):
         messages = []
         redo = None
         if not self.user.history_id:
-            raise Exception('You cannot redo the next undo history. You up to date.')
+            raise Exception('You cannot redo the next undo history. You are up to date.')
         current_history = Log.get_by_id(self.user.history_id)
         if current_history:
             redo = Log.filter(updated__gt=current_history.updated).order_by('created').first()
@@ -206,19 +221,23 @@ class UndoCommand():
 
     def redo_changes(self, redo):
         changes, item, undo_changes_str = self.get_undo(redo)
-        if changes and item:
-            [setattr(item, c, changes[c]) for c in changes]
-            item.updated_by = str(self.user.id)
-            item.save()
-            redo.parent_id = str(item.id)
-            redo.save()
-            action = 'restored' if redo.action == 'created' else 'updated'
-            return f'{redo.category} {TextUtils.clean(item.name)} has been {action}:\n\n{item.get_string()}'
-        elif redo.action == 'created':
-            history = Log.get_by_page(params={'updated__lt': redo.updated}, page_num=0).first()
-            item.history_id = str(history.id)
-            item.updated_by = str(self.user.id)
+        history = Log.get_by_page(params={'updated__lt': redo.updated}, page_num=0).first()
+        item.history_id = str(history.id)
+        item.updated_by = str(self.user.id)
+        if redo.action == 'created':
             item.save()
             response = f'{redo.category} {TextUtils.clean(item.name)} has been deleted:\n\n{item.get_string()}'
             item.archive(self.user)
             return response
+        elif changes and item:
+            for c in changes:
+                if '__' in c:
+                    nest = c.split ('__')
+                    attr = getattr(item, nest[0])
+                    attr[nest[1]] = changes[c]
+                    setattr(item, nest[0], attr)
+                else:
+                    setattr(item, c, changes[c])
+            item.save()
+            action = 'restored' if redo.action == 'created' else 'updated'
+            return f'{redo.category} {TextUtils.clean(item.name)} has been {action}:\n\n{item.get_string()}'

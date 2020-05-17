@@ -66,7 +66,9 @@ class Character(Document):
             user.save()
             print({'history_id': document.history_id})
         else:
-            changes = document._delta()[0]
+            changes = {}
+            for c in document._delta()[0]:
+                changes[c.replace('.', '__')] = document._delta()[0][c]
             action = 'updated'
             if 'created' in kwargs:
                 action = 'created' if kwargs['created'] else action

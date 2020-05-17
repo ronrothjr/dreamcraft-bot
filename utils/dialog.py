@@ -59,11 +59,11 @@ class Dialog(object):
                 else:
                     return [f'***{self.command}*** command cancelled']
         else:
-            items = self.get_list(page_num) if page_count else None
+            items = list(self.get_list(page_num)) if page_count else None
             paging_question = self.get_page_str(page_num, page_count) if page_count and page_count > 1 else ''
             question = f'{select_question}{paging_question}'
             self.set_dialog(self.command if question else '', question)
-        if len(items) == 1 and self.select:
+        if items and len(items) == 1 and self.select:
             return self.select(items[0])
         elif items:
             content = self.get_content(items)

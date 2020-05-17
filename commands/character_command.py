@@ -283,7 +283,7 @@ class CharacterCommand():
                     'type_name': 'CHARACTER',
                     'getter': {
                         'method': Character.get_by_page,
-                        'params': {'params': {'name': char_name, 'guild': self.guild.name, 'archived': False}}
+                        'params': {'params': {'name__icontains': char_name, 'guild': self.guild.name, 'category': 'Character', 'archived': False}}
                     },
                     'formatter': lambda item, item_num: f'_CHARACTER #{item_num+1}_\n{item.get_short_string()}',
                     'cancel': canceler,
@@ -808,6 +808,8 @@ class CharacterCommand():
             titles = []
             if self.char.stress_titles:
                 titles = copy.deepcopy(self.char.stress_titles)
+            else:
+                titles = copy.deepcopy(SETUP.stress_titles)
             if args[2] in ['delete', 'd']:
                 if not titles:
                     messages.append('You have not defined any custom stress titles')
@@ -834,7 +836,7 @@ class CharacterCommand():
                     messages.append(f'{self.char.get_string()}')
                 elif total == "FATE":
                     self.char.stress = STRESS
-                    self.char.stress_titles = None
+                    self.char.stress_titles = SETUP.stress_titles
                 elif total == "FAE":
                     self.char.stress = SETUP.stress_FAE
                     self.char.stress_titles = SETUP.stress_titles_FAE
@@ -848,12 +850,14 @@ class CharacterCommand():
                     stress_boxes = []
                     [stress_boxes.append(['1', O]) for i in range(0, int(total))]
                     matches = [t for t in titles if title.lower() in t.lower()]
-                    modified = copy.deepcopy(self.char.stress) if self.char.stress_titles and self.char.stress else []
+                    modified = copy.deepcopy(self.char.stress) if self.char.stress_titles and self.char.stress else STRESS
                     if matches:
                         for i in range(0, len(titles)):
                             if title.lower() in titles[i].lower():
                                 modified[i] = stress_boxes
                     else:
+                        if not titles:
+                            titles.append(SETUP.stress_titles)
                         titles.append(title)
                         self.char.stress_titles = titles
                         modified.append(stress_boxes)

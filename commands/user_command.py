@@ -9,13 +9,13 @@ SETUP = Setup()
 USER_HELP = SETUP.user_help
 
 class UserCommand():
-    def __init__(self, parent, ctx, args):
+    def __init__(self, parent, ctx, args, guild=None, user=None):
         self.parent = parent
         self.ctx = ctx
         self.args = args[1:]
+        self.guild = guild
+        self.user = user
         self.command = self.args[0].lower() if len(self.args) > 0 else 'u'
-        self.guild = ctx.guild if ctx.guild else ctx.author
-        self.user = User().get_or_create(ctx.author.name, self.guild.name)
 
     def run(self):
         switcher = {

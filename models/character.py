@@ -24,6 +24,7 @@ class Character(Document):
     user = LazyReferenceField(User)
     parent_id = StringField()
     active_character = StringField()
+    npc = BooleanField()
     characters = ListField(StringField())
     category = StringField()
     description = StringField()
@@ -92,7 +93,7 @@ class Character(Document):
         return Character.objects.filter(**params)
 
     @classmethod
-    def find(cls, user, name, guild, parent=None, category='', archived=False):
+    def find(cls, user, name, guild, parent=None, category='', archived=False, npc=False):
         params = {}
         if user:
             params.update(user=user.id)
@@ -102,6 +103,8 @@ class Character(Document):
             params.update(guild=guild)
         if parent:
             params.update(parent_id=str(parent.id))
+        if category:
+            params.update(category=category)
         if category:
             params.update(category=category)
         params.update(archived=archived)
@@ -128,7 +131,7 @@ class Character(Document):
         return logs
 
     @classmethod
-    def get_by_parent(cls, parent, name='', category=''):
+    def get_by_parent(cls, parent, name='', category='', archived=False):
         characters = []
         params = {}
         if parent:
@@ -137,6 +140,7 @@ class Character(Document):
             params.update(name__icontains=name)
         if category:
             params.update(category=category)
+        params.update(archived=archived)
         if name:
             character = cls.filter(**params).first()
             characters = [character] if character else []
@@ -144,12 +148,13 @@ class Character(Document):
             characters = cls.filter(**params).all()
         return characters
 
-    def create_new(self, user, name, guild, parent_id, category, archived):
+    def create_new(self, user, name, guild, parent_id, category, archived, npc=False):
         self.user = user
         self.name = name
         self.guild = guild
+        self.npc = npc
         self.category = category
-        if category == 'Character':
+        if category == 'Character' and not npc:
             self.refresh = 3
             self.fate_points = 3
             self.stress = STRESS
@@ -163,10 +168,10 @@ class Character(Document):
         self.save()
         return self
 
-    def get_or_create(self, user, name, guild, parent=None, category='Character', archived=False):
-        character = self.find(user, name, guild, parent, category, archived)
+    def get_or_create(self, user, name, guild, parent=None, category='Character', archived=False, npc=False):
+        character = self.find(user, name, guild, parent, category, archived, npc)
         if character is None:
-            character = self.create_new(user, name, guild, str(parent.id) if parent else None, category, archived)
+            character = self.create_new(user, name, guild, str(parent.id) if parent else None, category, archived, npc)
         return character
 
     def archive(self, user):
@@ -184,7 +189,7 @@ class Character(Document):
             c.updated = datetime.datetime.utcnow()
             c.save()
 
-    def reverse(self, user):
+    def restore(self, user):
             self.reverse_restore(self.user)
             self.archived = False
             self.updated_by = str(user.id)
@@ -201,7 +206,8 @@ class Character(Document):
 
     def get_string_name(self, user=None):
         active = ''
-        category = f' _({self.category})_ ' if self.category else ''
+        player = 'Nonplayer ' if self.npc else ''
+        category = f' _({player}{self.category})_ ' if self.category else ''
         if user and str(self.id) == user.active_character:
             active = f' _(Active)_ '
         return f'***{self.name}***{active}{category}'

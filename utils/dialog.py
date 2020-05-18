@@ -139,6 +139,6 @@ class Dialog(object):
                 content = self.select(item)
             else:
                 content = [item.get_string()]
-            return [content]
+            return content
         else:
             return [f'You don\'t have anything in your {self.title}.']

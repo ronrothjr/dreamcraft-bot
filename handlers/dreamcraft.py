@@ -1,14 +1,17 @@
 # dreamcraft.py
 import datetime
+import re
+from dotenv import load_dotenv
 from discord import Embed
 
-from models import Channel, User
+from models import Channel, User, Character
 from commands import *
 from config.setup import Setup
 
 SETUP = Setup()
 APPROACHES = SETUP.approaches
 SKILLS = SETUP.skills
+from config.setup import Setup
 
 class DreamcraftHandler():
     """
@@ -17,7 +20,12 @@ class DreamcraftHandler():
     def __init__(self, ctx, args):
         self.ctx = ctx
         self.args = args
+        self.guild = ctx.guild if ctx.guild else ctx.author
+        self.user = User().get_or_create(ctx.author.name, self.guild.name)
+        self.char = Character().get_by_id(self.user.active_character) if self.user and self.user.active_character else None
+        self.module = self.char.category if self.char else None
         self.command = args[0].lower()
+        self.func = None
         self.messages = []
 
     async def handle(self):
@@ -29,6 +37,15 @@ class DreamcraftHandler():
             await self.send('\n'.join(self.messages))
 
     def get_messages(self):
+        modules = {
+            'Channel': ChannelCommand,
+            'Scenario': ScenarioCommand,
+            'Scene': SceneCommand,
+            'Character': CharacterCommand,
+            'Undo': UndoCommand,
+            'User': UserCommand,
+            'Zone': ZoneCommand
+        }
         switcher = {
             'cheat': CheatCommand,
             'undo': UndoCommand,
@@ -68,14 +85,31 @@ class DreamcraftHandler():
         if not self.messages:
             self.shortcuts()
             # Get the function from switcher dictionary
-            if self.command in switcher:
-                func = switcher.get(self.command, lambda: CharacterCommand)
+            if switcher.get(self.command, None):
+                self.func = switcher.get(self.command, None)
+                self.module = re.sub(r'commands\.|_command', '', self.func.__module__).title()
+                if self.module != self.user.module:
+                    self.user.module = self.module
+                    self.user.updated_by = str(self.user.id)
+                    self.user.updated = datetime.datetime.utcnow()
+                    self.user.save()
+            # Get the function from User object
+            if self.func is None and self.user.module in modules:
+                self.module = self.user.module
+                self.func = modules.get(self.module, None)
+                self.args = (self.module.lower(),) + self.args
+            # Get the function from Character object
+            if self.func is None and self.module in modules:
+                self.func = modules.get(self.module, None)
+                self.args = (self.module.lower(),) + self.args
+            if self.func:
                 # Execute the function and store the returned messages
-                instance = func(ctx=self.ctx, args=self.args, parent=self)      
+                instance = self.func(ctx=self.ctx, args=self.args, guild=self.guild, user=self.user, parent=self)
                 # Call the run() method for the command
                 self.messages = instance.run()
             else:
                 self.messages = [f'Unknown command: {self.command}']
+            
         return self.messages
 
     async def send(self, message):
@@ -92,17 +126,17 @@ class DreamcraftHandler():
 
     def answer(self):
         guild = self.ctx.guild if self.ctx.guild else self.ctx.author
-        user = User().find(self.ctx.author.name, guild.name)
-        if user and user.command:
+        self.user = User().find(self.ctx.author.name, guild.name)
+        if self.user and self.user.command:
             answer = ' '.join(self.args[0:])
-            self.args = tuple(user.command.split(' '))
+            self.args = tuple(self.user.command.split(' '))
             self.command = self.args[0].lower()
-            if (not user.created):
-                user.created = datetime.datetime.utcnow()
-            user.answer = answer
-            user.updated_by = str(user.id)
-            user.updated = datetime.datetime.utcnow()
-            user.save()
+            if (not self.user.created):
+                self.user.created = datetime.datetime.utcnow()
+            self.user.answer = answer
+            self.user.updated_by = str(self.user.id)
+            self.user.updated = datetime.datetime.utcnow()
+            self.user.save()
 
     def shortcuts(self):
         # shortcut for updating approaches on a character (must enter full name)

@@ -38,7 +38,7 @@ class Zone(Document):
                 action = 'created' if kwargs['created'] else action
             if action == 'updated' and 'archived' in changes:
                 action = 'archived' if changes['archived'] else 'restored'
-            Log().create_new(str(document.id), document.name, document.updated_by, document.guild, document.category, changes, action)
+            Log().create_new(str(document.id), document.name, document.updated_by, document.guild, 'Zone', changes, action)
             user = User().get_by_id(document.updated_by)
             if user.history_id:
                 user.history_id = None

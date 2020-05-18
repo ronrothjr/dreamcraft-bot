@@ -2,6 +2,7 @@
 import datetime
 from mongoengine import *
 from bson.objectid import ObjectId
+from utils.text_utils import TextUtils
 
 class Log(Document):
     parent_id = StringField(required=True)

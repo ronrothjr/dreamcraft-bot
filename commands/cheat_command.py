@@ -6,7 +6,7 @@ SETUP = Setup()
 CHEATS = SETUP.cheats
 
 class CheatCommand():
-    def __init__(self, parent, ctx, args):
+    def __init__(self, parent, ctx, args, guild=None, user=None):
         self.parent = parent
         self.ctx = ctx
         self.args = args[1:]

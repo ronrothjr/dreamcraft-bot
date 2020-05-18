@@ -11,17 +11,19 @@ from handlers.dreamcraft import DreamcraftHandler
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
-GUILD = os.getenv('DISCORD_GUILD')
+PREFIX = os.getenv('DISCORD_PREFIX')
+COMMAND = os.getenv('DISCORD_COMMAND')
+DATABASE = os.getenv('DISCORD_DATABASE')
 SETUP = Setup()
 START = SETUP.start
 HELP = SETUP.help
 
-connect('dreamcraft')
+connect(DATABASE)
 
 
-bot = commands.Bot(command_prefix='.')
+bot = commands.Bot(command_prefix=PREFIX)
 
-@bot.command(name='d')
+@bot.command(name=COMMAND)
 async def command_handler(ctx, *args):
     """
     Command handler for .d, the Dreamcraft Bot command

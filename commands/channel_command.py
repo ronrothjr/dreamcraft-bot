@@ -3,13 +3,13 @@ import datetime
 from models import Channel, User, Character, Scene
 
 class ChannelCommand():
-    def __init__(self, parent, ctx, args):
+    def __init__(self, parent, ctx, args, guild=None, user=None):
         self.parent = parent
         self.ctx = ctx
         self.args = args[1:]
         self.command = self.args[0].lower() if len(self.args) > 0 else 'c'
-        self.guild = ctx.guild if ctx.guild else ctx.author
-        self.user = User().get_or_create(self.ctx.author.name, self.guild.name)
+        self.guild = guild
+        self.user = user
         channel = 'private' if ctx.channel.type.name == 'private' else ctx.channel.name
         self.channel = Channel().get_or_create(channel, self.guild.name, self.user)
         if self.user.name not in self.channel.users:

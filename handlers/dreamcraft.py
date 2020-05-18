@@ -50,6 +50,8 @@ class DreamcraftHandler():
             'cheat': CheatCommand,
             'undo': UndoCommand,
             'redo': UndoCommand,
+            'log': UndoCommand,
+            'l': UndoCommand,
             'user': UserCommand,
             'u': UserCommand,
             'channel': ChannelCommand,

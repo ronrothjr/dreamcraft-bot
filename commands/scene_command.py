@@ -2,7 +2,7 @@
 import traceback
 import datetime
 from commands import CharacterCommand
-from models import Channel, Scenario, Scene, Character, User
+from models import Channel, Scenario, Scene, Character, User, Log
 from config.setup import Setup
 from services.character_service import CharacterService
 

@@ -31,19 +31,22 @@ class UndoCommand():
         try:
             switcher = {
                 'help': self.help,
+                'note': self.note,
+                'n': self.note,
+                'story': self.story,
                 'list': self.undo_list,
                 'last': self.last,
                 'next': self.next
             }
             # Get the function from switcher dictionary
-            if self.command in switcher:
-                func = switcher.get(self.command, lambda: self.name)
+            if switcher.get(self.command, None):
+                func = switcher.get(self.command, lambda: self.help)
                 # Execute the function
                 messages = func(self.args)
             else:
-                self.args = ('help',) + self.args
-                self.command = 'help'
-                func = self.help
+                self.args = ('note',) + self.args
+                self.command = 'note'
+                func = self.note
                 # Execute the function
                 messages = func(self.args)
             # Send messages
@@ -54,6 +57,44 @@ class UndoCommand():
 
     def help(self, args):
         return [UNDO_HELP]
+
+    def note(self, args):
+        Log().create_new(str(self.user.id), 'Log', str(self.user.id), self.guild.name, 'Log', {'by': self.user.name, 'note': ' '.join(args[1:])}, 'created')
+        return ['Log created']
+
+    def story(self, args):
+        messages =[]
+        command = 'log ' + (' '.join(args))
+        def canceler(cancel_args):
+            if cancel_args[0].lower() in ['log','redo','undo']:
+                self.args = cancel_args
+                self.command = self.args[0]
+                return self.run()
+            else:
+                self.parent.args = cancel_args
+                self.parent.command = self.parent.args[0]
+                return self.parent.get_messages()
+        response = Dialog({
+            'svc': char_svc,
+            'user': self.user,
+            'title': 'Story',
+            'type': 'view',
+            'type_name': 'Story Log',
+            'command': command,
+            'user': self.user,
+            'getter': {
+                'method': Log.get_by_page,
+                'params': {
+                    'params': {'user_id': str(self.user.id), 'category': 'Log'},
+                    'sort': 'created'
+                }
+            },
+            'formatter': lambda log, num: log.get_short_string(),
+            'cancel': canceler,
+            'page_size': 10
+        }).open()
+        messages.extend(response)
+        return messages
 
     def set_dialog(self, command='', question='', answer=''):
         self.user.command = command
@@ -84,7 +125,7 @@ class UndoCommand():
             'getter': {
                 'method': Log.get_by_page,
                 'params': {
-                    'params': {'user_id': str(self.user.id)}
+                    'params': {'user_id': str(self.user.id), 'category__ne': 'Log'}
                 }
             },
             'formatter': lambda undo, num: f'_Undo #{num+1}_\n{undo.get_string()}',
@@ -120,9 +161,9 @@ class UndoCommand():
         if self.user.history_id:
             current_history = Log.get_by_id(self.user.history_id)
             if current_history:
-                undos = list(Log.filter(updated__lt=current_history.updated).order_by('-created').all())
+                undos = list(Log.filter(updated__lt=current_history.updated, category__ne='Log').order_by('-created').all())
         if not undos:
-            undos = list(Log.get_by_page({'user_id': str(self.user.id)}))
+            undos = list(Log.get_by_page({'user_id': str(self.user.id, category__ne='Log')}))
         if not undos:
             raise Exception('You have no undo history')
         undo = undos[0]
@@ -156,7 +197,7 @@ class UndoCommand():
 
     def undo_changes(self, undo):
         changes, item, undo_changes_str = self.get_undo(undo)
-        undos = list(Log.get_by_page(params={'parent_id': undo.parent_id, 'updated__lt': undo.updated}, page_num=0))
+        undos = list(Log.get_by_page(params={'parent_id': undo.parent_id, 'updated__lt': undo.updated, 'category__ne': 'Log'}, page_num=0))
         if undo.action == 'created':
             item.history_id = str(undo.id)
             item.updated_by = str(self.user.id)
@@ -229,7 +270,7 @@ class UndoCommand():
 
     def redo_changes(self, redo):
         changes, item, undo_changes_str = self.get_undo(redo)
-        history = Log.get_by_page(params={'updated__gt': redo.updated}, page_num=0).first()
+        history = Log.get_by_page(params={'updated__gt': redo.updated, 'category__ne': 'Log'}, page_num=0).first()
         item.history_id = str(history.id) if history else None
         item.updated_by = str(self.user.id)
         if redo.action == 'created':

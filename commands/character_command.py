@@ -815,7 +815,7 @@ class CharacterCommand():
             titles = []
             if self.char.stress_titles:
                 titles = copy.deepcopy(self.char.stress_titles)
-            elif not self.char.npc:
+            elif not self.char.npc and self.char.category == 'Character' :
                 titles = copy.deepcopy(SETUP.stress_titles)
             if args[2] in ['delete', 'd']:
                 if not titles:
@@ -857,7 +857,7 @@ class CharacterCommand():
                     stress_boxes = []
                     [stress_boxes.append(['1', O]) for i in range(0, int(total))]
                     matches = [t for t in titles if title.lower() in t.lower()]
-                    modified = copy.deepcopy(self.char.stress) if self.char.stress_titles and self.char.stress else ([] if self.char.npc else STRESS)
+                    modified = copy.deepcopy(self.char.stress) if self.char.stress_titles and self.char.stress else ([] if self.char.npc or self.char.category != 'Character' else STRESS)
                     if matches:
                         for i in range(0, len(titles)):
                             if title.lower() in titles[i].lower():

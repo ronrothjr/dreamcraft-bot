@@ -5,6 +5,7 @@ from commands import CharacterCommand
 from models import Channel, Scenario, Scene, Character, User, Log
 from config.setup import Setup
 from services.character_service import CharacterService
+from utils import Dialog
 
 char_svc = CharacterService()
 SETUP = Setup()
@@ -30,6 +31,8 @@ class SceneCommand():
                 'help': self.help,
                 'name': self.name,
                 'n': self.name,
+                'note': self.note,
+                'story': self.story,
                 'description': self.description,
                 'desc': self.description,
                 'character': self.character,
@@ -62,6 +65,43 @@ class SceneCommand():
 
     def help(self, args):
         return [SCENE_HELP]
+
+    def note(self, args):
+        Log().create_new(str(self.sc.id), f'Scene: {self.sc.name}', str(self.user.id), self.guild.name, 'Log', {'by': self.user.name, 'note': ' '.join(args[1:])}, 'created')
+        return ['Log created']
+
+    def story(self, args):
+        messages =[]
+        command = 'log ' + (' '.join(args))
+        def canceler(cancel_args):
+            if cancel_args[0].lower() in ['scene']:
+                self.args = cancel_args
+                self.command = self.args[0]
+                return self.run()
+            else:
+                self.parent.args = cancel_args
+                self.parent.command = self.parent.args[0]
+                return self.parent.get_messages()
+        response = Dialog({
+            'svc': char_svc,
+            'user': self.user,
+            'title': 'Story',
+            'type': 'view',
+            'type_name': 'Story Log',
+            'command': command,
+            'getter': {
+                'method': Log.get_by_page,
+                'params': {
+                    'params': {'parent_id': str(self.scene.id), 'category__in': ['Log','Scene']},
+                    'sort': 'created'
+                }
+            },
+            'formatter': lambda log, num: log.get_short_string() if log.category == 'Log' else log.get_string(),
+            'cancel': canceler,
+            'page_size': 10
+        }).open()
+        messages.extend(response)
+        return messages
     
     def name(self, args):
         if not self.scenario:
@@ -174,9 +214,7 @@ class SceneCommand():
             search = str(self.sc.name)
             scenario_id = str(self.sc.scenario_id) if self.sc.scenario_id else ''
             channel_id = str(self.sc.channel_id) if self.sc.channel_id else ''
-            self.sc.character.reverse_archive(self.user)
-            self.sc.character.archived = True
-            char_svc.save(self.sc.character, self.user)
+            self.sc.character.archive(self.user)
             self.sc.archived = True
             self.sc.updated_by = str(self.user.id)
             self.sc.updated = datetime.datetime.utcnow()

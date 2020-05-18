@@ -7,6 +7,7 @@ from models.character import Character
 from models.log import Log
 
 class Scene(Document):
+    parent_id = StringField()
     name = StringField(required=True)
     guild = StringField(required=True)
     description = StringField()
@@ -92,9 +93,44 @@ class Scene(Document):
         self.updated = datetime.datetime.utcnow()
         self.save()
 
-    def get_by_channel(self, channel):
-        scenes = Scene.objects(channel_id=str(channel.id)).all()
+    def get_by_channel(self, channel, archived=False):
+        scenes = Scene.objects(channel_id=str(channel.id), archived=archived).all()
         return scenes
+
+    @classmethod
+    def get_by_parent(cls, **params):
+        items = cls.filter(**params).all()
+        return [items] if items else []
+
+    def archive(self, user):
+            self.reverse_archive(self.user)
+            self.archived = True
+            self.updated_by = str(user.id)
+            self.updated = datetime.datetime.utcnow()
+            self.save()
+
+    def reverse_archive(self, user):
+        for s in Scene().get_by_parent(parent_id=str(self.id)):
+            s.reverse_archive(self.user)
+            s.archived = True
+            s.updated_by = str(user.id)
+            s.updated = datetime.datetime.utcnow()
+            s.save()
+
+    def restore(self, user):
+            self.reverse_restore(self.user)
+            self.archived = False
+            self.updated_by = str(user.id)
+            self.updated = datetime.datetime.utcnow()
+            self.save()
+
+    def reverse_restore(self, user):
+        for s in Scene().get_by_parent(parent_id=str(self.id)):
+            s.reverse_restore(self.user)
+            s.archived = False
+            s.updated_by = str(user.id)
+            s.updated = datetime.datetime.utcnow()
+            s.save()
 
     def get_string_characters(self, channel):
         characters = [Character.get_by_id(id) for id in self.characters]
@@ -102,6 +138,23 @@ class Scene(Document):
         return f'\n            _Characters:_\n                ***{characters}***'
 
     def get_string(self, channel=None):
+        name = f'***{self.name}***'
+        active = ''
+        if channel:
+            active = ' _(Active Scene)_ ' if str(self.id) == channel.active_scene else ''
+        description = f' - "{self.description}"' if self.description else ''
+        characters = f'{self.get_string_characters()}' if self.characters else ''
+        aspects = ''
+        stress = ''
+        if self.character:
+            name = f'***{self.character.name}***' if self.character.name else name
+            description = f' - "{self.character.description}"' if self.character.description else description
+            aspects = self.character.get_string_aspects()
+            stress = self.character.get_string_stress() if self.character.has_stress else ''
+        return f'\n        {name}{active}{description}{characters}{aspects}{stress}'
+
+
+    def get_short_string(self, channel=None):
         name = f'***{self.name}***'
         active = ''
         if channel:

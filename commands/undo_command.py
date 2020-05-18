@@ -81,7 +81,6 @@ class UndoCommand():
             'type': 'view',
             'type_name': 'Story Log',
             'command': command,
-            'user': self.user,
             'getter': {
                 'method': Log.get_by_page,
                 'params': {
@@ -121,7 +120,6 @@ class UndoCommand():
             'type': 'view',
             'type_name': 'Undo History',
             'command': command,
-            'user': self.user,
             'getter': {
                 'method': Log.get_by_page,
                 'params': {

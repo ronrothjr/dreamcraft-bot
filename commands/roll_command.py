@@ -15,15 +15,15 @@ SKILLS = SETUP.skills
 FATE_DICE = SETUP.fate_dice
 
 class RollCommand():
-    def __init__(self, parent, ctx, args):
+    def __init__(self, parent, ctx, args, guild=None, user=None):
         self.parent = parent
         self.ctx = ctx
         self.args = args
+        self.guild = guild
+        self.user = user
         self.invoke_index = [i for i in range(0, len(self.args)) if self.args[i] in ['invoke', 'i']]
         self.compel_index = [i for i in range(0, len(self.args)) if self.args[i] in ['compel', 'c']]
         self.command = args[0].lower()
-        self.guild = ctx.guild if ctx.guild else ctx.author
-        self.user = User().get_or_create(self.ctx.author.name, self.guild.name)
         channel = 'private' if ctx.channel.type.name == 'private' else ctx.channel.name
         self.channel = Channel().get_or_create(channel, self.guild.name, self.user)
         self.scenario = Scenario().get_by_id(self.channel.active_scenario) if self.channel and self.channel.active_scenario else None

@@ -39,7 +39,7 @@ class Channel(Document):
                 action = 'created' if kwargs['created'] else action
             if action == 'updated' and 'archived' in changes:
                 action = 'archived' if changes['archived'] else 'restored'
-            Log().create_new(str(document.id), document.name, document.updated_by, document.guild, document.category, changes, action)
+            Log().create_new(str(document.id), document.name, document.updated_by, document.guild, 'Channel', changes, action)
             user = User().get_by_id(document.updated_by)
             if user.history_id:
                 user.history_id = None
@@ -108,13 +108,13 @@ class Channel(Document):
         return f'{users_string}'
 
     def get_scenarios_string(self):
-        scenario_list = Scenario.filter(channel_id=str(self.id)).all()
+        scenario_list = Scenario.filter(channel_id=str(self.id), archived=False).all()
         scenarios = [s.character.get_string() for s in scenario_list]
         scenarios_string = '\n***Scenarios:***\n        ' + '\n        '.join([s for s in scenarios]) if scenarios else ''
         return f'{scenarios_string}'
 
     def get_scenes_string(self):
-        scene_list = Scene.filter(channel_id=str(self.id)).all()
+        scene_list = Scene.filter(channel_id=str(self.id), archived=False).all()
         scenes = [s.character.get_string() for s in scene_list]
         scenes_string = '\n***Scenes:***\n        ' + '\n        '.join([s for s in scenes]) if scenes else ''
         return f'{scenes_string}'

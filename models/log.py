@@ -2,6 +2,7 @@
 import datetime
 from mongoengine import *
 from bson.objectid import ObjectId
+from utils.text_utils import TextUtils
 
 class Log(Document):
     parent_id = StringField(required=True)
@@ -30,12 +31,12 @@ class Log(Document):
         return log
 
     @classmethod
-    def get_by_page(cls, params, page_num=1, page_size=5):
+    def get_by_page(cls, params, page_num=1, page_size=5, sort='-created'):
         if page_num:
             offset = (page_num - 1) * 5
-            logs = cls.filter(**params).order_by('-created').skip(offset).limit(page_size).all()
+            logs = cls.filter(**params).order_by(sort).skip(offset).limit(page_size).all()
         else:
-            logs = cls.filter(**params).order_by('-created').all()
+            logs = cls.filter(**params).order_by(sort).all()
         return logs
 
     @classmethod
@@ -78,3 +79,7 @@ class Log(Document):
             f' _{action} on: {self.updated.strftime("%m/%d/%Y, %H:%M:%S")}_{data}\n'
         ])
         return undo
+
+    def get_short_string(self):
+        data = [f'{self.data[d]}' for d in self.data if d not in ['updated_by', 'created_by', 'updated', 'created']]
+        return ': '.join(data)

@@ -2,7 +2,7 @@
 import traceback
 import datetime
 from commands import CharacterCommand
-from models import Channel, Scenario, Scene, Character, User
+from models import Channel, Scenario, Scene, Character, User, Log
 from config.setup import Setup
 from services.character_service import CharacterService
 
@@ -11,13 +11,13 @@ SETUP = Setup()
 SCENE_HELP = SETUP.scene_help
 
 class SceneCommand():
-    def __init__(self, parent, ctx, args):
+    def __init__(self, parent, ctx, args, guild=None, user=None):
         self.parent = parent
         self.ctx = ctx
         self.args = args[1:]
+        self.guild = guild
+        self.user = user
         self.command = self.args[0].lower() if len(self.args) > 0 else 'n'
-        self.guild = ctx.guild if ctx.guild else ctx.author
-        self.user = User().get_or_create(ctx.author.name, self.guild.name)
         channel = 'private' if ctx.channel.type.name == 'private' else ctx.channel.name
         self.channel = Channel().get_or_create(channel, self.guild.name, self.user)
         self.scenario = Scenario().get_by_id(self.channel.active_scenario) if self.channel and self.channel.active_scenario else None

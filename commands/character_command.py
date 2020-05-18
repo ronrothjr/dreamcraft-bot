@@ -24,10 +24,14 @@ CONSEQUENCES_TITLES = SETUP.consequences_titles
 CONSEQUENCES_SHIFTS = SETUP.consequence_shifts
 
 class CharacterCommand():
-    def __init__(self, parent, ctx, args, char=None):
+    def __init__(self, parent, ctx, args, guild=None, user=None, char=None):
         self.parent = parent
         self.ctx = ctx
         self.args = args[1:] if args[0] in ['character', 'char', 'c'] else args
+        self.npc = False
+        if self.args and len(self.args) and self.args[0] and self.args[0].lower() == 'npc':
+            self.npc = True
+            self.args = self.args[1:]
         self.command = self.args[0].lower() if len(self.args) > 0 else 'n'
         self.guild = ctx.guild if ctx.guild else ctx.author
         self.user = User().get_or_create(ctx.author.name, self.guild.name)
@@ -131,7 +135,7 @@ class CharacterCommand():
                 '.d character YOUR_CHARACTER\'S_NAME```'
             ]),
             'active_character': ''.join([
-                '***THIS IS YOUR ACTIVE CHARACTER:***\n',
+                '***YOU ARE CURRENTLY EDITING...***\n',
                 f':point_down:\n\n{get_string}'
             ]),
             'rename_delete': ''.join([
@@ -262,7 +266,7 @@ class CharacterCommand():
             else:
                 def canceler(cancel_args):
                     if cancel_args[0].lower() in ['character','char','c']:
-                        return CharacterCommand(self.parent, self.ctx, cancel_args).run()
+                        return CharacterCommand(parent=self.parent, ctx=self.ctx, args=cancel_args).run()
                     else:
                         self.parent.args = cancel_args
                         self.parent.command = self.parent.args[0]
@@ -278,19 +282,19 @@ class CharacterCommand():
                     'svc': char_svc,
                     'user': self.user,
                     'title': 'Character List',
-                    'command': 'c ' + ' '.join(args),
+                    'command': 'c ' + ('npc ' if self.npc else '' ) + ' '.join(args),
                     'type': 'select',
                     'type_name': 'CHARACTER',
                     'getter': {
                         'method': Character.get_by_page,
-                        'params': {'params': {'name__icontains': char_name, 'guild': self.guild.name, 'category': 'Character', 'archived': False}}
+                        'params': {'params': {'name__icontains': char_name, 'guild': self.guild.name, 'category': 'Character', 'archived': False, 'npc': self.npc}}
                     },
                     'formatter': lambda item, item_num: f'_CHARACTER #{item_num+1}_\n{item.get_short_string()}',
                     'cancel': canceler,
                     'select': selector,
                     'empty': {
                         'method': Character().get_or_create,
-                        'params': {'user': self.user, 'name': char_name, 'guild': self.guild.name}
+                        'params': {'user': self.user, 'name': char_name, 'guild': self.guild.name, 'npc': self.npc}
                     }
                 }).open())
         return messages
@@ -299,7 +303,7 @@ class CharacterCommand():
         messages = []
         def canceler(cancel_args):
             if cancel_args[0].lower() in ['character','char','c']:
-                return CharacterCommand(self.parent, self.ctx, cancel_args).run()
+                return CharacterCommand(parent=self.parent, ctx=self.ctx, args=cancel_args).run()
             else:
                 self.parent.args = cancel_args
                 self.parent.command = self.parent.args[0]
@@ -309,7 +313,7 @@ class CharacterCommand():
             'svc': char_svc,
             'user': self.user,
             'title': 'Character List',
-            'command': 'c ' + (' '.join(args)),
+            'command': 'c ' + ('npc ' if self.npc else '' ) + (' '.join(args)),
             'type': 'view',
             'getter': {
                 'method': Character.get_by_page,
@@ -376,7 +380,7 @@ class CharacterCommand():
             raise Exception('You do not have permission to delete this character')
         search = self.char.name
         parent_id = str(self.char.parent_id) if self.char.parent_id else ''
-        command = 'c ' + ' '.join(args)
+        command = 'c ' + ('npc ' if self.npc else '' ) + ' '.join(args)
         question = ''.join([
             f'Are you sure you want to delete this {self.char.category}?\n\n{self.char.get_string()}',
             f'\n\nREPEAT THE COMMAND\n\n***OR***\n\nREPLY TO CONFIRM:',
@@ -439,7 +443,7 @@ class CharacterCommand():
                     '```css\n.d CANCEL```'
                 ])
                 selections = '\n\n'.join([f'CHARACTER {i + 1}\n{chars[i].get_short_string()}' for i in range(0, len(chars))])
-                command = 'c ' + ' '.join(args)
+                command = 'c ' + ('npc ' if self.npc else '' ) + ' '.join(args)
                 if self.user.command != command:
                     question = f'{selections}{prompt}'
                     messages.append(question)
@@ -548,6 +552,9 @@ class CharacterCommand():
             return ['You don\'t have an active character.\nTry this: ```css\n.d c CHARACTER_NAME```']
         elif not self.can_edit:
             raise Exception('You do not have permission to edit this character')
+        elif args[1].lower() == 'none':
+            self.char.refresh = None
+            self.char.fate_points = None
         elif args[1].lower() in ['refresh', 'r']:
             if not self.char.refresh:
                 self.char.refresh = 3
@@ -565,7 +572,7 @@ class CharacterCommand():
             points = int(args[2]) if len(args) == 3 and args[2].isdigit() else 1
             self.char.fate_points += points if self.char.fate_points < 5 else 0
         char_svc.save(self.char, self.user)
-        return [f'Fate Points: {self.char.fate_points}']
+        return [f'Fate Points: {self.char.get_string_fate()}'] if self.char.get_string_fate() else ['Fate points not used by this character']
 
     def custom(self, args):
         if not self.char:
@@ -726,7 +733,7 @@ class CharacterCommand():
             self.char.active_aspect = str(self.asp.id)
             self.char.active_character = str(self.asp.id)
             char_svc.save(self.char, self.user)
-            command = CharacterCommand(self.parent, self.ctx, args[1:], self.asp)
+            command = CharacterCommand(parent=self.parent, ctx=self.ctx, args=args[1:], char=self.asp)
             messages.extend(command.run())
         else:
             aspect = ' '.join(args[1:])
@@ -764,7 +771,7 @@ class CharacterCommand():
             self.char.active_stunt = str(self.stu.id)
             self.char.active_character = str(self.stu.id)
             char_svc.save(self.char, self.user)
-            command = CharacterCommand(self.parent, self.ctx, args[1:], self.stu)
+            command = CharacterCommand(parent=self.parent, ctx=self.ctx, args=args[1:], char=self.stu)
             messages.extend(command.run())
         else:
             stunt = ' '.join(args[1:])
@@ -808,7 +815,7 @@ class CharacterCommand():
             titles = []
             if self.char.stress_titles:
                 titles = copy.deepcopy(self.char.stress_titles)
-            else:
+            elif not self.char.npc:
                 titles = copy.deepcopy(SETUP.stress_titles)
             if args[2] in ['delete', 'd']:
                 if not titles:
@@ -830,17 +837,17 @@ class CharacterCommand():
             else:
                 total = args[2]
                 title = ' '.join(args[3:])
-                if total == "None":
+                if total.lower() == "none":
                     self.char.stress = None
                     self.char.stress_titles = None
                     messages.append(f'{self.char.get_string()}')
-                elif total == "FATE":
+                elif total.lower() == "fate":
                     self.char.stress = STRESS
                     self.char.stress_titles = SETUP.stress_titles
-                elif total == "FAE":
+                elif total.lower() == "fae":
                     self.char.stress = SETUP.stress_FAE
                     self.char.stress_titles = SETUP.stress_titles_FAE
-                elif total == "Core":
+                elif total.lower() == "core":
                     self.char.stress = SETUP.stress_Core
                     self.char.stress_titles = SETUP.stress_titles_Core
                 else:
@@ -850,14 +857,12 @@ class CharacterCommand():
                     stress_boxes = []
                     [stress_boxes.append(['1', O]) for i in range(0, int(total))]
                     matches = [t for t in titles if title.lower() in t.lower()]
-                    modified = copy.deepcopy(self.char.stress) if self.char.stress_titles and self.char.stress else STRESS
+                    modified = copy.deepcopy(self.char.stress) if self.char.stress_titles and self.char.stress else ([] if self.char.npc else STRESS)
                     if matches:
                         for i in range(0, len(titles)):
                             if title.lower() in titles[i].lower():
                                 modified[i] = stress_boxes
                     else:
-                        if not titles:
-                            titles.append(SETUP.stress_titles)
                         titles.append(title)
                         self.char.stress_titles = titles
                         modified.append(stress_boxes)

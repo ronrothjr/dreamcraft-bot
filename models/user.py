@@ -10,6 +10,7 @@ class User(Document):
     role = StringField()
     active_character = StringField()
     time_zone = StringField()
+    module = StringField()
     command =  StringField()
     question = StringField()
     answer = StringField()

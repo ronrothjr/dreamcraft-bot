@@ -120,7 +120,7 @@ class Dialog(object):
             data_params[p] = params[p]
         data_params.update({'page_num': page_num, 'page_size': self.page_size})
         items = method(**data_params)
-        items = self.get_descendants(items, data_params, page_num)
+        # items = self.get_descendants(items, data_params, page_num)
         return items
 
     def get_descendants(self, items, params, page_num):
@@ -150,7 +150,7 @@ class Dialog(object):
             got_parent_id = hasattr(item, 'parent_id') and item.parent_id
             child_items = parent_method({'parent_id': item.parent_id}, page_num=0)
             [parent_ids.append(str(child.id)) for child in child_items]
-            parent_ids.extend(self.get_parent_ids(child)) for child in child_items
+            parent_ids.extend(self.get_parent_ids(child) for child in child_items)
         return parent_ids
 
     def get_content(self, items):      

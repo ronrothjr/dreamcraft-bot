@@ -7,6 +7,7 @@ from models.character import Character
 from models.log import Log
 
 class Zone(Document):
+    parent_id = StringField()
     name = StringField(required=True)
     guild = StringField(required=True)
     description = StringField()
@@ -92,9 +93,53 @@ class Zone(Document):
         self.updated = datetime.datetime.utcnow()
         self.save()
 
-    def get_by_channel(self, channel):
-        zones = Zone.objects(channel_id=str(channel.id)).all()
+    def get_by_channel(self, channel, archived=False):
+        zones = Zone.objects(channel_id=str(channel.id), archived=archived).all()
         return zones
+
+    @classmethod
+    def get_by_page(cls, params, page_num=1, page_size=5):
+        if page_num:
+            offset = (page_num - 1) * 5
+            logs = cls.filter(**params).order_by('name', 'created').skip(offset).limit(page_size).all()
+        else:
+            logs = cls.filter(**params).order_by('name', 'created').all()
+        return logs
+
+    @classmethod
+    def get_by_parent(cls, **params):
+        items = cls.filter(**params).all()
+        return [items] if items else []
+
+    def archive(self, user):
+            self.reverse_archive(self.user)
+            self.archived = True
+            self.updated_by = str(user.id)
+            self.updated = datetime.datetime.utcnow()
+            self.save()
+
+    def reverse_archive(self, user):
+        for z in Zone().get_by_parent(parent_id=str(self.id)):
+            z.reverse_archive(self.user)
+            z.archived = True
+            z.updated_by = str(user.id)
+            z.updated = datetime.datetime.utcnow()
+            z.save()
+
+    def restore(self, user):
+            self.reverse_restore(self.user)
+            self.archived = False
+            self.updated_by = str(user.id)
+            self.updated = datetime.datetime.utcnow()
+            self.save()
+
+    def reverse_restore(self, user):
+        for z in Zone().get_by_parent(parent_id=str(self.id)):
+            z.reverse_restore(self.user)
+            z.archived = False
+            z.updated_by = str(user.id)
+            z.updated = datetime.datetime.utcnow()
+            z.save()
 
     def get_string_characters(self, channel):
         characters = [Character.get_by_id(id) for id in self.characters]
@@ -102,6 +147,22 @@ class Zone(Document):
         return f'\n            _Characters:_\n                ***{characters}***'
 
     def get_string(self, channel):
+        name = f'***{self.name}***'
+        active = ''
+        if channel:
+            active = ' _(Active Zone)_ ' if str(self.id) == channel.active_zone else ''
+        description = f' - "{self.description}"' if self.description else ''
+        characters = f'{self.get_string_characters()}' if self.characters else ''
+        aspects = ''
+        stress = ''
+        if self.character:
+            name = f'***{self.character.name}***' if self.character.name else name
+            description = f' - "{self.character.description}"' if self.character.description else description
+            aspects = self.character.get_string_aspects()
+            stress = self.character.get_string_stress() if self.character.has_stress else ''
+        return f'\n        {name}{active}{description}{characters}{aspects}{stress}'
+
+    def get_short_string(self, channel):
         name = f'***{self.name}***'
         active = ''
         if channel:

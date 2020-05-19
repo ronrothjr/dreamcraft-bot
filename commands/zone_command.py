@@ -1,9 +1,11 @@
 # zone_command
+import traceback
 import datetime
 from commands import CharacterCommand
-from models import Channel, Scenario, Scene, Zone, Character, User
+from models import Channel, Scenario, Scene, Zone, Character, User, Log
 from config.setup import Setup
 from services.character_service import CharacterService
+from utils import Dialog
 
 char_svc = CharacterService()
 SETUP = Setup()
@@ -25,39 +27,82 @@ class ZoneCommand():
         self.char = Character().get_by_id(self.user.active_character) if self.user and self.user.active_character else None
 
     def run(self):
-        switcher = {
-            'help': self.help,
-            'name': self.name,
-            'n': self.name,
-            'description': self.description,
-            'desc': self.description,
-            'character': self.character,
-            'char': self.character,
-            'c': self.character,
-            'players': self.player,
-            'player': self.player,
-            'p': self.player,
-            'list': self.zone_list,
-            'l': self.zone_list,
-            'delete': self.delete_zone,
-            'd': self.delete_zone
-        }
-        # Get the function from switcher dictionary
-        if self.command in switcher:
-            func = switcher.get(self.command, lambda: self.name)
-            # Execute the function
-            messages = func(self.args)
-        else:
-            self.args = ('n',) + self.args
-            self.command = 'n'
-            func = self.name
-            # Execute the function
-            messages = func(self.args)
-        # Send messages
-        return messages
+        try:
+            switcher = {
+                'help': self.help,
+                'name': self.name,
+                'n': self.name,
+                'note': self.note,
+                'story': self.story,
+                'description': self.description,
+                'desc': self.description,
+                'character': self.character,
+                'char': self.character,
+                'c': self.character,
+                'players': self.player,
+                'player': self.player,
+                'p': self.player,
+                'list': self.zone_list,
+                'l': self.zone_list,
+                'delete': self.delete_zone,
+                'd': self.delete_zone
+            }
+            # Get the function from switcher dictionary
+            if self.command in switcher:
+                func = switcher.get(self.command, lambda: self.name)
+                # Execute the function
+                messages = func(self.args)
+            else:
+                self.args = ('n',) + self.args
+                self.command = 'n'
+                func = self.name
+                # Execute the function
+                messages = func(self.args)
+            # Send messages
+            return messages
+        except Exception as err:
+            traceback.print_exc()
+            return list(err.args)
 
     def help(self, args):
         return [ZONE_HELP]
+
+    def note(self, args):
+        Log().create_new(str(self.zone.id), f'Zone: {self.zone.name}', str(self.user.id), self.guild.name, 'Log', {'by': self.user.name, 'note': ' '.join(args[1:])}, 'created')
+        return ['Log created']
+
+    def story(self, args):
+        messages =[]
+        command = 'log ' + (' '.join(args))
+        def canceler(cancel_args):
+            if cancel_args[0].lower() in ['zone']:
+                self.args = cancel_args
+                self.command = self.args[0]
+                return self.run()
+            else:
+                self.parent.args = cancel_args
+                self.parent.command = self.parent.args[0]
+                return self.parent.get_messages()
+        response = Dialog({
+            'svc': char_svc,
+            'user': self.user,
+            'title': 'Story',
+            'type': 'view',
+            'type_name': 'Story Log',
+            'command': command,
+            'getter': {
+                'method': Log.get_by_page,
+                'params': {
+                    'params': {'parent_id': str(self.zone.id), 'category__in': ['Log','Zone']},
+                    'sort': 'created'
+                }
+            },
+            'formatter': lambda log, num: log.get_short_string() if log.category == 'Log' else log.get_string(),
+            'cancel': canceler,
+            'page_size': 10
+        }).open()
+        messages.extend(response)
+        return messages
     
     def name(self, args):
         if len(args) == 0:
@@ -170,9 +215,7 @@ class ZoneCommand():
             search = str(self.zone.name)
             scene_id = str(self.zone.scene_id) if self.zone.scene_id else ''
             channel_id = str(self.zone.channel_id) if self.zone.channel_id else ''
-            self.zone.character.reverse_archive(self.user)
-            self.zone.character.archived = True
-            char_svc.save(self.zone.character, self.user)
+            self.zone.character.archive(self.user)
             self.zone.archived = True
             self.zone.updated_by = str(self.user.id)
             self.zone.updated = datetime.datetime.utcnow()

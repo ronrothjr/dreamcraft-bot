@@ -4,7 +4,7 @@ import datetime
 import copy
 from bson.objectid import ObjectId
 from services import CharacterService
-from models import User, Channel, Character
+from models import User, Channel, Scenario, Scene, Character, Log
 from config.setup import Setup
 from utils import TextUtils, Dialog
 
@@ -32,11 +32,13 @@ class CharacterCommand():
         if self.args and len(self.args) and self.args[0] and self.args[0].lower() == 'npc':
             self.npc = True
             self.args = self.args[1:]
-        self.command = self.args[0].lower() if len(self.args) > 0 else 'n'
+        self.command = self.args[0].lower() if len(self.args) > 0 else '='
         self.guild = ctx.guild if ctx.guild else ctx.author
         self.user = User().get_or_create(ctx.author.name, self.guild.name)
         channel = 'private' if ctx.channel.type.name == 'private' else ctx.channel.name
         self.channel = Channel().get_or_create(channel, self.guild.name, self.user)
+        self.scenario = Scenario().get_by_id(self.channel.active_scenario) if self.channel and self.channel.active_scenario else None
+        self.sc = Scene().get_by_id(self.channel.active_scene) if self.channel and self.channel.active_scene else None
         self.char = char if char else (Character().get_by_id(self.user.active_character) if self.user and self.user.active_character else None)
         self.can_edit = str(self.user.id) == str(self.char.user.id) or self.user.role == 'Game Master' if self.user and self.char else True
         self.asp = Character().get_by_id(self.char.active_aspect) if self.char and self.char.active_aspect else None
@@ -46,11 +48,16 @@ class CharacterCommand():
         try:
             switcher = {
                 'help': self.help,
+                'note': self.note,
+                'say': self.say,
+                'story': self.story,
                 'stats': self.stats,
                 'parent': self.parent,
                 'p': self.get_parent,
                 'name': self.name,
+                'new': self.name,
                 'n': self.name,
+                '=': self.select,
                 'image': self.image,
                 'list': self.character_list,
                 'l': self.character_list,
@@ -87,10 +94,15 @@ class CharacterCommand():
                 # Execute the function
                 messages = func(self.args)
             else:
-                self.args = ('n',) + self.args
-                self.command = 'n'
-                func = self.name
-                # Execute the function
+                match = self.search(self.args)
+                if match:
+                    self.args = ('select',) + self.args
+                    self.command = 'select'
+                    func = self.select
+                else:
+                    self.args = ('n',) + self.args
+                    self.command = 'n'
+                    func = self.name
                 messages = func(self.args)
             # Send messages
             return messages
@@ -100,6 +112,65 @@ class CharacterCommand():
 
     def help(self, args):
         return [self.dialog('all')]
+
+    def search(self, args):
+        params = {'name__icontains': ' '.join(args[0:]), 'guild': self.guild.name, 'category': 'Character', 'archived': False, 'npc': self.npc}
+        return char_svc.search(args, Character.filter, params)
+
+    def note(self, args):
+        if self.char:
+            Log().create_new(str(self.char.id), f'Character: {self.char.name}', str(self.user.id), self.guild.name, 'Character', {'by': self.user.name, 'note': f'{self.char.name} says, "' + ' '.join(args[1:])} + '"', 'created')
+            return ['Log created']
+        else:
+            return ['No active character to log']
+
+    def say(self, args):
+        if not self.char:
+            return ['No active character to log']
+        if not self.sc:
+            return [f'{self.char.name} is not in a scene']
+        else:
+            note_text = ' '.join(args[1:])
+            Log().create_new(str(self.sc.id), f'Character: {self.char.name}', str(self.user.id), self.guild.name, 'Character', {'by': self.user.name, 'note': f'{self.char.name} says, "{note_text}"'}, 'created')
+            return ['Log created']
+
+    def story(self, args):
+        messages =[]
+        command = 'c ' + (' '.join(args))
+        def canceler(cancel_args):
+            if cancel_args[0].lower() in ['scenario']:
+                self.args = cancel_args
+                self.command = self.args[0]
+                return self.run()
+            else:
+                self.parent.args = cancel_args
+                self.parent.command = self.parent.args[0]
+                return self.parent.get_messages()
+        response = Dialog({
+            'svc': char_svc,
+            'user': self.user,
+            'title': 'Story',
+            'type': 'view',
+            'type_name': 'Story Log',
+            'command': command,
+            'getter': {
+                'method': Log.get_by_page,
+                'params': {
+                    'params': {'parent_id': str(self.char.id)},
+                    'sort': 'created'
+                },
+                'parent_method': Character.get_by_page,
+                'parent_params': {
+                    'params': {'category__in': ['Character','Aspect','Stunt']},
+                    'sort': 'created'
+                }
+            },
+            'formatter': lambda log, num: log.get_short_string(), # if log.category == 'Log' else log.get_string()
+            'cancel': canceler,
+            'page_size': 10
+        }).open()
+        messages.extend(response)
+        return messages
 
     def stats(self, args):
         search = ' '.join(args[1:]) if len(args) > 1 else self.guild.name
@@ -297,6 +368,52 @@ class CharacterCommand():
                         'params': {'user': self.user, 'name': char_name, 'guild': self.guild.name, 'npc': self.npc}
                     }
                 }).open())
+        return messages
+    
+    def select(self, args):
+        messages = []
+        if len(args) == 0:
+            if not self.char:
+                return [
+                    'No active character or name provided\n\n',
+                    self.dialog('all')
+                ]
+            messages.append(self.char.get_string())
+        else:
+            if len(args) == 1 and args[0].lower() == 'short':
+                return [self.dialog('active_character_short')]
+            if len(args) == 1 and self.char:
+                return [self.dialog('')]
+            char_name = ' '.join(args[1:])
+            def canceler(cancel_args):
+                if cancel_args[0].lower() in ['character','char','c']:
+                    return CharacterCommand(parent=self.parent, ctx=self.ctx, args=cancel_args).run()
+                else:
+                    self.parent.args = cancel_args
+                    self.parent.command = self.parent.args[0]
+                    return self.parent.get_messages()
+
+            def selector(selection):
+                self.char = selection
+                self.user.set_active_character(self.char)
+                char_svc.save_user(self.user)
+                return [self.dialog('')]
+
+            messages.extend(Dialog({
+                'svc': char_svc,
+                'user': self.user,
+                'title': 'Character List',
+                'command': 'c ' + ' '.join(args),
+                'type': 'select',
+                'type_name': 'CHARACTER',
+                'getter': {
+                    'method': Character.get_by_page,
+                    'params': {'params': {'user': self.user, 'name__icontains': char_name, 'guild': self.guild.name, 'archived': False}}
+                },
+                'formatter': lambda item, item_num: f'_CHARACTER #{item_num+1}_\n{item.get_short_string()}',
+                'cancel': canceler,
+                'select': selector
+            }).open())
         return messages
 
     def character_list(self, args):
@@ -815,7 +932,7 @@ class CharacterCommand():
             titles = []
             if self.char.stress_titles:
                 titles = copy.deepcopy(self.char.stress_titles)
-            elif not self.char.npc:
+            elif not self.char.npc and self.char.category == 'Character' :
                 titles = copy.deepcopy(SETUP.stress_titles)
             if args[2] in ['delete', 'd']:
                 if not titles:
@@ -857,7 +974,7 @@ class CharacterCommand():
                     stress_boxes = []
                     [stress_boxes.append(['1', O]) for i in range(0, int(total))]
                     matches = [t for t in titles if title.lower() in t.lower()]
-                    modified = copy.deepcopy(self.char.stress) if self.char.stress_titles and self.char.stress else ([] if self.char.npc else STRESS)
+                    modified = copy.deepcopy(self.char.stress) if self.char.stress_titles and self.char.stress else ([] if self.char.npc or self.char.category != 'Character' else STRESS)
                     if matches:
                         for i in range(0, len(titles)):
                             if title.lower() in titles[i].lower():

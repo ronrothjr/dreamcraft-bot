@@ -81,7 +81,6 @@ class UndoCommand():
             'type': 'view',
             'type_name': 'Story Log',
             'command': command,
-            'user': self.user,
             'getter': {
                 'method': Log.get_by_page,
                 'params': {
@@ -121,7 +120,6 @@ class UndoCommand():
             'type': 'view',
             'type_name': 'Undo History',
             'command': command,
-            'user': self.user,
             'getter': {
                 'method': Log.get_by_page,
                 'params': {
@@ -163,7 +161,7 @@ class UndoCommand():
             if current_history:
                 undos = list(Log.filter(updated__lt=current_history.updated, category__ne='Log').order_by('-created').all())
         if not undos:
-            undos = list(Log.get_by_page({'user_id': str(self.user.id, category__ne='Log')}))
+            undos = list(Log.get_by_page({'user_id': str(self.user.id), 'category__ne':'Log'}))
         if not undos:
             raise Exception('You have no undo history')
         undo = undos[0]

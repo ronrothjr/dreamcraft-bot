@@ -21,26 +21,26 @@ class Dialog(object):
         question = ''
         paging_question = ''
         items = None
-        page_num = 1
-        page_count = self.get_page_count()
-        select_question = self.get_select_str() if self.select and page_count and page_count > 0 else ''
+        self.page_num = 1
+        self.page_count = self.get_page_count()
+        select_question = self.get_select_str()
         if self.user.command == self.command:
             answer = self.user.answer
             paging_question = self.user.question
-            if page_count> 0 and answer and (answer in ['<<','<','>','>>'] or answer.isdigit()):
+            if self.page_count > 0 and answer and (answer in ['<<','<','>','>>'] or answer.isdigit()):
                 page_num_str = paging_question[paging_question.find('Page ')+5:paging_question.find(' of ')]
-                page_num = int(page_num_str)
+                self.page_num = int(page_num_str)
                 if answer.isdigit():
                     new_page_num = int(answer)
-                    if new_page_num > page_count or new_page_num < 1:
-                        raise Exception(f'Page number {page_num} does not exist')
+                    if new_page_num > self.page_count or new_page_num < 1:
+                        raise Exception(f'Page number {self.page_num} does not exist')
                 else:
-                    options = {'<<': 1, '<': page_num - 1, '>': page_num + 1, '>>': page_count}
+                    options = {'<<': 1, '<': self.page_num - 1, '>': self.page_num + 1, '>>': self.page_count}
                     new_page_num = options.get(answer, None)
-                if new_page_num and new_page_num > 0 and new_page_num <= page_count:
-                    page_num = new_page_num
-                paging_question = self.get_page_str(page_num, page_count)
-                items = list(self.get_list(page_num))
+                if new_page_num and new_page_num > 0 and new_page_num <= self.page_count:
+                    self.page_num = new_page_num
+                paging_question = self.get_page_str()
+                items = list(self.get_list())
                 question = f'{select_question}{paging_question}'
                 self.set_dialog(self.command, question)
             elif '=' in answer and self.select:
@@ -48,11 +48,13 @@ class Dialog(object):
                 if not selection.isdigit():
                     raise Exception('Your selection is invalid')
                 item_num = int(selection)
-                items = list(self.get_list(page_num))
+                items = list(self.get_list())
                 if item_num < 1 or item_num > len(items):
                     raise Exception('Your selection is invalid')
                 self.set_dialog()
                 return self.select(items[item_num-1])
+            elif answer.lower() in ['yes','y']:
+                return self.no_items()
             else:
                 self.set_dialog()
                 if self.cancel:
@@ -60,17 +62,16 @@ class Dialog(object):
                 else:
                     return [f'***{self.command}*** command cancelled']
         else:
-            items = list(self.get_list(page_num)) if page_count else None
-            paging_question = self.get_page_str(page_num, page_count) if page_count and page_count > 1 else ''
-            question = f'{select_question}{paging_question}'
-            self.set_dialog(self.command if question else '', question)
+            items = list(self.get_list()) if self.page_count else None
+        # If this is a selection list and there is only one item, select the first item
         if items and len(items) == 1 and self.select:
             return self.select(items[0])
-        elif items:
+        else:
+            paging_question = self.get_page_str() if self.page_count and self.page_count > 0 else ''
+            question = f'{select_question}{paging_question}'
+            self.set_dialog(self.command if question else '', question)
             content = self.get_content(items)
             return [f'{content}\n{question}']
-        else:
-            return self.no_items()
 
     def set_dialog(self, command='', question='', answer=''):
         self.user.command = command
@@ -90,25 +91,36 @@ class Dialog(object):
             data_params[p] = params[p]
         data_params.update({'page_num': None})
         item_count = method(**data_params).count()
-        return math.ceil(item_count/self.page_size) if item_count else None
+        return math.ceil(item_count/self.page_size) if item_count else 0
 
-    def get_page_str(self, page_num, page_count):
+    def get_page_str(self):
         return ''.join([
-            f'Page {page_num} of {page_count} - Enter page number, **\'<<\'**, **\'<\'**, **\'>\'** or **\'>>\'**',
+            f'Page {self.page_num} of {self.page_count} - Enter page number, **\'<<\'**, **\'<\'**, **\'>\'** or **\'>>\'**',
             '```css\n.d 1 /* to jump to a page */\n',
             '.d << /* to go to the first page */\n',
             '.d < /* to go to the previous page */\n',
             '.d > /* to go to the next page */\n',
             '.d >> /* to go to the last page */```'
-        ])
+        ]) if self.page_count > 1 else ''
 
     def get_select_str(self):
-        return ''.join([
-            f'SELECT a {self.type_name} by entering **\'=\'** followed by the {self.type_name} number:',
-            '```css\n.d =2 /* select item 2 from the list */```' if self.type == 'select' else ''
-        ])
+        select_str = ''
+        if self.page_count:
+            select_str = ''.join([
+                f'SELECT a {self.type_name} by entering **\'=\'** followed by the {self.type_name} number:',
+                '```css\n.d =2 /* select item 2 from the list */```'
+            ]) if self.type == 'select' else ''
+        elif self.empty:
+            name = self.empty['params']['name']
+            select_str = ''.join([
+                f'Are you sure you want to create a new {self.type_name} with the following name?\n\n',
+                f'        ***{name}***',
+                f'\n\nREPLY TO CONFIRM:',
+                '```css\n.d YES /* to confirm the command */\n.d NO /* to reject the command */\n.d CANCEL /* to cancel the command */```'
+            ])
+        return select_str
 
-    def get_list(self, page_num=1):
+    def get_list(self):
         method = self.getter.get('method', None)
         if not method:
             raise Exception('No data getter method supplied')
@@ -118,12 +130,12 @@ class Dialog(object):
         data_params = {}
         for p in params:
             data_params[p] = params[p]
-        data_params.update({'page_num': page_num, 'page_size': self.page_size})
+        data_params.update({'page_num': self.page_num, 'page_size': self.page_size})
         items = method(**data_params)
-        # items = self.get_descendants(items, data_params, page_num)
+        # items = self.get_descendants(items, data_params)
         return items
 
-    def get_descendants(self, items, params, page_num):
+    def get_descendants(self, items, params):
         parent_method = self.getter.get('parent_method', None)
         params = copy.deepcopy(self.getter.get('params', None))
         if parent_method is not null and params is not null and hasattr(item, 'parent_id'):
@@ -138,7 +150,7 @@ class Dialog(object):
             params.update(parent_id__in=parend_ids)
             items = list(method(**params))
             items.sort(key=lambda i: i.created)
-            offset = (page_num-1) * self.page_size
+            offset = (self.page_num-1) * self.page_size
             items = items[offset:offset+self.page_size]
         return items
 
@@ -153,9 +165,11 @@ class Dialog(object):
             parent_ids.extend(self.get_parent_ids(child) for child in child_items)
         return parent_ids
 
-    def get_content(self, items):      
-        items_string = '\n\n'.join([self.formatter(items[i], i) for i in range(0, len(items))])
-        content = f'***{self.title}:***\n\n{items_string}\n'
+    def get_content(self, items):
+        content = ''
+        if items:
+            items_string = '\n\n'.join([self.formatter(items[i], i) for i in range(0, len(items))])
+            content = f'***{self.title}:***\n\n{items_string}\n'
         return content
 
     def no_items(self):

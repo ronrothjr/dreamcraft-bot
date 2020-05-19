@@ -22,6 +22,15 @@ CONSEQUENCES_TITLES = SETUP.consequences_titles
 CONSEQUENCES_SHIFTS = SETUP.consequence_shifts
 
 class CharacterService():
+    def search(self, args, method, params):
+        if len(args) == 0:
+            return None
+        item = method(**params).first()
+        if item:
+            return item
+        else:
+            return None
+
     def save(self, char, user):
         if char:
             if (not char.created):

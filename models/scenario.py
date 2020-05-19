@@ -93,9 +93,23 @@ class Scenario(Document):
         self.updated = datetime.datetime.utcnow()
         self.save()
 
-    def get_by_channel(self, channel, archived=False):
-        scenarios = Scenario.objects(channel_id=str(channel.id), archived=archived).all()
+    @classmethod
+    def get_by_channel(cls, channel, archived=False, page_num=1, page_size=5):
+        if page_num:
+            offset = (page_num - 1) * 5
+            scenarios = cls.filter(channel_id=str(channel.id), archived=archived).skip(offset).limit(page_size).all()
+        else:
+            scenarios = cls.filter(channel_id=str(channel.id), archived=archived).order_by('name', 'created').all()
         return scenarios
+
+    @classmethod
+    def get_by_page(cls, params, page_num=1, page_size=5):
+        if page_num:
+            offset = (page_num - 1) * 5
+            items = cls.filter(**params).order_by('name', 'created').skip(offset).limit(page_size).all()
+        else:
+            items = cls.filter(**params).order_by('name', 'created').all()
+        return items
 
     @classmethod
     def get_by_parent(cls, **params):
@@ -158,16 +172,9 @@ class Scenario(Document):
         active = ''
         if channel:
             active = ' _(Active Scenario)_ ' if str(self.id) == channel.active_scenario else ''
-        description = f' - "{self.description}"' if self.description else ''
-        characters = f'{self.get_string_characters()}' if self.characters else ''
-        aspects = ''
-        stress = ''
         if self.character:
             name = f'***{self.character.name}***' if self.character.name else name
-            description = f' - "{self.character.description}"' if self.character.description else description
-            aspects = self.character.get_string_aspects()
-            stress = self.character.get_string_stress() if self.character.has_stress else ''
-        return f'\n        {name}{active}{description}{characters}{aspects}{stress}'
+        return f'\n        {name}{active}'
 
 
 signals.post_save.connect(Scenario.post_save, sender=Scenario)

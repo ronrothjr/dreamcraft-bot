@@ -93,9 +93,32 @@ class Scene(Document):
         self.updated = datetime.datetime.utcnow()
         self.save()
 
-    def get_by_channel(self, channel, archived=False):
-        scenes = Scene.objects(channel_id=str(channel.id), archived=archived).all()
-        return scenes
+    @classmethod
+    def get_by_channel(cls, channel, archived=False, page_num=1, page_size=5):
+        if page_num:
+            offset = (page_num - 1) * 5
+            items = cls.filter(channel_id=str(channel.id), archived=archived).skip(offset).limit(page_size).all()
+        else:
+            items = cls.filter(channel_id=str(channel.id), archived=archived).order_by('name', 'created').all()
+        return items
+
+    @classmethod
+    def get_by_scenario(cls, scenario, archived=False, page_num=1, page_size=5):
+        if page_num:
+            offset = (page_num - 1) * 5
+            items = cls.filter(scenario_id=str(scenario.id), archived=archived).skip(offset).limit(page_size).all()
+        else:
+            items = cls.filter(scenario_id=str(scenario.id), archived=archived).order_by('name', 'created').all()
+        return items
+
+    @classmethod
+    def get_by_page(cls, params, page_num=1, page_size=5):
+        if page_num:
+            offset = (page_num - 1) * 5
+            logs = cls.filter(**params).order_by('name', 'created').skip(offset).limit(page_size).all()
+        else:
+            logs = cls.filter(**params).order_by('name', 'created').all()
+        return logs
 
     @classmethod
     def get_by_parent(cls, **params):

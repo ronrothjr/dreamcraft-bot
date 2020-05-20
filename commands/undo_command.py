@@ -88,7 +88,7 @@ class UndoCommand():
                     'sort': 'created'
                 }
             },
-            'formatter': lambda log, num: log.get_short_string(),
+            'formatter': lambda log, num, page_num, page_size: log.get_short_string(),
             'cancel': canceler,
             'page_size': 10
         }).open()
@@ -126,7 +126,7 @@ class UndoCommand():
                     'params': {'user_id': str(self.user.id), 'category__ne': 'Log'}
                 }
             },
-            'formatter': lambda undo, num: f'_Undo #{num+1}_\n{undo.get_string()}',
+            'formatter': lambda undo, num, page_num, page_size: f'_Undo #{num+1}_\n{undo.get_string()}',
             'cancel': canceler
         }).open()
         messages.extend(response)

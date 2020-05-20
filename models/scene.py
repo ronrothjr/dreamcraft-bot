@@ -174,7 +174,7 @@ class Scene(Document):
             description = f' - "{self.character.description}"' if self.character.description else description
             aspects = self.character.get_string_aspects()
             stress = self.character.get_string_stress() if self.character.has_stress else ''
-        return f'\n        {name}{active}{description}{characters}{aspects}{stress}'
+        return f'        {name}{active}{description}{characters}{aspects}{stress}'
 
 
     def get_short_string(self, channel=None):
@@ -191,7 +191,7 @@ class Scene(Document):
             description = f' - "{self.character.description}"' if self.character.description else description
             aspects = self.character.get_string_aspects()
             stress = self.character.get_string_stress() if self.character.has_stress else ''
-        return f'\n        {name}{active}{description}{characters}{aspects}{stress}'
+        return f'        {name}{active}{description}{characters}{aspects}{stress}'
 
 
 signals.post_save.connect(Scene.post_save, sender=Scene)

@@ -86,11 +86,7 @@ class Dialog(object):
         params = self.getter.get('params', None)
         if not params:
             raise Exception('No data getter params supplied')
-        data_params = {}
-        for p in params:
-            data_params[p] = params[p]
-        data_params.update({'page_num': None})
-        item_count = method(**data_params).count()
+        item_count = method(**params, page_num=0).count()
         return math.ceil(item_count/self.page_size) if item_count else 0
 
     def get_page_str(self):
@@ -127,11 +123,7 @@ class Dialog(object):
         params = self.getter.get('params', None)
         if not params:
             raise Exception('No data getter params supplied')
-        data_params = {}
-        for p in params:
-            data_params[p] = params[p]
-        data_params.update({'page_num': self.page_num, 'page_size': self.page_size})
-        items = method(**data_params)
+        items = method(**params, page_num=self.page_num, page_size=self.page_size)
         # items = self.get_descendants(items, data_params)
         return items
 
@@ -168,7 +160,7 @@ class Dialog(object):
     def get_content(self, items):
         content = ''
         if items:
-            items_string = '\n\n'.join([self.formatter(items[i], i) for i in range(0, len(items))])
+            items_string = '\n\n'.join([self.formatter(items[i], i, self.page_num, self.page_size) for i in range(0, len(items))])
             content = f'***{self.title}:***\n\n{items_string}\n'
         return content
 

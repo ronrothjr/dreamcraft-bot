@@ -131,7 +131,7 @@ class CharacterCommand():
             return [f'{self.char.name} is not in a scene']
         else:
             note_text = ' '.join(args[1:])
-            Log().create_new(str(self.sc.id), f'Character: {self.char.name}', str(self.user.id), self.guild.name, 'Character', {'by': self.user.name, 'note': f'{self.char.name} says, "{note_text}"'}, 'created')
+            Log().create_new(str(self.sc.id), f'Character: {self.char.name}', str(self.user.id), self.guild.name, 'Character', {'by': self.user.name, 'note': f'***{self.char.name}*** says, "{note_text}"'}, 'created')
             return ['Log created']
 
     def story(self, args):
@@ -165,7 +165,7 @@ class CharacterCommand():
                     'sort': 'created'
                 }
             },
-            'formatter': lambda log, num: log.get_short_string(), # if log.category == 'Log' else log.get_string()
+            'formatter': lambda log, num, page_num, page_size: log.get_short_string(), # if log.category == 'Log' else log.get_string()
             'cancel': canceler,
             'page_size': 10
         }).open()
@@ -280,6 +280,8 @@ class CharacterCommand():
         elif char.category == 'Character':
             if dialog_text:
                 dialog_string += dialog.get(dialog_text, '')
+            elif char.npc:
+                dialog_string += dialog.get('active_character', '')
             else:
                 dialog_string += dialog.get('active_character', '')
                 dialog_string += dialog.get('rename_delete', '') if self.can_edit else ''
@@ -337,7 +339,7 @@ class CharacterCommand():
             else:
                 def canceler(cancel_args):
                     if cancel_args[0].lower() in ['character','char','c']:
-                        return CharacterCommand(parent=self.parent, ctx=self.ctx, args=cancel_args).run()
+                        return CharacterCommand(parent=self.parent, ctx=self.ctx, args=cancel_args, guild=self.guild, user=self.user).run()
                     else:
                         self.parent.args = cancel_args
                         self.parent.command = self.parent.args[0]
@@ -348,6 +350,9 @@ class CharacterCommand():
                     self.user.set_active_character(self.char)
                     char_svc.save_user(self.user)
                     return [self.dialog('')]
+
+                def formatter(item, item_num, page_num, page_size):
+                    return f'_CHARACTER #{((page_num-1)*page_size)+item_num+1}_\n{item.get_short_string()}'
 
                 messages.extend(Dialog({
                     'svc': char_svc,
@@ -360,7 +365,7 @@ class CharacterCommand():
                         'method': Character.get_by_page,
                         'params': {'params': {'name__icontains': char_name, 'guild': self.guild.name, 'category': 'Character', 'archived': False, 'npc': self.npc}}
                     },
-                    'formatter': lambda item, item_num: f'_CHARACTER #{item_num+1}_\n{item.get_short_string()}',
+                    'formatter': formatter,
                     'cancel': canceler,
                     'select': selector,
                     'empty': {
@@ -387,7 +392,7 @@ class CharacterCommand():
             char_name = ' '.join(args[1:])
             def canceler(cancel_args):
                 if cancel_args[0].lower() in ['character','char','c']:
-                    return CharacterCommand(parent=self.parent, ctx=self.ctx, args=cancel_args).run()
+                    return CharacterCommand(parent=self.parent, ctx=self.ctx, args=cancel_args, guild=self.guild, user=self.user).run()
                 else:
                     self.parent.args = cancel_args
                     self.parent.command = self.parent.args[0]
@@ -399,6 +404,9 @@ class CharacterCommand():
                 char_svc.save_user(self.user)
                 return [self.dialog('')]
 
+            def formatter(item, item_num, page_num, page_size):
+                return f'_CHARACTER #{((page_num-1)*page_size)+item_num+1}_\n{item.get_short_string(self.user)}'
+
             messages.extend(Dialog({
                 'svc': char_svc,
                 'user': self.user,
@@ -408,9 +416,9 @@ class CharacterCommand():
                 'type_name': 'CHARACTER',
                 'getter': {
                     'method': Character.get_by_page,
-                    'params': {'params': {'user': self.user, 'name__icontains': char_name, 'guild': self.guild.name, 'archived': False}}
+                    'params': {'params': {'user': self.user, 'name__icontains': char_name, 'guild': self.guild.name, 'npc': False, 'archived': False}}
                 },
-                'formatter': lambda item, item_num: f'_CHARACTER #{item_num+1}_\n{item.get_short_string()}',
+                'formatter': formatter,
                 'cancel': canceler,
                 'select': selector
             }).open())
@@ -420,11 +428,20 @@ class CharacterCommand():
         messages = []
         def canceler(cancel_args):
             if cancel_args[0].lower() in ['character','char','c']:
-                return CharacterCommand(parent=self.parent, ctx=self.ctx, args=cancel_args).run()
+                return CharacterCommand(parent=self.parent, ctx=self.ctx, args=cancel_args, guild=self.guild, user=self.user).run()
             else:
                 self.parent.args = cancel_args
                 self.parent.command = self.parent.args[0]
                 return self.parent.get_messages()
+
+        def selector(selection):
+            self.char = selection
+            self.user.set_active_character(self.char)
+            char_svc.save_user(self.user)
+            return [self.dialog('')]
+
+        def formatter(item, item_num, page_num, page_size):
+            return f'_CHARACTER #{((page_num-1)*page_size)+item_num+1}_\n{item.get_short_string(self.user)}'
 
         messages.extend(Dialog({
             'svc': char_svc,
@@ -436,8 +453,9 @@ class CharacterCommand():
                 'method': Character.get_by_page,
                 'params': {'params': {'guild': self.guild.name, 'category': 'Character', 'archived': False}}
             },
-            'formatter': lambda item, item_num: f'{item.get_short_string(self.user)}',
-            'cancel': canceler
+            'formatter': formatter,
+            'cancel': canceler,
+                'select': selector
         }).open())
         return messages
 
@@ -850,7 +868,7 @@ class CharacterCommand():
             self.char.active_aspect = str(self.asp.id)
             self.char.active_character = str(self.asp.id)
             char_svc.save(self.char, self.user)
-            command = CharacterCommand(parent=self.parent, ctx=self.ctx, args=args[1:], char=self.asp)
+            command = CharacterCommand(parent=self.parent, ctx=self.ctx, args=args[1:], guild=self.guild, user=self.user, char=self.asp)
             messages.extend(command.run())
         else:
             aspect = ' '.join(args[1:])
@@ -888,7 +906,7 @@ class CharacterCommand():
             self.char.active_stunt = str(self.stu.id)
             self.char.active_character = str(self.stu.id)
             char_svc.save(self.char, self.user)
-            command = CharacterCommand(parent=self.parent, ctx=self.ctx, args=args[1:], char=self.stu)
+            command = CharacterCommand(parent=self.parent, ctx=self.ctx, args=args[1:], guild=self.guild, user=self.user, char=self.stu)
             messages.extend(command.run())
         else:
             stunt = ' '.join(args[1:])

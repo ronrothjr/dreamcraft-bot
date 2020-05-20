@@ -90,7 +90,7 @@ class SceneCommand():
             return ['No active scene to log']
         else:
             note_text = ' '.join(args[1:])
-            Log().create_new(str(self.sc.id), f'Scene: {self.sc.name}', str(self.user.id), self.guild.name, 'Scene', {'by': self.user.name, 'note': f'Narrator says, "{note_text}"'}, 'created')
+            Log().create_new(str(self.sc.id), f'Scene: {self.sc.name}', str(self.user.id), self.guild.name, 'Scene', {'by': self.user.name, 'note': f'***Narrator*** says, "{note_text}"'}, 'created')
             return ['Log created']
 
     def story(self, args):
@@ -124,7 +124,7 @@ class SceneCommand():
                     'sort': 'created'
                 }
             },
-            'formatter': lambda log, num: log.get_short_string(), # if log.category == 'Log' else log.get_string()
+            'formatter': lambda log, num, page_num, page_size: log.get_short_string(), # if log.category == 'Log' else log.get_string()
             'cancel': canceler,
             'page_size': 10
         }).open()
@@ -132,7 +132,7 @@ class SceneCommand():
         return messages
 
     def dialog(self, dialog_text, sc=None):
-        sc, name, get_string, get_short_string = scene_svc.get_scene_info(self.sc, self.user)
+        sc, name, get_string, get_short_string = scene_svc.get_scene_info(self.sc, self.channel)
         category = sc.category if sc else 'Scene'
         dialog = {
             'create_scene': ''.join([
@@ -178,8 +178,8 @@ class SceneCommand():
         return dialog_string
     
     def name(self, args):
-        if not self.sc:
-            raise Exception('No active scene or name provided. Try this:```css\n.d scene SCENE_NAME```')
+        if not self.scenario:
+            raise Exception('No active scenario or name provided. Try this:```css\n.d scenario SCENARIO_NAME```')
         messages = []
         if len(args) == 0:
             if not self.sc:
@@ -212,7 +212,7 @@ class SceneCommand():
             else:
                 def canceler(cancel_args):
                     if cancel_args[0].lower() in ['scene','s']:
-                        return SceneCommand(parent=self.parent, ctx=self.ctx, args=cancel_args).run()
+                        return SceneCommand(parent=self.parent, ctx=self.ctx, args=cancel_args, guild=self.guild, user=self.user).run()
                     else:
                         self.parent.args = cancel_args
                         self.parent.command = self.parent.args[0]
@@ -236,12 +236,12 @@ class SceneCommand():
                         'method': Scene.get_by_page,
                         'params': {'params': {'name__icontains': scene_name, 'channel_id': str(self.channel.id), 'guild': self.guild.name, 'archived': False}}
                     },
-                    'formatter': lambda item, item_num: f'_SCENE #{item_num+1}_\n{item.get_short_string()}',
+                    'formatter': lambda item, item_num, page_num, page_size: f'_SCENE #{item_num+1}_\n{item.get_short_string()}',
                     'cancel': canceler,
                     'select': selector,
                     'empty': {
                         'method': Scene().get_or_create,
-                        'params': {'user': self.user, 'name': scene_name, 'channel': self.channel, 'guild': self.guild.name}
+                        'params': {'user': self.user, 'name': scene_name, 'scenario': self.scenario, 'channel': self.channel, 'guild': self.guild.name}
                     }
                 }).open())
         return messages
@@ -263,7 +263,7 @@ class SceneCommand():
             sc_name = ' '.join(args[1:])
             def canceler(cancel_args):
                 if cancel_args[0].lower() in ['scene','s']:
-                    return SceneCommand(parent=self.parent, ctx=self.ctx, args=cancel_args).run()
+                    return SceneCommand(parent=self.parent, ctx=self.ctx, args=cancel_args, guild=self.guild, user=self.user).run()
                 else:
                     self.parent.args = cancel_args
                     self.parent.command = self.parent.args[0]
@@ -286,7 +286,7 @@ class SceneCommand():
                     'method': Scene.get_by_page,
                     'params': {'params': {'name__icontains': sc_name, 'scenario_id': str(self.scenario.id), 'guild': self.guild.name, 'archived': False}}
                 },
-                'formatter': lambda item, item_num: f'_SCENE #{item_num+1}_\n{item.get_short_string()}',
+                'formatter': lambda item, item_num, page_num, page_size: f'_SCENE #{item_num+1}_\n{item.get_short_string()}',
                 'cancel': canceler,
                 'select': selector
             }).open())
@@ -296,7 +296,7 @@ class SceneCommand():
         messages = []
         def canceler(cancel_args):
             if cancel_args[0].lower() in ['scene']:
-                return SceneCommand(parent=self.parent, ctx=self.ctx, args=cancel_args).run()
+                return SceneCommand(parent=self.parent, ctx=self.ctx, args=cancel_args, guild=self.guild, user=self.user).run()
             else:
                 self.parent.args = cancel_args
                 self.parent.command = self.parent.args[0]
@@ -312,7 +312,7 @@ class SceneCommand():
                 'method': Scene().get_by_scenario,
                 'params': {'scenario': self.scenario, 'archived': False}
             },
-            'formatter': lambda item, item_num: f'{item.get_short_string(self.channel)}',
+            'formatter': lambda item, item_num, page_num, page_size: f'{item.get_short_string(self.channel)}',
             'cancel': canceler
         }).open())
         return messages
@@ -343,7 +343,7 @@ class SceneCommand():
             self.channel.updated_by = str(self.user.id)
             self.user.updated = datetime.datetime.utcnow()
             self.user.save()
-        command = CharacterCommand(self.parent, self.ctx, args, self.sc.character)
+        command = CharacterCommand(parent=self.parent, ctx=self.ctx, args=args, guild=self.guild, user=self.user, char=self.sc.character)
         return command.run()
 
     def player(self, args):

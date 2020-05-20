@@ -165,7 +165,7 @@ class Scenario(Document):
             description = f' - "{self.character.description}"' if self.character.description else description
             aspects = self.character.get_string_aspects()
             stress = self.character.get_string_stress() if self.character.has_stress else ''
-        return f'\n        {name}{active}{description}{characters}{aspects}{stress}'
+        return f'        {name}{active}{description}{characters}{aspects}{stress}'
 
     def get_short_string(self, channel=None):
         name = f'***{self.name}***'
@@ -174,7 +174,7 @@ class Scenario(Document):
             active = ' _(Active Scenario)_ ' if str(self.id) == channel.active_scenario else ''
         if self.character:
             name = f'***{self.character.name}***' if self.character.name else name
-        return f'\n        {name}{active}'
+        return f'        {name}{active}'
 
 
 signals.post_save.connect(Scenario.post_save, sender=Scenario)

@@ -46,4 +46,4 @@ class ScenarioService():
         name = scenario.name if scenario else 'your scenario'
         get_string = scenario.get_string(user) if scenario else ''
         get_short_string = scenario.get_short_string(user) if scenario else ''
-        return scenario, name, get_string, get_short_string
+        return scenario.character, name, get_string, get_short_string

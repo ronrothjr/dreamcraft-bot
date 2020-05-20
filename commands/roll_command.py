@@ -116,7 +116,7 @@ class RollCommand():
             for invoke in self.invokes:
                 if invoke['stress_titles']:
                     for i in range(0, len(invoke['stress_titles'])):
-                        command = CharacterCommand(self.parent, self.ctx, self.args, invoke['stress_targets'][i])
+                        command = CharacterCommand(parent=self.parent, ctx=self.ctx, args=self.args, guild=self.guild, user=self.user, char=invoke['stress_targets'][i])
                         stress_messages = command.stress(['st', invoke['stress_titles'][i], invoke['stress'][i][0][0]])
                         if 'cannot absorb' in ''.join(stress_messages):
                             raise Exception(*stress_messages)
@@ -205,7 +205,7 @@ class RollCommand():
             has_stress = []
             for target in targets:
                 stress_target = copy.deepcopy(target['char'])
-                command = CharacterCommand(self.parent, self.ctx, self.args, stress_target)
+                command = CharacterCommand(parent=self.parent, ctx=self.ctx, args=self.args, guils=self.guild, user=self.user, char=stress_target)
                 target_errors = command.stress(['st', stress_titles[s], stress[s][0][0]], stress_target)
                 if target_errors:
                     for error in target_errors:

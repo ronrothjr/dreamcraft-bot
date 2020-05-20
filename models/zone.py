@@ -1,7 +1,6 @@
 # zone.py
 import datetime
-from mongoengine import *
-from mongoengine import signals
+from mongoengine import Document, StringField, ReferenceField, ListField, BooleanField, DateTimeField, signals
 from models.character import User
 from models.character import Character
 from models.log import Log
@@ -14,7 +13,6 @@ class Zone(Document):
     channel_id = StringField()
     scene_id = StringField()
     character = ReferenceField(Character)
-    active_user = StringField()
     characters = ListField(StringField())
     archived = BooleanField(default=False)
     history_id = StringField()
@@ -85,17 +83,23 @@ class Zone(Document):
         zone = Zone.objects(id=id).first()
         return zone
 
-    def set_active_user(self, user):
-        self.active_user = str(user.id)
-        if (not self.created):
-            self.created = datetime.datetime.utcnow()
-        self.updated_by = str(user.id)
-        self.updated = datetime.datetime.utcnow()
-        self.save()
+    @classmethod
+    def get_by_channel(cls, channel, archived=False, page_num=1, page_size=5):
+        if page_num:
+            offset = (page_num - 1) * 5
+            items = cls.filter(channel_id=str(channel.id), archived=archived).skip(offset).limit(page_size).all()
+        else:
+            items = cls.filter(channel_id=str(channel.id), archived=archived).order_by('name', 'created').all()
+        return items
 
-    def get_by_channel(self, channel, archived=False):
-        zones = Zone.objects(channel_id=str(channel.id), archived=archived).all()
-        return zones
+    @classmethod
+    def get_by_scene(cls, scene, archived=False, page_num=1, page_size=5):
+        if page_num:
+            offset = (page_num - 1) * 5
+            items = cls.filter(scene_id=str(scene.id), archived=archived).skip(offset).limit(page_size).all()
+        else:
+            items = cls.filter(scene_id=str(scene.id), archived=archived).order_by('name', 'created').all()
+        return items
 
     @classmethod
     def get_by_page(cls, params, page_num=1, page_size=5):
@@ -141,7 +145,7 @@ class Zone(Document):
             z.updated = datetime.datetime.utcnow()
             z.save()
 
-    def get_string_characters(self, channel):
+    def get_string_characters(self, channel=None):
         characters = [Character.get_by_id(id) for id in self.characters]
         characters = '***\n                ***'.join(c.name for c in characters if c)
         return f'\n            _Characters:_\n                ***{characters}***'
@@ -160,7 +164,7 @@ class Zone(Document):
             description = f' - "{self.character.description}"' if self.character.description else description
             aspects = self.character.get_string_aspects()
             stress = self.character.get_string_stress() if self.character.has_stress else ''
-        return f'\n        {name}{active}{description}{characters}{aspects}{stress}'
+        return f'        {name}{active}{description}{characters}{aspects}{stress}'
 
     def get_short_string(self, channel):
         name = f'***{self.name}***'
@@ -176,7 +180,7 @@ class Zone(Document):
             description = f' - "{self.character.description}"' if self.character.description else description
             aspects = self.character.get_string_aspects()
             stress = self.character.get_string_stress() if self.character.has_stress else ''
-        return f'\n        {name}{active}{description}{characters}{aspects}{stress}'
+        return f'        {name}{active}{description}{characters}{aspects}{stress}'
 
 
 signals.post_save.connect(Zone.post_save, sender=Zone)

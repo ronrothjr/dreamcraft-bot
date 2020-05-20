@@ -12,7 +12,7 @@ SETUP = Setup()
 ZONE_HELP = SETUP.zone_help
 
 class ZoneCommand():
-    def __init__(self, parent, ctx, args, guild=None, user=None):
+    def __init__(self, parent, ctx, args, guild, user, channel):
         self.parent = parent
         self.ctx = ctx
         self.args = args[1:]
@@ -22,8 +22,9 @@ class ZoneCommand():
         channel = 'private' if ctx.channel.type.name == 'private' else ctx.channel.name
         self.channel = Channel().get_or_create(channel, self.guild.name, self.user)
         self.scenario = Scenario().get_by_id(self.channel.active_scenario) if self.channel and self.channel.active_scenario else None
-        self.sc = Scene().get_by_id(self.channel.active_zone) if self.channel and self.channel.active_zone else None
+        self.sc = Scene().get_by_id(self.channel.active_scene) if self.channel and self.channel.active_scene else None
         self.zone = Zone().get_by_id(self.channel.active_zone) if self.channel and self.channel.active_zone else None
+        self.can_edit = self.user.role == 'Game Master' if self.user and self.zone else True
         self.char = Character().get_by_id(self.user.active_character) if self.user and self.user.active_character else None
 
     def run(self):
@@ -172,7 +173,7 @@ class ZoneCommand():
         return dialog_string
     
     def name(self, args):
-        if not self.scene:
+        if not self.sc:
             raise Exception('No active scene or name provided. Try this:```css\n.d scene SCENE_NAME```')
         messages = []
         if len(args) == 0:
@@ -206,7 +207,7 @@ class ZoneCommand():
             else:
                 def canceler(cancel_args):
                     if cancel_args[0].lower() in ['zone','z']:
-                        return ZoneCommand(parent=self.parent, ctx=self.ctx, args=cancel_args, guild=self.guild, user=self.user).run()
+                        return ZoneCommand(parent=self.parent, ctx=self.ctx, args=cancel_args, guild=self.guild, user=self.user, channel=self.channel).run()
                     else:
                         self.parent.args = cancel_args
                         self.parent.command = self.parent.args[0]
@@ -235,7 +236,7 @@ class ZoneCommand():
                     'select': selector,
                     'empty': {
                         'method': Zone().get_or_create,
-                        'params': {'user': self.user, 'name': zone_name, 'scene': self.scene, 'channel': self.channel, 'guild': self.guild.name}
+                        'params': {'user': self.user, 'name': zone_name, 'scene': self.sc, 'channel': self.channel, 'guild': self.guild.name}
                     }
                 }).open())
         return messages
@@ -257,7 +258,7 @@ class ZoneCommand():
             sc_name = ' '.join(args[1:])
             def canceler(cancel_args):
                 if cancel_args[0].lower() in ['zone','s']:
-                    return ZoneCommand(parent=self.parent, ctx=self.ctx, args=cancel_args, guild=self.guild, user=self.user).run()
+                    return ZoneCommand(parent=self.parent, ctx=self.ctx, args=cancel_args, guild=self.guild, user=self.user, channel=self.channel).run()
                 else:
                     self.parent.args = cancel_args
                     self.parent.command = self.parent.args[0]
@@ -278,7 +279,7 @@ class ZoneCommand():
                 'type_name': 'ZONE',
                 'getter': {
                     'method': Zone.get_by_page,
-                    'params': {'params': {'name__icontains': sc_name, 'scene_id': str(self.scene.id), 'guild': self.guild.name, 'archived': False}}
+                    'params': {'params': {'name__icontains': sc_name, 'scene_id': str(self.sc.id), 'guild': self.guild.name, 'archived': False}}
                 },
                 'formatter': lambda item, item_num, page_num, page_size: f'_ZONE #{item_num+1}_\n{item.get_short_string()}',
                 'cancel': canceler,
@@ -290,7 +291,7 @@ class ZoneCommand():
         messages = []
         def canceler(cancel_args):
             if cancel_args[0].lower() in ['zone']:
-                return ZoneCommand(parent=self.parent, ctx=self.ctx, args=cancel_args, guild=self.guild, user=self.user).run()
+                return ZoneCommand(parent=self.parent, ctx=self.ctx, args=cancel_args, guild=self.guild, user=self.user, channel=self.channel).run()
             else:
                 self.parent.args = cancel_args
                 self.parent.command = self.parent.args[0]
@@ -302,9 +303,10 @@ class ZoneCommand():
             'title': 'Zone List',
             'command': 'zone ' + (' '.join(args)),
             'type': 'view',
+            'type': 'ZONE',
             'getter': {
                 'method': Zone().get_by_scene,
-                'params': {'scene': self.scene, 'archived': False}
+                'params': {'scene': self.sc, 'archived': False}
             },
             'formatter': lambda item, item_num, page_num, page_size: f'{item.get_short_string(self.channel)}',
             'cancel': canceler
@@ -337,7 +339,7 @@ class ZoneCommand():
             self.user.updated_by = str(self.user.id)
             self.user.updated = datetime.datetime.utcnow()
             self.user.save()
-        command = CharacterCommand(self.parent, self.ctx, args, self.zone.character)
+        command = CharacterCommand(parent=self.parent, ctx=self.ctx, args=args, guild=self.guild, user=self.user, channel=self.channel, char=self.zone.character)
         return command.run()
 
     def player(self, args):

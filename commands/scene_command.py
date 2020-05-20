@@ -4,15 +4,16 @@ import datetime
 from commands import CharacterCommand
 from models import Channel, Scenario, Scene, Character, User, Log
 from config.setup import Setup
-from services.scene_service import SceneService
+from services import SceneService, ScenarioService
 from utils import Dialog
 
 scene_svc = SceneService()
+scenario_svc = ScenarioService()
 SETUP = Setup()
 SCENE_HELP = SETUP.scene_help
 
 class SceneCommand():
-    def __init__(self, parent, ctx, args, guild=None, user=None):
+    def __init__(self, parent, ctx, args, guild, user, channel):
         self.parent = parent
         self.ctx = ctx
         self.args = args[1:]
@@ -132,7 +133,7 @@ class SceneCommand():
         return messages
 
     def dialog(self, dialog_text, sc=None):
-        sc, name, get_string, get_short_string = scene_svc.get_scene_info(self.sc, self.channel)
+        sc, name, get_string, get_short_string = scene_svc.get_scene_info(self.sc, self.channel, self.user)
         category = sc.category if sc else 'Scene'
         dialog = {
             'create_scene': ''.join([
@@ -187,7 +188,7 @@ class SceneCommand():
                     'No active scene or name provided\n\n',
                     self.dialog('all')
                 ]
-            messages.append(self.sc.get_string())
+            messages.append(self.sc.get_string(self.channel, self.user))
         else:
             if len(args) == 1 and args[0].lower() == 'short':
                 return [self.dialog('active_scene_short')]
@@ -212,7 +213,7 @@ class SceneCommand():
             else:
                 def canceler(cancel_args):
                     if cancel_args[0].lower() in ['scene','s']:
-                        return SceneCommand(parent=self.parent, ctx=self.ctx, args=cancel_args, guild=self.guild, user=self.user).run()
+                        return SceneCommand(parent=self.parent, ctx=self.ctx, args=cancel_args, guild=self.guild, user=self.user, channel=self.channel).run()
                     else:
                         self.parent.args = cancel_args
                         self.parent.command = self.parent.args[0]
@@ -221,9 +222,15 @@ class SceneCommand():
                 def selector(selection):
                     self.sc = selection
                     self.channel.set_active_scene(self.sc, self.user)
-                    self.user.set_active_character(self.sc.character)
-                    scene_svc.save_user(self.user)
                     return [self.dialog('')]
+
+                def creator(**params):
+                    item = Scene().get_or_create(**params)
+                    scenes = scenario_svc.get_scenes(self.scenario)
+                    characters = scenario_svc.get_characters(scenes)
+                    item.players = [str(c.id) for c in characters]
+                    scene_svc.save(item, self.user)
+                    return item
 
                 messages.extend(Dialog({
                     'svc': scene_svc,
@@ -240,12 +247,12 @@ class SceneCommand():
                     'cancel': canceler,
                     'select': selector,
                     'empty': {
-                        'method': Scene().get_or_create,
+                        'method': creator,
                         'params': {'user': self.user, 'name': scene_name, 'scenario': self.scenario, 'channel': self.channel, 'guild': self.guild.name}
                     }
                 }).open())
         return messages
-    
+
     def select(self, args):
         messages = []
         if len(args) == 0:
@@ -263,16 +270,15 @@ class SceneCommand():
             sc_name = ' '.join(args[1:])
             def canceler(cancel_args):
                 if cancel_args[0].lower() in ['scene','s']:
-                    return SceneCommand(parent=self.parent, ctx=self.ctx, args=cancel_args, guild=self.guild, user=self.user).run()
+                    return SceneCommand(parent=self.parent, ctx=self.ctx, args=cancel_args, guild=self.guild, user=self.user, channel=self.channel).run()
                 else:
                     self.parent.args = cancel_args
                     self.parent.command = self.parent.args[0]
                     return self.parent.get_messages()
 
             def selector(selection):
-                self.char = selection
-                self.user.set_active_character(self.sc)
-                scene_svc.save_user(self.user)
+                self.sc = selection
+                self.channel.set_active_scene(self.sc, self.user)
                 return [self.dialog('')]
 
             messages.extend(Dialog({
@@ -296,7 +302,7 @@ class SceneCommand():
         messages = []
         def canceler(cancel_args):
             if cancel_args[0].lower() in ['scene']:
-                return SceneCommand(parent=self.parent, ctx=self.ctx, args=cancel_args, guild=self.guild, user=self.user).run()
+                return SceneCommand(parent=self.parent, ctx=self.ctx, args=cancel_args, guild=self.guild, user=self.user, channel=self.channel).run()
             else:
                 self.parent.args = cancel_args
                 self.parent.command = self.parent.args[0]
@@ -312,7 +318,7 @@ class SceneCommand():
                 'method': Scene().get_by_scenario,
                 'params': {'scenario': self.scenario, 'archived': False}
             },
-            'formatter': lambda item, item_num, page_num, page_size: f'{item.get_short_string(self.channel)}',
+            'formatter': lambda item, item_num, page_num, page_size: f'{scene_svc.get_list(item, self.channel)}',
             'cancel': canceler
         }).open())
         return messages
@@ -343,70 +349,11 @@ class SceneCommand():
             self.channel.updated_by = str(self.user.id)
             self.user.updated = datetime.datetime.utcnow()
             self.user.save()
-        command = CharacterCommand(parent=self.parent, ctx=self.ctx, args=args, guild=self.guild, user=self.user, char=self.sc.character)
+        command = CharacterCommand(parent=self.parent, ctx=self.ctx, args=args, guild=self.guild, user=self.user, channel=self.channel, char=self.sc.character)
         return command.run()
 
     def player(self, args):
-        if len(args) == 1:
-            raise Exception('No characters added')
-        if not self.sc:
-            raise Exception('You don\'t have an active scene. Try this:```css\n.d scene SCENE_NAME```')
-        elif args[1].lower() == 'list' or args[1].lower() == 'l':
-            return [self.sc.get_string_characters(self.channel)]
-        elif args[1].lower() == 'delete' or args[1].lower() == 'd':
-            char = ' '.join(args[2:])
-            [self.sc.characters.remove(s) for s in self.sc.characters if char.lower() in s.lower()]
-            if (not self.sc.created):
-                self.sc.created = datetime.datetime.utcnow()
-            self.sc.updated_by = str(self.user.id)
-            self.sc.updated = datetime.datetime.utcnow()
-            self.sc.save()
-            return [
-                f'{char} removed from scene characters',
-                self.sc.get_string_characters(self.channel)
-            ]
-        else:
-            search = ' '.join(args[1:])
-            char = Character().find(None, search, self.channel.guild)
-            if char:
-                self.sc.characters.append(str(char.id))
-            else:
-                return [f'***{search}*** not found. No character added to _{self.sc.name}_']
-            if (not self.sc.created):
-                self.sc.created = datetime.datetime.utcnow()
-            self.sc.updated_by = str(self.user.id)
-            self.sc.updated = datetime.datetime.utcnow()
-            self.sc.save()
-            return [
-                f'Added {char.name} to scene characters',
-                self.sc.get_string_characters(self.channel)
-            ]
+        return scene_svc.player(args, self.channel, self.sc, self.user)
 
     def delete_scene(self, args):
-        messages = []
-        search = ''
-        if len(args) == 1:
-            if not self.sc:
-                raise Exception('No scene provided for deletion')
-        else:
-            search = ' '.join(args[1:])
-            self.sc = Scene().find(self.guild.name, str(self.channel.id), str(self.scenario.id), search)
-        if not self.sc:
-            return [f'{search} was not found. No changes made.']
-        else:
-            search = str(self.sc.name)
-            scenario_id = str(self.sc.scenario_id) if self.sc.scenario_id else ''
-            channel_id = str(self.sc.channel_id) if self.sc.channel_id else ''
-            self.sc.character.archive(self.user)
-            self.sc.archived = True
-            self.sc.updated_by = str(self.user.id)
-            self.sc.updated = datetime.datetime.utcnow()
-            self.sc.save()
-            messages.append(f'***{search}*** removed')
-            if scenario_id:
-                secenario = Scenario().get_by_id(scenario_id)
-                messages.append(secenario.get_string(self.channel))
-            elif channel_id:
-                channel = Channel().get_by_id(channel_id)
-                messages.append(channel.get_string())
-            return messages
+        return scene_svc.delete_scene(args, self.guild, self.channel, self.scenario, self.sc, self.user)

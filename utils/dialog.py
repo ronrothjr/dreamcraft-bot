@@ -1,13 +1,15 @@
 # dialof.py
 import math
 import copy
+import inflect
+p = inflect.engine()
 
 class Dialog(object):
     def __init__(self, params):
         self.svc = params.get('svc', None)
         self.title = params.get('title', None)
         self.type = params.get('type', None)
-        self.type_name = params.get('type_name', None)
+        self.type_name = params.get('type_name', 'ITEM')
         self.command = params.get('command', None)
         self.user = params.get('user', None)
         self.getter = params.get('getter', None)
@@ -70,7 +72,7 @@ class Dialog(object):
             paging_question = self.get_page_str() if self.page_count and self.page_count > 0 else ''
             question = f'{select_question}{paging_question}'
             self.set_dialog(self.command if question else '', question)
-            content = self.get_content(items)
+            content = self.get_content(items) if items else f'No {p.plural(self.type_name).upper()} found'
             return [f'{content}\n{question}']
 
     def set_dialog(self, command='', question='', answer=''):
@@ -86,12 +88,12 @@ class Dialog(object):
         params = self.getter.get('params', None)
         if not params:
             raise Exception('No data getter params supplied')
-        item_count = method(**params, page_num=0).count()
-        return math.ceil(item_count/self.page_size) if item_count else 0
+        self.item_count = method(**params, page_num=0).count()
+        return math.ceil(self.item_count/self.page_size) if self.item_count else 0
 
     def get_page_str(self):
         return ''.join([
-            f'Page {self.page_num} of {self.page_count} - Enter page number, **\'<<\'**, **\'<\'**, **\'>\'** or **\'>>\'**',
+            f'Page {self.page_num} of {self.page_count} ({self.item_count} total) - Enter page number, **\'<<\'**, **\'<\'**, **\'>\'** or **\'>>\'**',
             '```css\n.d 1 /* to jump to a page */\n',
             '.d << /* to go to the first page */\n',
             '.d < /* to go to the previous page */\n',
@@ -109,10 +111,8 @@ class Dialog(object):
         elif self.empty:
             name = self.empty['params']['name']
             select_str = ''.join([
-                f'Are you sure you want to create a new {self.type_name} with the following name?\n\n',
-                f'        ***{name}***',
-                f'\n\nREPLY TO CONFIRM:',
-                '```css\n.d YES /* to confirm the command */\n.d NO /* to reject the command */\n.d CANCEL /* to cancel the command */```'
+                f'Create a new {self.type_name} named ***{name}***?',
+                f'```css\n.d YES /* to confirm the command */\n.d NO /* to reject the command */```'
             ])
         return select_str
 

@@ -3,12 +3,14 @@ import traceback
 import datetime
 import copy
 from bson.objectid import ObjectId
-from services import CharacterService
+from services import CharacterService, SceneService, ScenarioService
 from models import User, Channel, Scenario, Scene, Character, Log
 from config.setup import Setup
 from utils import TextUtils, Dialog
 
 char_svc = CharacterService()
+scene_svc = SceneService()
+scenario_svc = ScenarioService()
 SETUP = Setup()
 APPROACHES = SETUP.approaches
 SKILLS = SETUP.skills
@@ -24,7 +26,7 @@ CONSEQUENCES_TITLES = SETUP.consequences_titles
 CONSEQUENCES_SHIFTS = SETUP.consequence_shifts
 
 class CharacterCommand():
-    def __init__(self, parent, ctx, args, guild=None, user=None, char=None):
+    def __init__(self, parent, ctx, args, guild, user, channel, char=None):
         self.parent = parent
         self.ctx = ctx
         self.args = args[1:] if args[0] in ['character', 'char', 'c'] else args
@@ -33,10 +35,9 @@ class CharacterCommand():
             self.npc = True
             self.args = self.args[1:]
         self.command = self.args[0].lower() if len(self.args) > 0 else '='
-        self.guild = ctx.guild if ctx.guild else ctx.author
-        self.user = User().get_or_create(ctx.author.name, self.guild.name)
-        channel = 'private' if ctx.channel.type.name == 'private' else ctx.channel.name
-        self.channel = Channel().get_or_create(channel, self.guild.name, self.user)
+        self.guild = guild
+        self.user = user
+        self.channel = channel
         self.scenario = Scenario().get_by_id(self.channel.active_scenario) if self.channel and self.channel.active_scenario else None
         self.sc = Scene().get_by_id(self.channel.active_scene) if self.channel and self.channel.active_scene else None
         self.char = char if char else (Character().get_by_id(self.user.active_character) if self.user and self.user.active_character else None)
@@ -224,39 +225,39 @@ class CharacterCommand():
                 '.d c high concept HIGH_CONCEPT\n.d c trouble TROUBLE```'
             ]),
             'add_skills': ''.join([
-                f'Add approaches or skills for ***{name}***',
-                '```css\n.d c approach Forceful +4 Clever +2 Quick +1 ...\n',
+                f'\nAdd approaches or skills for ***{name}***',
+                '```css\n.d c approach Fo +4 Cl +2 Qu +1 Sn +2 Ca +1 Fl 0...\n',
                 '/* GET LIST OF APPROACHES or ADD YOUR OWN */\n',
                 '.d c approach help\n\n\n.d c skill Will +4 Rapport +2 Lore +1 ...\n',
                 '/* GET LIST OF SKILLS or ADD YOUR OWN */',
                 '\n.d c skill help```'
             ]),
             'add_aspects_and_stunts': ''.join([
-                f'Add an aspect or two for ***{name}***',
+                f'\n\nAdd an aspect or two for ***{name}***',
                 '```css\n.d c aspect ASPECT_NAME```',
                 f'Give  ***{name}*** some cool stunts',
                 '```css\n.d c stunt STUNT_NAME```'
             ]),
             'edit_active_aspect': ''.join([
-                f'***You can edit this aspect as if it were a character***',
+                f'\n***You can edit this aspect as if it were a character***',
                 '```css\n.d c aspect character\n',
                 '/* THIS WILL SHOW THE ASPECT IS THE ACTIVE CHARACTER */\n',
                 '.d c```'
             ]),
             'edit_active_stunt': ''.join([
-                f'***You can edit this stunt as if it were a character***',
+                f'\n***You can edit this stunt as if it were a character***',
                 '```css\n.d c stunt character\n',
                 '/* THIS WILL SHOW THE STUNT IS THE ACTIVE CHARACTER */\n',
                 '.d c```'
             ]),
             'manage_stress': ''.join([
-                f'***Modify the stress tracks.\n',
+                f'\n***Modify the stress tracks.\n',
                 'Here\'s an example to add and remove stress tracks***',
                 '```css\n.d c stress title 4 Ammo\n.d c stress title delete Ammo\n',
                 '.d c stress title FATE /* also use FAE or Core */```'
             ]),
             'manage_conditions': ''.join([
-                f'***Modify the conditions tracks.\n',
+                f'\n***Modify the conditions tracks.\n',
                 'Here\'s an example to add and remove consequence tracks***',
                 '```css\n.d c consequences title 2 Injured\n',
                 '.d c consequences title delete Injured\n',
@@ -284,15 +285,15 @@ class CharacterCommand():
                 dialog_string += dialog.get('active_character', '')
             else:
                 dialog_string += dialog.get('active_character', '')
-                dialog_string += dialog.get('rename_delete', '') if self.can_edit else ''
                 if not char.high_concept or not char.trouble:
+                    dialog_string += dialog.get('rename_delete', '') if self.can_edit else ''
                     dialog_string += dialog.get('add_more_info', '') if self.can_edit else ''
-                if not char.skills:                    
+                elif not char.skills:                    
                     dialog_string += dialog.get('add_skills', '') if self.can_edit else ''
-                dialog_string += dialog.get('add_aspects_and_stunts', '') if self.can_edit else ''
-                if not char.stress_titles:
+                elif char.skills:  
+                    dialog_string += dialog.get('add_aspects_and_stunts', '') if self.can_edit else ''
+                else:
                     dialog_string += dialog.get('manage_stress', '') if self.can_edit else ''
-                if not char.consequences_titles:
                     dialog_string += dialog.get('manage_conditions', '') if self.can_edit else ''
         else:
             if dialog_text:
@@ -339,7 +340,7 @@ class CharacterCommand():
             else:
                 def canceler(cancel_args):
                     if cancel_args[0].lower() in ['character','char','c']:
-                        return CharacterCommand(parent=self.parent, ctx=self.ctx, args=cancel_args, guild=self.guild, user=self.user).run()
+                        return CharacterCommand(parent=self.parent, ctx=self.ctx, args=cancel_args, guild=self.guild, user=self.user, channel=self.channel).run()
                     else:
                         self.parent.args = cancel_args
                         self.parent.command = self.parent.args[0]
@@ -353,6 +354,12 @@ class CharacterCommand():
 
                 def formatter(item, item_num, page_num, page_size):
                     return f'_CHARACTER #{((page_num-1)*page_size)+item_num+1}_\n{item.get_short_string()}'
+
+                def creator(**params):
+                    char = Character().get_or_create(**params)
+                    if self.sc:
+                        scene_svc.player(('p', char.name), self.channel, self.sc, self.user)
+                    return char
 
                 messages.extend(Dialog({
                     'svc': char_svc,
@@ -369,7 +376,7 @@ class CharacterCommand():
                     'cancel': canceler,
                     'select': selector,
                     'empty': {
-                        'method': Character().get_or_create,
+                        'method': creator,
                         'params': {'user': self.user, 'name': char_name, 'guild': self.guild.name, 'npc': self.npc}
                     }
                 }).open())
@@ -392,7 +399,7 @@ class CharacterCommand():
             char_name = ' '.join(args[1:])
             def canceler(cancel_args):
                 if cancel_args[0].lower() in ['character','char','c']:
-                    return CharacterCommand(parent=self.parent, ctx=self.ctx, args=cancel_args, guild=self.guild, user=self.user).run()
+                    return CharacterCommand(parent=self.parent, ctx=self.ctx, args=cancel_args, guild=self.guild, user=self.user, channel=self.channel).run()
                 else:
                     self.parent.args = cancel_args
                     self.parent.command = self.parent.args[0]
@@ -428,7 +435,7 @@ class CharacterCommand():
         messages = []
         def canceler(cancel_args):
             if cancel_args[0].lower() in ['character','char','c']:
-                return CharacterCommand(parent=self.parent, ctx=self.ctx, args=cancel_args, guild=self.guild, user=self.user).run()
+                return CharacterCommand(parent=self.parent, ctx=self.ctx, args=cancel_args, guild=self.guild, user=self.user, channel=self.channel).run()
             else:
                 self.parent.args = cancel_args
                 self.parent.command = self.parent.args[0]
@@ -868,7 +875,7 @@ class CharacterCommand():
             self.char.active_aspect = str(self.asp.id)
             self.char.active_character = str(self.asp.id)
             char_svc.save(self.char, self.user)
-            command = CharacterCommand(parent=self.parent, ctx=self.ctx, args=args[1:], guild=self.guild, user=self.user, char=self.asp)
+            command = CharacterCommand(parent=self.parent, ctx=self.ctx, args=args[1:], guild=self.guild, user=self.user, char=self.asp, channel=self.channel)
             messages.extend(command.run())
         else:
             aspect = ' '.join(args[1:])
@@ -906,7 +913,7 @@ class CharacterCommand():
             self.char.active_stunt = str(self.stu.id)
             self.char.active_character = str(self.stu.id)
             char_svc.save(self.char, self.user)
-            command = CharacterCommand(parent=self.parent, ctx=self.ctx, args=args[1:], guild=self.guild, user=self.user, char=self.stu)
+            command = CharacterCommand(parent=self.parent, ctx=self.ctx, args=args[1:], guild=self.guild, user=self.user, channel=self.channel, char=self.stu)
             messages.extend(command.run())
         else:
             stunt = ' '.join(args[1:])

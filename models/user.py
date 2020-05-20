@@ -1,7 +1,6 @@
 # user.py
 import datetime
-from mongoengine import *
-from mongoengine import signals
+from mongoengine import Document, StringField, BooleanField, DateTimeField
 from bson.objectid import ObjectId
 
 class User(Document):

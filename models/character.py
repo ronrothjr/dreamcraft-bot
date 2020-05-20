@@ -1,7 +1,6 @@
 # character.py
 import datetime
-from mongoengine import *
-from mongoengine import signals
+from mongoengine import Document, StringField, LazyReferenceField, ListField, BooleanField, DateTimeField, DynamicField, DictField, IntField, signals
 from bson.objectid import ObjectId
 
 from models.user import User

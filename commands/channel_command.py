@@ -1,17 +1,19 @@
 # channel_command
 import datetime
 from models import Channel, User, Character, Scene
+from services import ScenarioService
+
+scenario_svc = ScenarioService()
 
 class ChannelCommand():
-    def __init__(self, parent, ctx, args, guild=None, user=None):
+    def __init__(self, parent, ctx, args, guild, user, channel):
         self.parent = parent
         self.ctx = ctx
         self.args = args[1:]
         self.command = self.args[0].lower() if len(self.args) > 0 else 'c'
         self.guild = guild
         self.user = user
-        channel = 'private' if ctx.channel.type.name == 'private' else ctx.channel.name
-        self.channel = Channel().get_or_create(channel, self.guild.name, self.user)
+        self.channel = channel
         if self.user.name not in self.channel.users:
             self.channel.users.append(self.user.name)
             if (not self.channel.created):
@@ -38,7 +40,7 @@ class ChannelCommand():
         return messages
 
     def chan(self):
-        return [self.channel.get_string()]
+        return [self.channel.get_string(self.user)]
 
     def users(self):
         return [self.channel.get_users_string()]

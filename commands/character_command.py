@@ -41,7 +41,7 @@ class CharacterCommand():
         self.scenario = Scenario().get_by_id(self.channel.active_scenario) if self.channel and self.channel.active_scenario else None
         self.sc = Scene().get_by_id(self.channel.active_scene) if self.channel and self.channel.active_scene else None
         self.char = char if char else (Character().get_by_id(self.user.active_character) if self.user and self.user.active_character else None)
-        self.can_edit = str(self.user.id) == str(self.char.user.id) or self.user.role == 'Game Master' if self.user and self.char else True
+        self.can_edit = str(self.user.id) == str(self.user.id) or self.user.role == 'Game Master' if self.user and self.char else True
         self.asp = Character().get_by_id(self.char.active_aspect) if self.char and self.char.active_aspect else None
         self.stu = Character().get_by_id(self.char.active_stunt) if self.char and self.char.active_stunt else None
 

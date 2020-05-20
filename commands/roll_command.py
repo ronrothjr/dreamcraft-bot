@@ -205,7 +205,7 @@ class RollCommand():
             has_stress = []
             for target in targets:
                 stress_target = copy.deepcopy(target['char'])
-                command = CharacterCommand(parent=self.parent, ctx=self.ctx, args=self.args, guils=self.guild, user=self.user, channel=self.channel, char=stress_target)
+                command = CharacterCommand(parent=self.parent, ctx=self.ctx, args=self.args, guild=self.guild, user=self.user, channel=self.channel, char=stress_target)
                 target_errors = command.stress(['st', stress_titles[s], stress[s][0][0]], stress_target)
                 if target_errors:
                     for error in target_errors:

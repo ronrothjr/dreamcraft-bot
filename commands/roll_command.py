@@ -25,7 +25,6 @@ class RollCommand():
         self.invoke_index = [i for i in range(0, len(self.args)) if self.args[i] in ['invoke', 'i']]
         self.compel_index = [i for i in range(0, len(self.args)) if self.args[i] in ['compel', 'c']]
         self.command = args[0].lower()
-        channel = 'private' if ctx.channel.type.name == 'private' else ctx.channel.name
         self.scenario = Scenario().get_by_id(self.channel.active_scenario) if self.channel and self.channel.active_scenario else None
         self.sc = Scene().get_by_id(self.channel.active_scene) if self.channel and self.channel.active_scene else None
         self.zone = Zone().get_by_id(self.channel.active_zone) if self.channel and self.channel.active_zone else None
@@ -58,6 +57,7 @@ class RollCommand():
             if self.command in ['roll', 'r']:
                 self.last_roll = self.roll()
                 self.char.last_roll = self.last_roll
+                self.invokes_cost = sum([invoke['fate_points'] for invoke in self.invokes])
                 self.messages.append(self.char.last_roll['roll_text'])
             elif self.command in ['reroll', 're']:
                 if not self.invokes:

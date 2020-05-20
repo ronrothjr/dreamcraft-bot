@@ -1,7 +1,6 @@
 # scenario.py
 import datetime
-from mongoengine import *
-from mongoengine import signals
+from mongoengine import Document, StringField, ReferenceField, ListField, BooleanField, DateTimeField, signals
 from models.character import User
 from models.character import Character
 from models.log import Log
@@ -13,8 +12,6 @@ class Scenario(Document):
     description = StringField()
     channel_id = StringField()
     character = ReferenceField(Character)
-    active_user = StringField()
-    characters = ListField(StringField())
     archived = BooleanField(default=False)
     history_id = StringField()
     created_by = StringField()
@@ -85,14 +82,6 @@ class Scenario(Document):
         scenario = Scenario.objects(id=id).first()
         return scenario
 
-    def set_active_user(self, user):
-        self.active_user = str(user.id)
-        if (not self.created):
-            self.created = datetime.datetime.utcnow()
-        self.updated_by = str(user.id)
-        self.updated = datetime.datetime.utcnow()
-        self.save()
-
     @classmethod
     def get_by_channel(cls, channel, archived=False, page_num=1, page_size=5):
         if page_num:
@@ -146,8 +135,9 @@ class Scenario(Document):
             s.updated = datetime.datetime.utcnow()
             s.save()
 
-    def get_string_characters(self, channel):
-        characters = [Character.get_by_id(id) for id in self.characters]
+    def get_string_characters(self):
+        scenes = list(Scene.get_by_scenario(scenario=self, page_num=0))
+        characters = [Character.filter(id__in=[ObjectId(id) for id in s.characters]) for s in scenes]
         characters = '***\n                ***'.join(c.name for c in characters if c)
         return f'\n            _Characters:_\n                ***{characters}***'
 
@@ -157,7 +147,7 @@ class Scenario(Document):
         if channel:
             active = ' _(Active Scenario)_ ' if str(self.id) == channel.active_scenario else ''
         description = f' - "{self.description}"' if self.description else ''
-        characters = f'{self.get_string_characters()}' if self.characters else ''
+        characters = '' # f'{self.get_string_characters()}'
         aspects = ''
         stress = ''
         if self.character:

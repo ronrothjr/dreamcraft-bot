@@ -1,6 +1,6 @@
 # log.py
 import datetime
-from mongoengine import *
+from mongoengine import Document, StringField, ReferenceField, DynamicField, BooleanField, DateTimeField
 from bson.objectid import ObjectId
 from utils.text_utils import TextUtils
 

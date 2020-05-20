@@ -12,7 +12,7 @@ SETUP = Setup()
 SCENARIO_HELP = SETUP.scenario_help
 
 class ScenarioCommand():
-    def __init__(self, parent, ctx, args, guild=None, user=None):
+    def __init__(self, parent, ctx, args, guild, user, channel):
         self.parent = parent
         self.ctx = ctx
         self.args = args[1:]
@@ -141,7 +141,7 @@ class ScenarioCommand():
         return messages
 
     def dialog(self, dialog_text, char=None):
-        char, name, get_string, get_short_string = scenario_svc.get_scenario_info(self.scenario, self.channel)
+        char, name, get_string, get_short_string = scenario_svc.get_scenario_info(self.scenario, self.channel, self.user)
         category = char.category if char else 'Scenario'
         dialog = {
             'create_scenario': ''.join([
@@ -194,7 +194,7 @@ class ScenarioCommand():
                     'No active scenario or name provided\n\n',
                     self.dialog('all')
                 ]
-            messages.append(self.scenario.get_string())
+            messages.append(scenario_svc.get_string(self.scenario, self.channel, self.user))
         else:
             if len(args) == 1 and args[0].lower() == 'short':
                 return [self.dialog('active_scenario_short')]
@@ -219,7 +219,7 @@ class ScenarioCommand():
             else:
                 def canceler(cancel_args):
                     if cancel_args[0].lower() in ['scenario']:
-                        return ScenarioCommand(parent=self.parent, ctx=self.ctx, args=cancel_args, guild=self.guild, user=self.user).run()
+                        return ScenarioCommand(parent=self.parent, ctx=self.ctx, args=cancel_args, guild=self.guild, user=self.user, channel=self.channel).run()
                     else:
                         self.parent.args = cancel_args
                         self.parent.command = self.parent.args[0]
@@ -243,7 +243,7 @@ class ScenarioCommand():
                         'method': Scenario.get_by_page,
                         'params': {'params': {'name__icontains': scenario_name, 'channel_id': str(self.channel.id), 'guild': self.guild.name, 'archived': False}}
                     },
-                    'formatter': lambda item, item_num, page_num, page_size: f'_SCENARIO #{item_num+1}_\n{item.get_short_string()}',
+                    'formatter': lambda item, item_num, page_num, page_size: f'_SCENARIO #{item_num+1}_\n{scenario_svc.get_string(item, self.channel)}',
                     'cancel': canceler,
                     'select': selector,
                     'empty': {
@@ -270,7 +270,7 @@ class ScenarioCommand():
             scenario_name = ' '.join(args[1:])
             def canceler(cancel_args):
                 if cancel_args[0].lower() in ['scenario']:
-                    return ScenarioCommand(parent=self.parent, ctx=self.ctx, args=cancel_args, guild=self.guild, user=self.user).run()
+                    return ScenarioCommand(parent=self.parent, ctx=self.ctx, args=cancel_args, guild=self.guild, user=self.user, channel=self.channel).run()
                 else:
                     self.parent.args = cancel_args
                     self.parent.command = self.parent.args[0]
@@ -293,7 +293,7 @@ class ScenarioCommand():
                     'method': Scenario.get_by_page,
                     'params': {'params': {'name__icontains': scenario_name, 'channel_id': str(self.channel.id), 'guild': self.guild.name, 'archived': False}}
                 },
-                'formatter': lambda item, item_num, page_num, page_size: f'_SCENARIO #{item_num+1}_\n{item.get_short_string()}',
+                'formatter': lambda item, item_num, page_num, page_size: f'_SCENARIO #{item_num+1}_\n{scenario_svc.get_string(item, self.channel)}',
                 'cancel': canceler,
                 'select': selector
             }).open())
@@ -303,7 +303,7 @@ class ScenarioCommand():
         messages = []
         def canceler(cancel_args):
             if cancel_args[0].lower() in ['scenario']:
-                return ScenarioCommand(parent=self.parent, ctx=self.ctx, args=cancel_args, guild=self.guild, user=self.user).run()
+                return ScenarioCommand(parent=self.parent, ctx=self.ctx, args=cancel_args, guild=self.guild, user=self.user, channel=self.channel).run()
             else:
                 self.parent.args = cancel_args
                 self.parent.command = self.parent.args[0]
@@ -350,7 +350,7 @@ class ScenarioCommand():
             self.user.updated_by = str(self.user.id)
             self.user.updated = datetime.datetime.utcnow()
             self.user.save()
-        command = CharacterCommand(parent=self.parent, ctx=self.ctx, args=args, guild=self.guild, user=self.user, char=self.scenario.character)
+        command = CharacterCommand(parent=self.parent, ctx=self.ctx, args=args, guild=self.guild, user=self.user, channel=self.channel, char=self.scenario.character)
         return command.run()
 
     def player(self, args):

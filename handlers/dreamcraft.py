@@ -22,6 +22,13 @@ class DreamcraftHandler():
         self.args = args
         self.guild = ctx.guild if ctx.guild else ctx.author
         self.user = User().get_or_create(ctx.author.name, self.guild.name)
+        channel = 'private' if ctx.channel.type.name == 'private' else ctx.channel.name
+        self.channel = Channel().get_or_create(channel, self.guild.name, self.user)
+        if str(self.user.name) not in self.channel.users:
+            self.channel.users.append(str(self.user.name))
+            self.channel.updated_by = str(self.user.id)
+            self.channel.updated = datetime.datetime.utcnow()
+            self.channel.save()
         self.char = Character().get_by_id(self.user.active_character) if self.user and self.user.active_character else None
         self.module = self.char.category if self.char else None
         self.command = args[0].lower()
@@ -106,7 +113,7 @@ class DreamcraftHandler():
                 self.args = (self.module.lower(),) + self.args
             if self.func:
                 # Execute the function and store the returned messages
-                instance = self.func(ctx=self.ctx, args=self.args, guild=self.guild, user=self.user, parent=self)
+                instance = self.func(ctx=self.ctx, args=self.args, guild=self.guild, user=self.user, channel=self.channel, parent=self)
                 # Call the run() method for the command
                 self.messages = instance.run()
             else:

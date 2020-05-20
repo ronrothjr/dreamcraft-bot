@@ -9,7 +9,7 @@ SETUP = Setup()
 USER_HELP = SETUP.user_help
 
 class UserCommand():
-    def __init__(self, parent, ctx, args, guild=None, user=None):
+    def __init__(self, parent, ctx, args, guild, user, channel):
         self.parent = parent
         self.ctx = ctx
         self.args = args[1:]

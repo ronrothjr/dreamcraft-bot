@@ -1,9 +1,10 @@
 # channel.py
 import datetime
-from mongoengine import *
-from mongoengine import signals
+from bson import ObjectId
+from mongoengine import Document, StringField,  ListField, BooleanField, DateTimeField, signals
 
 from models.scenario import User
+from models.scenario import Character
 from models.scenario import Scenario
 from models.scene import Scene
 from models.zone import Zone
@@ -104,26 +105,42 @@ class Channel(Document):
         self.save()
 
     def get_users_string(self):
-        users_string = '\n***Players:***\n        ' + '\n        '.join([f'_{u}_ ' for u in self.users]) if self.users else ''
+        users_string = '\n_Players:_\n        ' + '\n        '.join([f'***{u}*** ' for u in self.users]) if self.users else ''
         return f'{users_string}'
 
     def get_scenarios_string(self):
         scenario_list = Scenario.filter(channel_id=str(self.id), archived=False).all()
-        scenarios = [s.character.get_string() for s in scenario_list]
-        scenarios_string = '\n***Scenarios:***\n        ' + '\n        '.join([s for s in scenarios]) if scenarios else ''
+        scenarios = [s.get_short_string(self) for s in scenario_list]
+        scenarios_string = '\n_Scenarios:_\n        ' + '\n        '.join([s for s in scenarios]) if scenarios else ''
         return f'{scenarios_string}'
 
-    def get_scenes_string(self):
-        scene_list = Scene.filter(channel_id=str(self.id), archived=False).all()
-        scenes = [s.character.get_string() for s in scene_list]
-        scenes_string = '\n***Scenes:***\n        ' + '\n        '.join([s for s in scenes]) if scenes else ''
+    def get_scenes(self):
+        scenes = list(Scene.filter(channel_id=str(self.id), archived=False).all())
+        return scenes
+
+    def get_scenes_string(self, scene_list):
+        scenes = [s.get_short_string(self) for s in scene_list]
+        scenes_string = '\n_Scenes:_\n        ' + '\n        '.join([s for s in scenes]) if scenes else ''
         return f'{scenes_string}'
 
-    def get_string(self):
+    def get_characters(self, scenes):
+        characters_list = []
+        [[characters_list.append(c) for c in Character.filter(id__in=[ObjectId(id) for id in s.characters]).all() if c not in characters_list] for s in scenes]
+        return characters_list
+
+    def get_characters_string(self, characters_list, user=None):
+        characters = [f'***{c.name}***' + (' _(Active Character)_' if user and str(c.id) == user.active_character else '') for c in characters_list]
+        characters_string = '\n_Characters:_\n        ' + '\n        '.join([x for x in characters]) if characters else ''
+        return f'{characters_string}'
+
+    def get_string(self, user=None):
         users = f'\n{self.get_users_string()}' if self.users else ''
         scenarios = f'\n{self.get_scenarios_string()}' if self.users else ''
-        scenes = f'\n{self.get_scenes_string()}' if self.users else ''
-        return f'***Guild:*** {self.guild}\n***Channel:*** {self.name}{users}{scenarios}{scenes}'
+        scenes_list = self.get_scenes()
+        scenes = f'\n{self.get_scenes_string(scenes_list)}'
+        characters_list = self.get_characters(scenes_list)
+        characters = f'\n{self.get_characters_string(characters_list, user)}'
+        return f'_Channel:_ ***{self.name}***\n_Guild:_ ***{self.guild}***{users}{scenarios}{scenes}{characters}'
 
 
 signals.post_save.connect(Channel.post_save, sender=Channel)

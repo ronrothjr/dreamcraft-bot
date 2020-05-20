@@ -1,9 +1,10 @@
 # scene.py
 import datetime
-from mongoengine import *
-from mongoengine import signals
+from bson import ObjectId
+from mongoengine import Document, StringField, ReferenceField, ListField, BooleanField, DateTimeField, signals
 from models.character import User
 from models.character import Character
+from models.zone import Zone
 from models.log import Log
 
 class Scene(Document):
@@ -14,7 +15,6 @@ class Scene(Document):
     channel_id = StringField()
     scenario_id = StringField()
     character = ReferenceField(Character)
-    active_user = StringField()
     characters = ListField(StringField())
     archived = BooleanField(default=False)
     history_id = StringField()
@@ -85,14 +85,6 @@ class Scene(Document):
         scene = Scene.objects(id=id).first()
         return scene
 
-    def set_active_user(self, user):
-        self.active_user = str(user.id)
-        if (not self.created):
-            self.created = datetime.datetime.utcnow()
-        self.updated_by = str(user.id)
-        self.updated = datetime.datetime.utcnow()
-        self.save()
-
     @classmethod
     def get_by_channel(cls, channel, archived=False, page_num=1, page_size=5):
         if page_num:
@@ -155,18 +147,22 @@ class Scene(Document):
             s.updated = datetime.datetime.utcnow()
             s.save()
 
-    def get_string_characters(self, channel):
-        characters = [Character.get_by_id(id) for id in self.characters]
-        characters = '***\n                ***'.join(c.name for c in characters if c)
-        return f'\n            _Characters:_\n                ***{characters}***'
+    def get_string_zones(self):
+        zones = '\n                '.join(f'***{z.name}***' for z in Zone.filter(scene_id=str(self.id)) if z)
+        return f'\n\n            _Zones:_\n                {zones}'
 
-    def get_string(self, channel=None):
+    def get_string_characters(self, user=None):
+        characters = '\n                '.join(f'***{c.name}***' + (' _(Active Character)_' if str(c.id) == user.active_character else '') for c in Character.filter(id__in=[ObjectId(id) for id in self.characters]) if c)
+        return f'\n\n            _Characters:_\n                {characters}'
+
+    def get_string(self, channel=None, user=None):
         name = f'***{self.name}***'
         active = ''
         if channel:
             active = ' _(Active Scene)_ ' if str(self.id) == channel.active_scene else ''
         description = f' - "{self.description}"' if self.description else ''
-        characters = f'{self.get_string_characters()}' if self.characters else ''
+        zones = f'{self.get_string_zones()}' if self.characters else ''
+        characters = f'{self.get_string_characters(user)}' if self.characters else ''
         aspects = ''
         stress = ''
         if self.character:
@@ -174,24 +170,14 @@ class Scene(Document):
             description = f' - "{self.character.description}"' if self.character.description else description
             aspects = self.character.get_string_aspects()
             stress = self.character.get_string_stress() if self.character.has_stress else ''
-        return f'        {name}{active}{description}{characters}{aspects}{stress}'
-
+        return f'        {name}{active}{description}{zones}{characters}{aspects}{stress}'
 
     def get_short_string(self, channel=None):
         name = f'***{self.name}***'
         active = ''
         if channel:
             active = ' _(Active Scene)_ ' if str(self.id) == channel.active_scene else ''
-        description = f' - "{self.description}"' if self.description else ''
-        characters = f'{self.get_string_characters()}' if self.characters else ''
-        aspects = ''
-        stress = ''
-        if self.character:
-            name = f'***{self.character.name}***' if self.character.name else name
-            description = f' - "{self.character.description}"' if self.character.description else description
-            aspects = self.character.get_string_aspects()
-            stress = self.character.get_string_stress() if self.character.has_stress else ''
-        return f'        {name}{active}{description}{characters}{aspects}{stress}'
+        return f'        {name}{active}'
 
 
 signals.post_save.connect(Scene.post_save, sender=Scene)

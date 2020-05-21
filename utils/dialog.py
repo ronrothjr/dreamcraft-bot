@@ -72,8 +72,8 @@ class Dialog(object):
             paging_question = self.get_page_str() if self.page_count and self.page_count > 0 else ''
             question = f'{select_question}{paging_question}'
             self.set_dialog(self.command if question else '', question)
-            content = self.get_content(items) if items else f'No {p.plural(self.type_name).upper()} found'
-            return [f'{content}\n{question}']
+            content = self.get_content(items) if items else ''
+            return [f'{content}\n{question}' if content or question else f'No {p.plural(self.type_name).upper()} found']
 
     def set_dialog(self, command='', question='', answer=''):
         self.user.command = command

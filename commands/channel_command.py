@@ -1,7 +1,7 @@
 # channel_command
-import datetime
 from models import Channel, User, Character, Scene
 from services import ScenarioService
+from utils import T
 
 scenario_svc = ScenarioService()
 
@@ -16,10 +16,8 @@ class ChannelCommand():
         self.channel = channel
         if self.user.name not in self.channel.users:
             self.channel.users.append(self.user.name)
-            if (not self.channel.created):
-                self.channel.created = datetime.datetime.utcnow()
             self.channel.updated_by = str(self.user.id)
-            self.channel.updated = datetime.datetime.utcnow()
+            self.channel.updated = T.now()
             self.channel.save()
         self.char = Character().get_by_id(self.user.active_character) if self.user and self.user.active_character else None
 

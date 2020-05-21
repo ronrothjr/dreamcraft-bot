@@ -1,6 +1,7 @@
 # character_command.py
 import traceback
 import datetime
+from datetime import timezone
 import copy
 from bson.objectid import ObjectId
 from services import CharacterService, SceneService, ScenarioService

@@ -1,11 +1,10 @@
 # scene_service.py
 import traceback
-import datetime
 import copy
 from bson.objectid import ObjectId
 from models import User, Scenario, Scene, Character
 from config.setup import Setup
-from utils.text_utils import TextUtils
+from utils import TextUtils, T
 
 class SceneService():
     def search(self, args, method, params):
@@ -20,16 +19,14 @@ class SceneService():
     def save(self, item, user):
         if item:
             item.updated_by = str(user.id)
-            item.updated = datetime.datetime.utcnow()
+            item.updated = T.now()
             item.history_id = ''
             item.save()
 
     def save_user(self, user):
         if user:
-            if (not user.created):
-                user.created = datetime.datetime.utcnow()
             user.updated_by = str(user.id)
-            user.updated = datetime.datetime.utcnow()
+            user.updated = T.now()
             user.save()
 
     def get_parent_by_id(self, char, user, parent_id):
@@ -95,7 +92,7 @@ class SceneService():
             sc.character.archive(user)
             sc.archived = True
             sc.updated_by = str(user.id)
-            sc.updated = datetime.datetime.utcnow()
+            sc.updated = T.now()
             sc.save()
             messages.append(f'***{search}*** removed')
             if scenario_id:

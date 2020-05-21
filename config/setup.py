@@ -304,6 +304,7 @@ class Setup():
         Players who concede each take a fate point. GM also pays players hostile invoke fate points.'
     }
 
+    timezone = 'America/New_York'
     fate_dice = {'-1': '-', '0': 'b', '1': '+'}
     x = '[X]'
     o = '[   ]'

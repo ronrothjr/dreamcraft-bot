@@ -1,9 +1,9 @@
 # scenario.py
-import datetime
 from mongoengine import Document, StringField, ReferenceField, ListField, BooleanField, DateTimeField, signals
 from models.character import User
 from models.character import Character
 from models.log import Log
+from utils import T
 
 class Scenario(Document):
     parent_id = StringField()
@@ -57,9 +57,9 @@ class Scenario(Document):
         self.guild = guild
         self.channel_id = channel_id
         self.created_by = str(user.id)
-        self.created = datetime.datetime.utcnow()
+        self.created = T.now()
         self.updated_by = str(user.id)
-        self.updated = datetime.datetime.utcnow()
+        self.updated = T.now()
         self.save()
         return self
 
@@ -74,7 +74,7 @@ class Scenario(Document):
             scenario = self.create_new(user, guild, str(channel.id), name, archived)
             scenario.character = Character().get_or_create(user, name, guild, scenario, 'Scenario', archived)
             scenario.updated_by = str(user.id)
-            scenario.updated = datetime.datetime.utcnow()
+            scenario.updated = T.now()
             scenario.save()
         return scenario
 
@@ -109,7 +109,7 @@ class Scenario(Document):
             self.reverse_archive(self.user)
             self.archived = True
             self.updated_by = str(user.id)
-            self.updated = datetime.datetime.utcnow()
+            self.updated = T.now()
             self.save()
 
     def reverse_archive(self, user):
@@ -117,14 +117,14 @@ class Scenario(Document):
             s.reverse_archive(self.user)
             s.archived = True
             s.updated_by = str(user.id)
-            s.updated = datetime.datetime.utcnow()
+            s.updated = T.now()
             s.save()
 
     def restore(self, user):
             self.reverse_restore(self.user)
             self.archived = False
             self.updated_by = str(user.id)
-            self.updated = datetime.datetime.utcnow()
+            self.updated = T.now()
             self.save()
 
     def reverse_restore(self, user):
@@ -132,7 +132,7 @@ class Scenario(Document):
             s.reverse_restore(self.user)
             s.archived = False
             s.updated_by = str(user.id)
-            s.updated = datetime.datetime.utcnow()
+            s.updated = T.now()
             s.save()
 
     def get_string_characters(self):

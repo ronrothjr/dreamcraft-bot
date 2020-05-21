@@ -1,11 +1,10 @@
 # scenario_command
 import traceback
-import datetime
 from commands import CharacterCommand
 from models import Channel, Scenario, Scene, Character, User, Log
 from config.setup import Setup
 from services.scenario_service import ScenarioService
-from utils import Dialog
+from utils import Dialog, T
 
 scenario_svc = ScenarioService()
 SETUP = Setup()
@@ -332,10 +331,8 @@ class ScenarioCommand():
         else:
             description = ' '.join(args[1:])
             self.scenario.description = description
-            if (not self.scenario.created):
-                self.scenario.created = datetime.datetime.utcnow()
             self.scenario.updated_by = str(self.user.id)
-            self.scenario.updated = datetime.datetime.utcnow()
+            self.scenario.updated = T.now()
             self.scenario.save()
             return [
                 f'Description updated to "{description}"',
@@ -345,10 +342,8 @@ class ScenarioCommand():
     def character(self, args):
         if self.user:
             self.user.active_character = str(self.scenario.character.id)
-            if (not self.user.created):
-                self.user.created = datetime.datetime.utcnow()
             self.user.updated_by = str(self.user.id)
-            self.user.updated = datetime.datetime.utcnow()
+            self.user.updated = T.now()
             self.user.save()
         command = CharacterCommand(parent=self.parent, ctx=self.ctx, args=args, guild=self.guild, user=self.user, channel=self.channel, char=self.scenario.character)
         return command.run()
@@ -363,10 +358,8 @@ class ScenarioCommand():
         elif args[1].lower() == 'delete' or args[1].lower() == 'd':
             char = ' '.join(args[2:])
             [self.scenario.characters.remove(s) for s in self.scenario.characters if char.lower() in s.lower()]
-            if (not self.scenario.created):
-                self.scenario.created = datetime.datetime.utcnow()
             self.scenario.updated_by = str(self.user.id)
-            self.scenario.updated = datetime.datetime.utcnow()
+            self.scenario.updated = T.now()
             self.scenario.save()
             return [
                 f'{char} removed from scenario characters',
@@ -379,10 +372,8 @@ class ScenarioCommand():
                 self.scenario.characters.append(str(char.id))
             else:
                 return [f'***{search}*** not found. No character added to _{self.scenario.name}_']
-            if (not self.scenario.created):
-                self.scenario.created = datetime.datetime.utcnow()
             self.scenario.updated_by = str(self.user.id)
-            self.scenario.updated = datetime.datetime.utcnow()
+            self.scenario.updated = T.now()
             self.scenario.save()
             return [
                 f'Added {char.name} to scenario characters',
@@ -406,7 +397,7 @@ class ScenarioCommand():
             self.scenario.character.archive(self.user)
             self.scenario.archived = True
             self.scenario.updated_by = str(self.user.id)
-            self.scenario.updated = datetime.datetime.utcnow()
+            self.scenario.updated = T.now()
             self.scenario.save()
             messages.append(f'***{search}*** removed')
             if channel_id:

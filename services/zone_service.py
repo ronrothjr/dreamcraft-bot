@@ -1,11 +1,10 @@
 # scene_service.py
 import traceback
-import datetime
 import copy
 from bson.objectid import ObjectId
 from models import User, Zone
 from config.setup import Setup
-from utils.text_utils import TextUtils
+from utils import TextUtils, T
 
 class ZoneService():
     def search(self, args, method, params):
@@ -19,19 +18,15 @@ class ZoneService():
 
     def save(self, item, user):
         if item:
-            if (not item.created):
-                item.created = datetime.datetime.utcnow()
             item.updated_by = str(user.id)
-            item.updated = datetime.datetime.utcnow()
+            item.updated = T.now()
             item.history_id = ''
             item.save()
 
     def save_user(self, user):
         if user:
-            if (not user.created):
-                user.created = datetime.datetime.utcnow()
             user.updated_by = str(user.id)
-            user.updated = datetime.datetime.utcnow()
+            user.updated = T.now()
             user.save()
 
     def get_parent_by_id(self, char, user, parent_id):

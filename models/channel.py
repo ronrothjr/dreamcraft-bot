@@ -1,5 +1,4 @@
 # channel.py
-import datetime
 from bson import ObjectId
 from mongoengine import Document, StringField,  ListField, BooleanField, DateTimeField, signals
 
@@ -9,6 +8,7 @@ from models.scenario import Scenario
 from models.scene import Scene
 from models.zone import Zone
 from models.log import Log
+from utils import T
 
 class Channel(Document):
     name = StringField(required=True)
@@ -61,9 +61,9 @@ class Channel(Document):
         self.name = name
         self.guild = guild
         self.created_by = str(user.id)
-        self.created = datetime.datetime.utcnow()
+        self.created = T.now()
         self.updated_by = str(user.id)
-        self.updated = datetime.datetime.utcnow()
+        self.updated = T.now()
         self.save()
         return self
 
@@ -82,26 +82,20 @@ class Channel(Document):
 
     def set_active_scenario(self, scenario, user):
         self.active_scenario = str(scenario.id)
-        if (not self.created):
-            self.created = datetime.datetime.utcnow()
         self.updated_by = str(user.id)
-        self.updated = datetime.datetime.utcnow()
+        self.updated = T.now()
         self.save()
 
     def set_active_scene(self, scene, user):
         self.active_scene = str(scene.id)
-        if (not self.created):
-            self.created = datetime.datetime.utcnow()
         self.updated_by = str(user.id)
-        self.updated = datetime.datetime.utcnow()
+        self.updated = T.now()
         self.save()
 
     def set_active_zone(self, zone, user):
         self.active_zone = str(zone.id)
-        if (not self.created):
-            self.created = datetime.datetime.utcnow()
         self.updated_by = str(user.id)
-        self.updated = datetime.datetime.utcnow()
+        self.updated = T.now()
         self.save()
 
     def get_users_string(self):

@@ -1,9 +1,9 @@
 # zone.py
-import datetime
 from mongoengine import Document, StringField, ReferenceField, ListField, BooleanField, DateTimeField, signals
 from models.character import User
 from models.character import Character
 from models.log import Log
+from utils import T
 
 class Zone(Document):
     parent_id = StringField()
@@ -60,9 +60,9 @@ class Zone(Document):
         self.channel_id = channel_id
         self.scene_id = scene_id
         self.created_by = str(user.id)
-        self.created = datetime.datetime.utcnow()
+        self.created = T.now()
         self.updated_by = str(user.id)
-        self.updated = datetime.datetime.utcnow()
+        self.updated = T.now()
         self.save()
         return self
 
@@ -119,7 +119,7 @@ class Zone(Document):
             self.reverse_archive(self.user)
             self.archived = True
             self.updated_by = str(user.id)
-            self.updated = datetime.datetime.utcnow()
+            self.updated = T.now()
             self.save()
 
     def reverse_archive(self, user):
@@ -127,14 +127,14 @@ class Zone(Document):
             z.reverse_archive(self.user)
             z.archived = True
             z.updated_by = str(user.id)
-            z.updated = datetime.datetime.utcnow()
+            z.updated = T.now()
             z.save()
 
     def restore(self, user):
             self.reverse_restore(self.user)
             self.archived = False
             self.updated_by = str(user.id)
-            self.updated = datetime.datetime.utcnow()
+            self.updated = T.now()
             self.save()
 
     def reverse_restore(self, user):
@@ -142,7 +142,7 @@ class Zone(Document):
             z.reverse_restore(self.user)
             z.archived = False
             z.updated_by = str(user.id)
-            z.updated = datetime.datetime.utcnow()
+            z.updated = T.now()
             z.save()
 
     def get_string_characters(self, channel=None):

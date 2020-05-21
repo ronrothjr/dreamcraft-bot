@@ -1,7 +1,7 @@
 # DREAMCRAFT BOT
 
 
-#### Fate CLI will cover the complete features of the Fate Condensed, FAE and Core Systems.
+#### Fate CLI is Discord both that will cover the complete features of the Fate Condensed, FAE and Core Systems.
 
 **_Bold italics Indicates that the feature has not yet been implemented_**
 

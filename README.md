@@ -1,16 +1,140 @@
 # DREAMCRAFT BOT
+# Fate CLI Discord Bot
 
-`Fate Condensed CLI` will cover the complete features of the Fate Condensed System.
 
-This Command Line Interface (CLI) allows users to:
+#### Fate CLI will cover the complete features of the Fate Condensed, FAE and Core Systems.
 
-* Get help with condensed instructions.
-* Create characters, aspects (that you can treat as characters), stunts, stress, consequences, and conditions.
-* Roll fate dice with approach/skill bonuses while invoking/compelling any number of aspects (cannot invoke and compel in the same roll)
-* Create zones, scenes, and scenarios (all of which can be treated as characters and rolled with).
-* **COMING SOON** - Manage contests, challenges, and conflicts within zones, scenes, and scenarios.
-* **COMING SOON** - Record narrative elements to read back and view them within the context of their scenes.
-* **COMING SOON** - Return to a previous point in time to alter history on a new timeline
+**_Bold italics Indicates that the feature has not yet been implemented_**
+
+
+## This Command Line Interface (CLI) allows users to:
+
+
+
+*   Get help with condensed game instructions.
+*   Commands for selecting, viewing, and editing all FATE game components.
+    *   Sessions, scenarios, scenes, and zones are confined to a channel.
+    *   Characters are free to be used in any channel on the Discord server.
+*   Setup users for local timezone display of all dates.
+*   Create customizable character sheets for PCs and NPCs:
+    *   Description, high concept, trouble, images.
+    *   Aspects, stunts, refresh, and fate points.
+    *   **_Allow nested stunts that upgrade the original._**
+    *   **_Spend/award refresh when adding/removing stunts._**
+    *   Custom character fields.
+    *   Standard and custom skills/approacches.
+    *   Standard and custom tracks for stress, consequences, and conditions.
+    *   **_Enforce character creation rules (stunt refresh, selection of specific stunts)._**
+    *   **_Character templates for PCs and NPCs to use during character creation._**
+*   Manage all aspects and stunts as if they were characters (FATE Fractal/Bronze Rule).
+*   Create zones, scenes, scenarios, and sessions, which can be treated as characters.
+*   Manage contests, challenges, and conflicts within zones, scenes, sessions, and sessions.
+    *   Start and end sessions and scenes.
+    *   Enter and exit zones within scenes.
+    *   Connect zones to reach other.
+    *   Add/move characters to zones and scenes.
+    *   Display invokable/compellable aspects and stunts.
+    *   Roll fate dice using character skills/approaches with invocation of aspects and stunts.
+    *   Resolve rolls by consuming/awarding fate points.
+        *   Handle reroll with invokes/compels
+        *   **_Manage Defend, Overcome, and Create an Advantage results_**
+        *   **_Add assisting with rolls._**
+        *   **_Add succeed with style._**
+        *   **_Add boosts with free invokes_**
+        *   **_Add concede before rolling to award fate point(s)._**
+        *   **_Apply passive stunt resolutions._**
+            *   **_Add automatic bonuses and defenses_**
+            *   **_Handle situational requirements_**
+    *   **_Enforce limits on stunts._**
+    *   Apply triggers for actions using aspects and stunts
+        *   Absorb stress **_or take out target_**
+        *   **_Inflict/heal consequences with aspects and GM free invokes_**
+        *   **_Add/remove aspects with and without Free Invoke(s)_**
+        *   **_Remove used boosts and free invokes on aspects_**
+    *   **_Handle conflicts, contests, and challenges._**
+        *   **_Start, setup, run through, and end._**
+        *   **_Track turn order within exchanges._**
+        *   **_Manage available targets and roll/defend with stress/consequence/aspect resolution._**
+        *   **_Handle transitions for PCs as they move, are taken out, and concede._**
+            *   **_Aspects that expire upon scene exit_**
+            *   **_Stunts that are triggered by moving, taking out, or conceding_**
+*   Record notes, character dialog, and scene narration to read back and view them within the context of their scenes within scenarios.
+*   Archive and restore of all character-based game components.
+*   Undo/redo for viewing all a log of changes and returning to a previous point in time to alter history on a new timeline.
+*   Copy and backup characters to Private Message channel and to other servers.
+
+
+## Enhancements List:
+
+
+### Items on this list are slated for development during Beta testing
+
+
+
+*   Schedule and record sessions with invites to and acceptance from players
+*   Improved instructions
+    *   Improve instructions for aspects and stunts
+    *   Character copy to guild
+*   Lists Upgrade:
+    *   reorder lists in character sheet
+    *   display descriptions only in lists
+*   NPCs Character Upgrade:
+    *   allow customized consequences tracks
+    *   different instructions for NPCs
+*   Aspects Upgrade
+    *   allow aspect types
+    *   consequences create aspects unless changed to conditions
+*   Enable Assets Upgrade:
+    *   Look up Jade Punk assets system
+*   Create Stunt Builder:
+    *   stunt actions triggered:
+        *   when using one or more stunts
+        *   when creating advantage
+        *   when defending
+        *   when active/full defense
+        *   when rolling a skill/approach
+        *   when assisting others
+        *   when conditions are added
+        *   when stress is absorbed
+        *   when specific aspects are invoked
+        *   when a stress track is exhausted
+        *   when scenario/session/scene start or end
+        *   when entering or exiting zone
+        *   when milestone is reached
+    *   stunt resolutions:
+        *   apply/remove stress
+        *   apply/remove consequences
+        *   apply/remove conditions
+        *   spend fate point(s)
+        *   add bonus to specific skill/approach roll
+        *   create specific aspect
+        *   create specific aspect w/ free invoke(s)
+        *   remove specific aspect
+    *   stunt limitations:
+        *   once/twice/thrice per zone/scene/session/scenario
+        *   requires avilable points on stress track
+        *   requires fate point(s)
+        *   requires specific action
+        *   requires specific skill
+        *   requires specific situation/circumstance
+
+
+## Technical Goals:
+
+
+
+*   Add comments and docstrings
+*   Update README with complete usage and developer setup instructions
+*   Replace timestamps with custom save hooks in mongoengineAdd setuptools files for easy install of dreacraft-bot for local development
+    *   [https://pypi.org/project/setuptools/](https://pypi.org/project/setuptools/)
+    *   [https://setuptools.readthedocs.io/en/latest/easy_install.html](https://setuptools.readthedocs.io/en/latest/easy_install.html)
+*   Research use of Cogs and how to apply to dreamcraft-bot:
+    *   [https://discordpy.readthedocs.io/en/latest/ext/commands/cogs.html#ext-commands-cogs](https://discordpy.readthedocs.io/en/latest/ext/commands/cogs.html#ext-commands-cogs)
+    *   [https://gist.github.com/EvieePy/d78c061a4798ae81be9825468fe146be](https://gist.github.com/EvieePy/d78c061a4798ae81be9825468fe146be)
+*   Research distutils to create dreamcraft-bot as a package:
+    *   [https://docs.python.org/3/distutils/introduction.html](https://docs.python.org/3/distutils/introduction.h
+
+
 
 # HELP COMMANDS
 

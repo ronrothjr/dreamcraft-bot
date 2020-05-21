@@ -1,11 +1,10 @@
 # scene_command
 import traceback
-import datetime
 from commands import CharacterCommand
 from models import Channel, Scenario, Scene, Character, User, Log
 from config.setup import Setup
 from services import SceneService, ScenarioService
-from utils import Dialog
+from utils import Dialog, T
 
 scene_svc = SceneService()
 scenario_svc = ScenarioService()
@@ -48,7 +47,8 @@ class SceneCommand():
                 'list': self.scene_list,
                 'l': self.scene_list,
                 'delete': self.delete_scene,
-                'd': self.delete_scene
+                'd': self.delete_scene,
+                'start': self.start
             }
             # Get the function from switcher dictionary
             if self.command in switcher:
@@ -74,6 +74,10 @@ class SceneCommand():
 
     def help(self, args):
         return [SCENE_HELP]
+
+    def check_scene(self):
+        if not self.sc:
+            raise Exception('You don\'t have an active scene. Try this:```css\n.d scene SCENE_NAME```')
 
     def search(self, args):
         params = {'name__icontains': ' '.join(args[0:]), 'guild': self.guild.name, 'channel_id': str(self.channel.id), 'archived': False}
@@ -179,8 +183,7 @@ class SceneCommand():
         return dialog_string
     
     def name(self, args):
-        if not self.scenario:
-            raise Exception('No active scenario or name provided. Try this:```css\n.d scenario SCENARIO_NAME```')
+        self.check_scene()
         messages = []
         if len(args) == 0:
             if not self.sc:
@@ -203,7 +206,7 @@ class SceneCommand():
                         self.dialog('all')
                     ]
                 else:
-                    scene = Scene().find(self.user, scene_name, self.guild.name)
+                    scene = Scene().find(self.guild.name, str(self.channel.id), str(self.scenario.id), scene_name)
                     if scene:
                         return [f'Cannot rename to _{scene_name}_. Scene already exists']
                     else:
@@ -326,28 +329,23 @@ class SceneCommand():
     def description(self, args):
         if len(args) == 1:
             raise Exception('No description provided')
-        if not self.sc:
-            raise Exception('You don\'t have an active scene. Try this:```css\n.d scene SCENE_NAME```')
-        else:
-            description = ' '.join(args[1:])
-            self.sc.description = description
-            if (not self.sc.created):
-                self.sc.created = datetime.datetime.utcnow()
-            self.sc.updated_by = str(self.user.id)
-            self.sc.updated = datetime.datetime.utcnow()
-            self.sc.save()
-            return [
-                f'Description updated to "{description}"',
-                self.sc.get_string(self.channel)
-            ]
+        self.check_scene()
+        description = ' '.join(args[1:])
+        self.sc.description = description
+        self.sc.updated_by = str(self.user.id)
+        self.sc.updated = T.now()
+        self.sc.save()
+        return [
+            f'Description updated to "{description}"',
+            self.sc.get_string(self.channel)
+        ]
 
     def character(self, args):
+        self.check_scene()
         if self.user:
             self.user.active_character = str(self.sc.character.id)
-            if (not self.user.created):
-                self.user.created = datetime.datetime.utcnow()
             self.channel.updated_by = str(self.user.id)
-            self.user.updated = datetime.datetime.utcnow()
+            self.user.updated = T.now()
             self.user.save()
         command = CharacterCommand(parent=self.parent, ctx=self.ctx, args=args, guild=self.guild, user=self.user, channel=self.channel, char=self.sc.character)
         return command.run()
@@ -357,3 +355,14 @@ class SceneCommand():
 
     def delete_scene(self, args):
         return scene_svc.delete_scene(args, self.guild, self.channel, self.scenario, self.sc, self.user)
+
+    def start(self, args):
+        self.check_scene()
+        if self.sc.started_on:
+            raise Exception(f'{self.sc.name} already began on {T.to(self.sc.started_on, self.user)}')
+        else:
+            self.sc.started_on = T.now()
+            scene_svc.save(self.sc, self.user)
+            return [self.dialog('')]
+        
+

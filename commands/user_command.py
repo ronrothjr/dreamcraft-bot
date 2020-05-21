@@ -1,9 +1,9 @@
 # user_command.py
 
 import pytz
-import datetime
 from config.setup import Setup
 from models.user import User
+from utils import T
 
 SETUP = Setup()
 USER_HELP = SETUP.user_help
@@ -52,7 +52,7 @@ class UserCommand():
             if len(self.args) <3:
                 return [f'No time zone search term provided. {tz_help}']
             if len(self.args[2]) <3:
-                return ['No time zone search term must be at least 3 characters```css\n/* EXAMPLES */\n.d u timezone New York\n.d u timezone London```']
+                return ['No time zone search term must be at least 3 characters```css\n/* EXAMPLES */\n.d u tz New_York\n.d u timezone London```']
             search = self.args[2].lower()
             tz = [tz for tz in pytz.all_timezones if search in tz.lower()]
             if len(tz) == 0:
@@ -71,9 +71,7 @@ class UserCommand():
                 timezones = '\n'.join([f'.d u tz {t}' for t in tz])
                 return [f'Time zone search \'{search}\' returned more than one. Try one of these:```css\n{timezones}```']
             self.user.time_zone = tz[0]
-            if (not self.user.created):
-                self.user.created = datetime.datetime.utcnow()
             self.user.updated_by = str(self.user.id)
-            self.user.updated = datetime.datetime.utcnow()
+            self.user.updated = T.now()
             self.user.save()
-        return [f'Saved time zone as _{tz[0]}\n\n{self.user.get_string()}_']
+        return [f'Saved time zone as ***{tz[0]}***\n\n{self.user.get_string()}']

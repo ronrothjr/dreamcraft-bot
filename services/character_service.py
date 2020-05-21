@@ -1,11 +1,10 @@
 # character_service.py
 import traceback
-import datetime
 import copy
 from bson.objectid import ObjectId
 from models import User, Character
 from config.setup import Setup
-from utils.text_utils import TextUtils
+from utils import TextUtils, T
 
 SETUP = Setup()
 APPROACHES = SETUP.approaches
@@ -33,19 +32,15 @@ class CharacterService():
 
     def save(self, char, user):
         if char:
-            if (not char.created):
-                char.created = datetime.datetime.utcnow()
             char.updated_by = str(user.id)
-            char.updated = datetime.datetime.utcnow()
+            char.updated = T.now()
             char.history_id = ''
             char.save()
 
     def save_user(self, user):
         if user:
-            if (not user.created):
-                user.created = datetime.datetime.utcnow()
             user.updated_by = str(user.id)
-            user.updated = datetime.datetime.utcnow()
+            user.updated = T.now()
             user.save()
 
     def get_parent_by_id(self, char, user, parent_id):

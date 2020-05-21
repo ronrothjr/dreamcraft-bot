@@ -1,11 +1,10 @@
 # scenario_service.py
 import traceback
-import datetime
 import copy
 from bson.objectid import ObjectId
 from models import User, Channel, Scenario, Scene, Character
 from config.setup import Setup
-from utils import TextUtils, Dialog
+from utils import TextUtils, Dialog, T
 
 class ScenarioService():
     def search(self, args, method, params):
@@ -19,19 +18,15 @@ class ScenarioService():
 
     def save(self, item, user):
         if item:
-            if (not item.created):
-                item.created = datetime.datetime.utcnow()
             item.updated_by = str(user.id)
-            item.updated = datetime.datetime.utcnow()
+            item.updated = T.now()
             item.history_id = ''
             item.save()
 
     def save_user(self, user):
         if user:
-            if (not user.created):
-                user.created = datetime.datetime.utcnow()
             user.updated_by = str(user.id)
-            user.updated = datetime.datetime.utcnow()
+            user.updated = T.now()
             user.save()
 
     def get_parent_by_id(self, method, user, parent_id):

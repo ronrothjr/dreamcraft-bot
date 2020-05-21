@@ -1,11 +1,10 @@
 # zone_command
 import traceback
-import datetime
 from commands import CharacterCommand
 from models import Channel, Scenario, Scene, Zone, Character, User, Log
 from config.setup import Setup
 from services.zone_service import ZoneService
-from utils import Dialog
+from utils import Dialog, T
 
 zone_svc = ZoneService()
 SETUP = Setup()
@@ -197,7 +196,7 @@ class ZoneCommand():
                         self.dialog('all')
                     ]
                 else:
-                    zone = Zone().find(self.user, zone_name, self.guild.name)
+                    zone = Zone().find(self.guild.name, str(self.channel.id), str(self.sc.id), zone_name)
                     if zone:
                         return [f'Cannot rename to _{zone_name}_. Zone already exists']
                     else:
@@ -321,10 +320,8 @@ class ZoneCommand():
         else:
             description = ' '.join(args[1:])
             self.zone.description = description
-            if (not self.zone.created):
-                self.zone.created = datetime.datetime.utcnow()
             self.zone.updated_by = str(self.user.id)
-            self.zone.updated = datetime.datetime.utcnow()
+            self.zone.updated = T.now()
             self.zone.save()
             return [
                 f'Description updated to "{description}"',
@@ -334,10 +331,8 @@ class ZoneCommand():
     def character(self, args):
         if self.user:
             self.user.active_character = str(self.zone.character.id)
-            if (not self.user.created):
-                self.user.created = datetime.datetime.utcnow()
             self.user.updated_by = str(self.user.id)
-            self.user.updated = datetime.datetime.utcnow()
+            self.user.updated = T.now()
             self.user.save()
         command = CharacterCommand(parent=self.parent, ctx=self.ctx, args=args, guild=self.guild, user=self.user, channel=self.channel, char=self.zone.character)
         return command.run()
@@ -352,10 +347,8 @@ class ZoneCommand():
         elif args[1].lower() == 'delete' or args[1].lower() == 'd':
             char = ' '.join(args[2:])
             [self.zone.characters.remove(s) for s in self.zone.characters if char.lower() in s.lower()]
-            if (not self.zone.created):
-                self.zone.created = datetime.datetime.utcnow()
             self.zone.updated_by = str(self.user.id)
-            self.zone.updated = datetime.datetime.utcnow()
+            self.zone.updated = T.now()
             self.zone.save()
             return [
                 f'{char} removed from zone characters',
@@ -368,10 +361,8 @@ class ZoneCommand():
                 self.zone.characters.append(str(char.id))
             else:
                 return [f'***{search}*** not found. No character added to _{self.zone.name}_']
-            if (not self.zone.created):
-                self.zone.created = datetime.datetime.utcnow()
             self.zone.updated_by = str(self.user.id)
-            self.zone.updated = datetime.datetime.utcnow()
+            self.zone.updated = T.now()
             self.zone.save()
             return [
                 f'Added {char.name} to zone characters',
@@ -396,7 +387,7 @@ class ZoneCommand():
             self.zone.character.archive(self.user)
             self.zone.archived = True
             self.zone.updated_by = str(self.user.id)
-            self.zone.updated = datetime.datetime.utcnow()
+            self.zone.updated = T.now()
             self.zone.save()
             messages.append(f'***{search}*** removed')
             if zone_id:

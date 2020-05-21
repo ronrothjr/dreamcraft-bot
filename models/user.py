@@ -1,7 +1,7 @@
 # user.py
-import datetime
 from mongoengine import Document, StringField, BooleanField, DateTimeField
 from bson.objectid import ObjectId
+from utils import T
 
 class User(Document):
     name = StringField(required=True)
@@ -23,8 +23,8 @@ class User(Document):
     def create_new(self, name, guild):
         self.guild = guild
         self.name = name
-        self.created = datetime.datetime.utcnow()
-        self.updated = datetime.datetime.utcnow()
+        self.created = T.now()
+        self.updated = T.now()
         self.save()
         return self
 
@@ -50,12 +50,10 @@ class User(Document):
 
     def set_active_character(self, character):
         self.active_character = str(character.id)
-        if (not self.created):
-            self.created = datetime.datetime.utcnow()
-        self.updated = datetime.datetime.utcnow()
+        self.updated = T.now()
         self.save()
 
     def get_string(self):
         tz = self.time_zone if self.time_zone else '_None_'
-        return f'Player: {self.name}\nTimezone: {tz}'
+        return f'_Player:_ ***{self.name}***\n_Timezone:_ ***{tz}***'
         

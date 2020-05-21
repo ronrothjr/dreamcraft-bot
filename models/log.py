@@ -1,8 +1,7 @@
 # log.py
-import datetime
 from mongoengine import Document, StringField, ReferenceField, DynamicField, BooleanField, DateTimeField
 from bson.objectid import ObjectId
-from utils.text_utils import TextUtils
+from utils import TextUtils, T
 
 class Log(Document):
     parent_id = StringField(required=True)
@@ -58,9 +57,9 @@ class Log(Document):
         self.data = data
         self.action = action
         self.created_by = str(user_id)
-        self.created = datetime.datetime.utcnow()
+        self.created = T.now()
         self.updated_by = str(user_id)
-        self.updated = datetime.datetime.utcnow()
+        self.updated = T.now()
         self.save()
         return self
 

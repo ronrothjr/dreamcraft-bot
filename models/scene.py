@@ -1,11 +1,11 @@
 # scene.py
-import datetime
 from bson import ObjectId
 from mongoengine import Document, StringField, ReferenceField, ListField, BooleanField, DateTimeField, signals
 from models.character import User
 from models.character import Character
 from models.zone import Zone
 from models.log import Log
+from utils import T
 
 class Scene(Document):
     parent_id = StringField()
@@ -18,6 +18,8 @@ class Scene(Document):
     characters = ListField(StringField())
     archived = BooleanField(default=False)
     history_id = StringField()
+    started_on = DateTimeField()
+    ended_on = DateTimeField()
     created_by = StringField()
     created = DateTimeField(required=True)
     updated_by = StringField()
@@ -62,9 +64,9 @@ class Scene(Document):
         self.channel_id = channel_id
         self.scenario_id = scenario_id
         self.created_by = str(user.id)
-        self.created = datetime.datetime.utcnow()
+        self.created = T.now()
         self.updated_by = str(user.id)
-        self.updated = datetime.datetime.utcnow()
+        self.updated = T.now()
         self.save()
         return self
 
@@ -121,7 +123,7 @@ class Scene(Document):
             self.reverse_archive(self.user)
             self.archived = True
             self.updated_by = str(user.id)
-            self.updated = datetime.datetime.utcnow()
+            self.updated = T.now()
             self.save()
 
     def reverse_archive(self, user):
@@ -129,14 +131,14 @@ class Scene(Document):
             s.reverse_archive(self.user)
             s.archived = True
             s.updated_by = str(user.id)
-            s.updated = datetime.datetime.utcnow()
+            s.updated = T.now()
             s.save()
 
     def restore(self, user):
             self.reverse_restore(self.user)
             self.archived = False
             self.updated_by = str(user.id)
-            self.updated = datetime.datetime.utcnow()
+            self.updated = T.now()
             self.save()
 
     def reverse_restore(self, user):
@@ -144,7 +146,7 @@ class Scene(Document):
             s.reverse_restore(self.user)
             s.archived = False
             s.updated_by = str(user.id)
-            s.updated = datetime.datetime.utcnow()
+            s.updated = T.now()
             s.save()
 
     def get_string_zones(self):
@@ -156,10 +158,15 @@ class Scene(Document):
         return f'\n\n            _Characters:_\n                {characters}'
 
     def get_string(self, channel=None, user=None):
+        if not user.time_zone:
+            raise Exception('No time zone defined```css\n.d user timezone New_York```')
         name = f'***{self.name}***'
         active = ''
         if channel:
             active = ' _(Active Scene)_ ' if str(self.id) == channel.active_scene else ''
+        start = ''
+        if self.started_on:
+            start = f'\n_Started On:_ ***{T.to(self.started_on, user)}***' if self.started_on else ''
         description = f' - "{self.description}"' if self.description else ''
         zones = f'{self.get_string_zones()}'
         characters = f'{self.get_string_characters(user)}' if self.characters else ''
@@ -170,7 +177,7 @@ class Scene(Document):
             description = f' - "{self.character.description}"' if self.character.description else description
             aspects = self.character.get_string_aspects()
             stress = self.character.get_string_stress() if self.character.has_stress else ''
-        return f'        {name}{active}{description}{zones}{characters}{aspects}{stress}'
+        return f'        {name}{active}{start}{description}{zones}{characters}{aspects}{stress}'
 
     def get_short_string(self, channel=None):
         name = f'***{self.name}***'

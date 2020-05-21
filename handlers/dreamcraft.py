@@ -1,5 +1,4 @@
 # dreamcraft.py
-import datetime
 import re
 from dotenv import load_dotenv
 from discord import Embed
@@ -7,6 +6,7 @@ from discord import Embed
 from models import Channel, User, Character
 from commands import *
 from config.setup import Setup
+from utils import T
 
 SETUP = Setup()
 APPROACHES = SETUP.approaches
@@ -27,7 +27,7 @@ class DreamcraftHandler():
         if str(self.user.name) not in self.channel.users:
             self.channel.users.append(str(self.user.name))
             self.channel.updated_by = str(self.user.id)
-            self.channel.updated = datetime.datetime.utcnow()
+            self.channel.updated = T.now()
             self.channel.save()
         self.char = Character().get_by_id(self.user.active_character) if self.user and self.user.active_character else None
         self.module = self.char.category if self.char else None
@@ -100,7 +100,7 @@ class DreamcraftHandler():
                 if self.module != self.user.module:
                     self.user.module = self.module
                     self.user.updated_by = str(self.user.id)
-                    self.user.updated = datetime.datetime.utcnow()
+                    self.user.updated = T.now()
                     self.user.save()
             # Get the function from User object
             if self.func is None and self.user.module in modules:
@@ -140,11 +140,9 @@ class DreamcraftHandler():
             answer = ' '.join(self.args[0:])
             self.args = tuple(self.user.command.split(' '))
             self.command = self.args[0].lower()
-            if (not self.user.created):
-                self.user.created = datetime.datetime.utcnow()
             self.user.answer = answer
             self.user.updated_by = str(self.user.id)
-            self.user.updated = datetime.datetime.utcnow()
+            self.user.updated = T.now()
             self.user.save()
 
     def shortcuts(self):

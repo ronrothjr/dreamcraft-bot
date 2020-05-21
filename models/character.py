@@ -1,12 +1,11 @@
 # character.py
-import datetime
 from mongoengine import Document, StringField, LazyReferenceField, ListField, BooleanField, DateTimeField, DynamicField, DictField, IntField, signals
 from bson.objectid import ObjectId
 
 from models.user import User
 from config.setup import Setup
 from models.log import Log
-from utils.text_utils import TextUtils
+from utils import TextUtils, T
 
 SETUP = Setup()
 X = SETUP.x
@@ -54,7 +53,7 @@ class Character(Document):
 
     @classmethod
     def pre_save(cls, sender, document, **kwargs):
-        document.updated = datetime.datetime.utcnow()
+        document.updated = T.now()
 
     @classmethod
     def post_save(cls, sender, document, **kwargs):
@@ -161,9 +160,9 @@ class Character(Document):
         if parent_id:
             self.parent_id = parent_id
         self.created_by = str(user.id)
-        self.created = datetime.datetime.utcnow()
+        self.created = T.now()
         self.updated_by = str(user.id)
-        self.updated = datetime.datetime.utcnow()
+        self.updated = T.now()
         self.save()
         return self
 
@@ -177,7 +176,7 @@ class Character(Document):
             self.reverse_archive(self.user)
             self.archived = True
             self.updated_by = str(user.id)
-            self.updated = datetime.datetime.utcnow()
+            self.updated = T.now()
             self.save()
 
     def reverse_archive(self, user):
@@ -185,14 +184,14 @@ class Character(Document):
             c.reverse_archive(self.user)
             c.archived = True
             c.updated_by = str(user.id)
-            c.updated = datetime.datetime.utcnow()
+            c.updated = T.now()
             c.save()
 
     def restore(self, user):
             self.reverse_restore(self.user)
             self.archived = False
             self.updated_by = str(user.id)
-            self.updated = datetime.datetime.utcnow()
+            self.updated = T.now()
             self.save()
 
     def reverse_restore(self, user):
@@ -200,7 +199,7 @@ class Character(Document):
             c.reverse_restore(self.user)
             c.archived = False
             c.updated_by = str(user.id)
-            c.updated = datetime.datetime.utcnow()
+            c.updated = T.now()
             c.save()
 
     def get_string_name(self, user=None):

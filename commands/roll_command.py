@@ -1,12 +1,12 @@
 # roll_command.py
 import traceback
-import datetime
 import random
 import copy
 from bson.objectid import ObjectId
 from models import Channel, Scenario, Scene, Zone, User, Character
 from commands import CharacterCommand
 from config.setup import Setup
+from utils import T
 
 SETUP = Setup()
 ROLL_HELP = SETUP.roll_help
@@ -92,10 +92,8 @@ class RollCommand():
             return list(err.args)
 
     def save_char(self):
-        if (not self.char.created):
-            self.char.created = datetime.datetime.utcnow()
         self.char.updated_by = str(self.user.id)
-        self.char.updated = datetime.datetime.utcnow()
+        self.char.updated = T.now()
         self.char.save()
 
     # determine skill to validate

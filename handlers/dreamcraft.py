@@ -90,7 +90,7 @@ class DreamcraftHandler():
         }
         self.messages = []
         self.search = str(self.args[0])
-        self.answer()
+        self.get_answer()
         if not self.messages:
             self.shortcuts()
             # Get the function from switcher dictionary
@@ -133,7 +133,7 @@ class DreamcraftHandler():
                 embed.set_image(url=image_split[1])
             await self.ctx.send(embed=embed)
 
-    def answer(self):
+    def get_answer(self):
         guild = self.ctx.guild if self.ctx.guild else self.ctx.author
         self.user = User().find(self.ctx.author.name, guild.name)
         if self.user and self.user.command:

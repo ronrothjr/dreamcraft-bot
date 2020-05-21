@@ -32,6 +32,7 @@ class ZoneCommand():
                 'help': self.help,
                 'name': self.name,
                 'n': self.name,
+                'select': self.select,
                 'say': self.say,
                 'note': self.note,
                 'story': self.story,
@@ -125,9 +126,9 @@ class ZoneCommand():
         messages.extend(response)
         return messages
 
-    def dialog(self, dialog_text, sc=None):
-        sc, name, get_string, get_short_string = zone_svc.get_zone_info(self.sc, self.channel)
-        category = sc.category if sc else 'Zone'
+    def dialog(self, dialog_text, zone=None):
+        zone, name, get_string, get_short_string = zone_svc.get_zone_info(zone if zone else self.zone, self.channel)
+        category = zone.category if zone else 'Zone'
         dialog = {
             'create_zone': ''.join([
                 '**CREATE or ZONE**```css\n',
@@ -153,10 +154,10 @@ class ZoneCommand():
         }
         dialog_string = ''
         if dialog_text == 'all':
-            if not sc:
+            if not zone:
                 dialog_string += dialog.get('create_zone', '')
             dialog_string += dialog.get('rename_delete', '')
-        elif sc.category == 'Zone':
+        elif zone.category == 'Zone':
             if dialog_text:
                 dialog_string += dialog.get(dialog_text, '')
             else:
@@ -213,9 +214,9 @@ class ZoneCommand():
                         return self.parent.get_messages()
 
                 def selector(selection):
-                    self.sc = selection
-                    self.channel.set_active_zone(self.sc, self.user)
-                    self.user.set_active_character(self.sc.character)
+                    self.zone = selection
+                    self.channel.set_active_zone(self.zone, self.user)
+                    self.user.set_active_character(self.zone.character)
                     zone_svc.save_user(self.user)
                     return [self.dialog('')]
 
@@ -264,8 +265,9 @@ class ZoneCommand():
                     return self.parent.get_messages()
 
             def selector(selection):
-                self.char = selection
-                self.user.set_active_character(self.sc)
+                self.zone = selection
+                self.channel.set_active_zone(self.zone, self.user)
+                self.user.set_active_character(self.zone)
                 zone_svc.save_user(self.user)
                 return [self.dialog('')]
 

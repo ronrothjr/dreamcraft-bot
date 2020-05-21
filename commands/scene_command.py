@@ -35,7 +35,7 @@ class SceneCommand():
                 'story': self.story,
                 'name': self.name,
                 'n': self.name,
-                '=': self.select,
+                'select': self.select,
                 'description': self.description,
                 'desc': self.description,
                 'character': self.character,
@@ -244,7 +244,7 @@ class SceneCommand():
                     'type_name': 'SCENE',
                     'getter': {
                         'method': Scene.get_by_page,
-                        'params': {'params': {'name__icontains': scene_name, 'channel_id': str(self.channel.id), 'guild': self.guild.name, 'archived': False}}
+                        'params': {'params': {'name__icontains': scene_name, 'scenario_id': str(self.scenario.id), 'guild': self.guild.name, 'archived': False}}
                     },
                     'formatter': lambda item, item_num, page_num, page_size: f'_SCENE #{item_num+1}_\n{item.get_short_string()}',
                     'cancel': canceler,

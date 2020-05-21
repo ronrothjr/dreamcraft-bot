@@ -37,8 +37,8 @@ class ZoneService():
             return [parent.get_string(user)] if parent.get_string else f'***{parent.name}*** selected as Active Zone'
         return ['No parent found']
 
-    def get_zone_info(self, zone, user):
+    def get_zone_info(self, zone, channel):
         name = zone.name if zone else 'your zone'
-        get_string = zone.get_string(user) if zone else ''
-        get_short_string = zone.get_short_string(user) if zone else ''
+        get_string = zone.get_string(channel) if zone else ''
+        get_short_string = zone.get_short_string(channel) if zone else ''
         return zone.character, name, get_string, get_short_string

@@ -31,6 +31,7 @@ class ScenarioCommand():
                 'help': self.help,
                 'name': self.name,
                 'n': self.name,
+                'select': self.select,
                 '=': self.select,
                 'note': self.note,
                 'say': self.say,
@@ -277,6 +278,7 @@ class ScenarioCommand():
 
             def selector(selection):
                 self.scenario = selection
+                self.channel.set_active_scenario(self.scenario, self.user)
                 self.user.set_active_character(self.scenario.character)
                 scenario_svc.save_user(self.user)
                 return [self.dialog('')]

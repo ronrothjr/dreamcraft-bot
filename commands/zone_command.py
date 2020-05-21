@@ -303,7 +303,7 @@ class ZoneCommand():
             'title': 'Zone List',
             'command': 'zone ' + (' '.join(args)),
             'type': 'view',
-            'type': 'ZONE',
+            'type_name': 'ZONE',
             'getter': {
                 'method': Zone().get_by_scene,
                 'params': {'scene': self.sc, 'archived': False}

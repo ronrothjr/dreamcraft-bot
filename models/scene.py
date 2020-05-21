@@ -149,7 +149,7 @@ class Scene(Document):
 
     def get_string_zones(self):
         zones = '\n                '.join(f'***{z.name}***' for z in Zone.filter(scene_id=str(self.id)) if z)
-        return f'\n\n            _Zones:_\n                {zones}'
+        return f'\n\n            _Zones:_\n                {zones}' if zones else ''
 
     def get_string_characters(self, user=None):
         characters = '\n                '.join(f'***{c.name}***' + (' _(Active Character)_' if str(c.id) == user.active_character else '') for c in Character.filter(id__in=[ObjectId(id) for id in self.characters]) if c)
@@ -161,7 +161,7 @@ class Scene(Document):
         if channel:
             active = ' _(Active Scene)_ ' if str(self.id) == channel.active_scene else ''
         description = f' - "{self.description}"' if self.description else ''
-        zones = f'{self.get_string_zones()}' if self.characters else ''
+        zones = f'{self.get_string_zones()}'
         characters = f'{self.get_string_characters(user)}' if self.characters else ''
         aspects = ''
         stress = ''

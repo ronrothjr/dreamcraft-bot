@@ -228,7 +228,7 @@ class SceneCommand():
                     item = Scene().get_or_create(**params)
                     scenes = scenario_svc.get_scenes(self.scenario)
                     characters = scenario_svc.get_characters(scenes)
-                    item.players = [str(c.id) for c in characters]
+                    item.characters = [str(c.id) for c in characters]
                     scene_svc.save(item, self.user)
                     return item
 
@@ -318,7 +318,7 @@ class SceneCommand():
                 'method': Scene().get_by_scenario,
                 'params': {'scenario': self.scenario, 'archived': False}
             },
-            'formatter': lambda item, item_num, page_num, page_size: f'{scene_svc.get_list(item, self.channel)}',
+            'formatter': lambda item, item_num, page_num, page_size: f'{item.get_short_string(self.channel)}',
             'cancel': canceler
         }).open())
         return messages

@@ -7,6 +7,7 @@ from models.scenario import Character
 from models.scenario import Scenario
 from models.scene import Scene
 from models.zone import Zone
+from models.session import Session
 from models.log import Log
 from utils import T
 
@@ -16,6 +17,7 @@ class Channel(Document):
     active_scenario = StringField()
     active_scene = StringField()
     active_zone = StringField()
+    active_session = StringField()
     users = ListField(StringField())
     archived = BooleanField(default=False)
     history_id = StringField()
@@ -94,6 +96,12 @@ class Channel(Document):
 
     def set_active_zone(self, zone, user):
         self.active_zone = str(zone.id)
+        self.updated_by = str(user.id)
+        self.updated = T.now()
+        self.save()
+
+    def set_active_session(self, session, user):
+        self.active_session = str(session.id)
         self.updated_by = str(user.id)
         self.updated = T.now()
         self.save()

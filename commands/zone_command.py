@@ -74,18 +74,18 @@ class ZoneCommand():
         return zone_svc.search(args, Zone.filter, params)
 
     def note(self, args):
-        if self.sc:
-            Log().create_new(str(self.sc.id), f'Zone: {self.sc.name}', str(self.user.id), self.guild.name, 'Zone', {'by': self.user.name, 'note': ' '.join(args[1:])}, 'created')
+        if self.zone:
+            Log().create_new(str(self.zone.id), f'Zone: {self.zone.name}', str(self.user.id), self.guild.name, 'Zone', {'by': self.user.name, 'note': ' '.join(args[1:])}, 'created')
             return ['Log created']
         else:
             return ['No active zone to log']
 
     def say(self, args):
-        if not self.sc:
+        if not self.zone:
             return ['No active zone to log']
         else:
             note_text = ' '.join(args[1:])
-            Log().create_new(str(self.sc.id), f'Zone: {self.sc.name}', str(self.user.id), self.guild.name, 'Zone', {'by': self.user.name, 'note': f'***Narrator*** says, "{note_text}"'}, 'created')
+            Log().create_new(str(self.zone.id), f'Zone: {self.zone.name}', str(self.user.id), self.guild.name, 'Zone', {'by': self.user.name, 'note': f'***Narrator*** says, "{note_text}"'}, 'created')
             return ['Log created']
 
     def story(self, args):
@@ -135,11 +135,11 @@ class ZoneCommand():
                 '.d zone YOUR_ZONE\'S_NAME```'
             ]),
             'active_zone': ''.join([
-                '***YOU ARE CURRENTLY EDITING...***\n',
+                '***YOU ARE CURRENTLY EDITING...***\n' if self.can_edit else '',
                 f':point_down:\n\n{get_string}'
             ]),
             'active_zone_short': ''.join([
-                f'***YOU ARE CURRENTLY EDITING...:***\n',
+                '***YOU ARE CURRENTLY EDITING...:***\n' if self.can_edit else '',
                 f':point_down:\n\n{get_short_string}'
             ]),
             'rename_delete': ''.join([
@@ -177,21 +177,21 @@ class ZoneCommand():
             raise Exception('No active scene or name provided. Try this:```css\n.d scene SCENE_NAME```')
         messages = []
         if len(args) == 0:
-            if not self.sc:
+            if not self.zone:
                 return [
                     'No active zone or name provided\n\n',
                     self.dialog('all')
                 ]
-            messages.append(self.sc.get_string())
+            messages.append(self.zone.get_string())
         else:
             if len(args) == 1 and args[0].lower() == 'short':
                 return [self.dialog('active_zone_short')]
-            if len(args) == 1 and self.sc:
+            if len(args) == 1 and self.zone:
                 return [self.dialog('')]
             zone_name = ' '.join(args[1:])
             if len(args) > 1 and args[1] == 'rename':
                 zone_name = ' '.join(args[2:])
-                if not self.sc:
+                if not self.zone:
                     return [
                         'No active zone or name provided\n\n',
                         self.dialog('all')
@@ -201,8 +201,8 @@ class ZoneCommand():
                     if zone:
                         return [f'Cannot rename to _{zone_name}_. Zone already exists']
                     else:
-                        self.sc.name = zone_name
-                        zone_svc.save(self.sc, self.user)
+                        self.zone.name = zone_name
+                        zone_svc.save(self.zone, self.user)
                         messages.append(self.dialog(''))
             else:
                 def canceler(cancel_args):
@@ -244,20 +244,20 @@ class ZoneCommand():
     def select(self, args):
         messages = []
         if len(args) == 0:
-            if not self.sc:
+            if not self.zone:
                 return [
                     'No active zone or name provided\n\n',
                     self.dialog('all')
                 ]
-            messages.append(self.sc.get_string())
+            messages.append(self.zone.get_string())
         else:
             if len(args) == 1 and args[0].lower() == 'short':
                 return [self.dialog('active_zone_short')]
             if len(args) == 1 and self.char:
                 return [self.dialog('')]
-            sc_name = ' '.join(args[1:])
+            zone_name = ' '.join(args[1:])
             def canceler(cancel_args):
-                if cancel_args[0].lower() in ['zone','s']:
+                if cancel_args[0].lower() in ['zone','z']:
                     return ZoneCommand(parent=self.parent, ctx=self.ctx, args=cancel_args, guild=self.guild, user=self.user, channel=self.channel).run()
                 else:
                     self.parent.args = cancel_args
@@ -280,7 +280,7 @@ class ZoneCommand():
                 'type_name': 'ZONE',
                 'getter': {
                     'method': Zone.get_by_page,
-                    'params': {'params': {'name__icontains': sc_name, 'scene_id': str(self.sc.id), 'guild': self.guild.name, 'archived': False}}
+                    'params': {'params': {'name__icontains': zone_name, 'scene_id': str(self.sc.id), 'guild': self.guild.name, 'archived': False}}
                 },
                 'formatter': lambda item, item_num, page_num, page_size: f'_ZONE #{item_num+1}_\n{item.get_short_string()}',
                 'cancel': canceler,

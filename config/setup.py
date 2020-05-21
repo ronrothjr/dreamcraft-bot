@@ -104,6 +104,16 @@ class Setup():
             .d z (c)haracter [(d)elete] \{character} - add/remove character for active zone\n\
             .d z (d)delete \{name} - removes a zone'
 
+    session_help = '.d z help - display these instructions\nZone Help:\n\
+            .d (z)one - display active session\n\
+            .d z (n)ame \{name\} - add/display/set active session\n\
+            .d z (l)ist - display list of sessions\n\
+            .d z (desc)ription \{description\} - set the description for the active session\n\
+            .d z (a)spect [(d)elete] \{aspect} - add/remove aspect for active session\n\
+            .d z (a)spect (c)character - set the current aspect as the active character\n\
+            .d z (c)haracter [(d)elete] \{character} - add/remove character for active session\n\
+            .d z (d)delete \{name} - removes a session'
+
     approaches = [
         'Careful - pay close attention to detail and take your time.',
         'Flashy - draw attention to you; full of style and panache.',

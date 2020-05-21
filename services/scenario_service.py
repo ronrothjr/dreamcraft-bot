@@ -41,7 +41,7 @@ class ScenarioService():
         name = scenario.name if scenario else 'your scenario'
         get_string = self.get_string(scenario, channel) if scenario else ''
         get_short_string = scenario.get_short_string(channel) if scenario else ''
-        return scenario.character, name, get_string, get_short_string
+        return scenario.character if scenario else None, name, get_string, get_short_string
 
     def get_string(self, item, channel=None, user=None):
         name = f'***{item.name}***'

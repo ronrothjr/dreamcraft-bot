@@ -1,17 +1,16 @@
-# scene_command
+# session_command
 import traceback
 from commands import CharacterCommand
-from models import Channel, Scenario, Scene, Character, User, Log
+from models import Channel, Scenario, Scene, Session, Character, User, Log
 from config.setup import Setup
-from services import SceneService, ScenarioService
+from services import SessionService
 from utils import Dialog, T
 
-scene_svc = SceneService()
-scenario_svc = ScenarioService()
+session_svc = SessionService()
 SETUP = Setup()
-SCENE_HELP = SETUP.scene_help
+SESSION_HELP = SETUP.session_help
 
-class SceneCommand():
+class SessionCommand():
     def __init__(self, parent, ctx, args, guild, user, channel):
         self.parent = parent
         self.ctx = ctx
@@ -23,7 +22,8 @@ class SceneCommand():
         self.channel = Channel().get_or_create(channel, self.guild.name, self.user)
         self.scenario = Scenario().get_by_id(self.channel.active_scenario) if self.channel and self.channel.active_scenario else None
         self.sc = Scene().get_by_id(self.channel.active_scene) if self.channel and self.channel.active_scene else None
-        self.can_edit = self.user.role == 'Game Master' if self.user and self.sc else True
+        self.session = Session().get_by_id(self.channel.active_session) if self.channel and self.channel.active_session else None
+        self.can_edit = self.user.role == 'Game Master' if self.user and self.session else True
         self.char = Character().get_by_id(self.user.active_character) if self.user and self.user.active_character else None
 
     def run(self):
@@ -44,10 +44,10 @@ class SceneCommand():
                 'players': self.player,
                 'player': self.player,
                 'p': self.player,
-                'list': self.scene_list,
-                'l': self.scene_list,
-                'delete': self.delete_scene,
-                'd': self.delete_scene,
+                'list': self.session_list,
+                'l': self.session_list,
+                'delete': self.delete_session,
+                'd': self.delete_session,
                 'start': self.start,
                 'end': self.end
             }
@@ -74,36 +74,36 @@ class SceneCommand():
             return list(err.args)
 
     def help(self, args):
-        return [SCENE_HELP]
+        return [SESSION_HELP]
 
-    def check_scene(self):
-        if not self.sc:
-            raise Exception('You don\'t have an active scene. Try this:```css\n.d scene SCENE_NAME```')
+    def check_session(self):
+        if not self.session:
+            raise Exception('You don\'t have an active session. Try this:```css\n.d session SESSION_NAME```')
 
     def search(self, args):
         params = {'name__icontains': ' '.join(args[0:]), 'guild': self.guild.name, 'channel_id': str(self.channel.id), 'archived': False}
-        return scene_svc.search(args, Scene.filter, params)
+        return session_svc.search(args, Session.filter, params)
 
     def note(self, args):
-        if self.sc:
-            Log().create_new(str(self.sc.id), f'Scene: {self.sc.name}', str(self.user.id), self.guild.name, 'Scene', {'by': self.user.name, 'note': ' '.join(args[1:])}, 'created')
+        if self.session:
+            Log().create_new(str(self.session.id), f'Session: {self.session.name}', str(self.user.id), self.guild.name, 'Session', {'by': self.user.name, 'note': ' '.join(args[1:])}, 'created')
             return ['Log created']
         else:
-            return ['No active scene to log']
+            return ['No active session to log']
 
     def say(self, args):
-        if not self.sc:
-            return ['No active scene to log']
+        if not self.session:
+            return ['No active session to log']
         else:
             note_text = ' '.join(args[1:])
-            Log().create_new(str(self.sc.id), f'Scene: {self.sc.name}', str(self.user.id), self.guild.name, 'Scene', {'by': self.user.name, 'note': f'***Narrator*** says, "{note_text}"'}, 'created')
+            Log().create_new(str(self.session.id), f'Session: {self.session.name}', str(self.user.id), self.guild.name, 'Session', {'by': self.user.name, 'note': f'***Narrator*** says, "{note_text}"'}, 'created')
             return ['Log created']
 
     def story(self, args):
         messages =[]
-        command = 'scene ' + (' '.join(args))
+        command = 'session ' + (' '.join(args))
         def canceler(cancel_args):
-            if cancel_args[0].lower() in ['scene','s']:
+            if cancel_args[0].lower() in ['session']:
                 self.args = cancel_args
                 self.command = self.args[0]
                 return self.run()
@@ -112,7 +112,7 @@ class SceneCommand():
                 self.parent.command = self.parent.args[0]
                 return self.parent.get_messages()
         response = Dialog({
-            'svc': scene_svc,
+            'svc': session_svc,
             'user': self.user,
             'title': 'Story',
             'type': 'view',
@@ -121,10 +121,10 @@ class SceneCommand():
             'getter': {
                 'method': Log.get_by_page,
                 'params': {
-                    'params': {'parent_id': str(self.sc.id)},
+                    'params': {'parent_id': str(self.session.id)},
                     'sort': 'created'
                 },
-                'parent_method': Scene.get_by_page,
+                'parent_method': Session.get_by_page,
                 'parent_params': {
                     'params': {'category__in': ['Character','Aspect','Stunt']},
                     'sort': 'created'
@@ -137,122 +137,122 @@ class SceneCommand():
         messages.extend(response)
         return messages
 
-    def dialog(self, dialog_text, sc=None):
-        sc, name, get_string, get_short_string = scene_svc.get_scene_info(self.sc, self.channel, self.user)
-        category = sc.category if sc else 'Scene'
+    def dialog(self, dialog_text, session=None):
+        session, name, get_string, get_short_string = session_svc.get_session_info(self.session, self.channel, self.user)
+        category = session.category if session else 'Session'
         dialog = {
-            'create_scene': ''.join([
-                '**CREATE or SCENE**```css\n',
-                '.d scene YOUR_SCENE\'S_NAME```'
+            'create_session': ''.join([
+                '**CREATE or SESSION**```css\n',
+                '.d session YOUR_SESSION\'S_NAME```'
             ]),
-            'active_scene': ''.join([
+            'active_session': ''.join([
                 '***YOU ARE CURRENTLY EDITING...***\n' if self.can_edit else '',
                 f':point_down:\n\n{get_string}'
             ]),
-            'active_scene_short': ''.join([
+            'active_session_short': ''.join([
                 '***YOU ARE CURRENTLY EDITING...:***\n' if self.can_edit else '',
                 f':point_down:\n\n{get_short_string}'
             ]),
             'rename_delete': ''.join([
                 f'\n\n_Is ***{name}*** not the {category.lower()} name you wanted?_',
-                f'```css\n.d scene rename NEW_NAME```_Want to remove ***{name}***?_',
-                '```css\n.d scene delete```'
+                f'```css\n.d session rename NEW_NAME```_Want to remove ***{name}***?_',
+                '```css\n.d session delete```'
             ]),
             'go_back_to_parent': ''.join([
-                f'\n\n***You can GO BACK to the parent scene, aspect, or stunt***',
-                '```css\n.d scene parent```'
+                f'\n\n***You can GO BACK to the parent session, aspect, or stunt***',
+                '```css\n.d session parent```'
             ])
         }
         dialog_string = ''
         if dialog_text == 'all':
-            if not sc:
-                dialog_string += dialog.get('create_scene', '')
+            if not session:
+                dialog_string += dialog.get('create_session', '')
             dialog_string += dialog.get('rename_delete', '')
-        elif sc.category == 'Scene':
+        elif session.category == 'Session':
             if dialog_text:
                 dialog_string += dialog.get(dialog_text, '')
             else:
-                dialog_string += dialog.get('active_scene', '')
+                dialog_string += dialog.get('active_session', '')
                 dialog_string += dialog.get('rename_delete', '') if self.can_edit else ''
         else:
             if dialog_text:
                 dialog_string += dialog.get(dialog_text, '')
             else:
-                dialog_string += dialog.get('active_scene', '') if self.can_edit else ''
+                dialog_string += dialog.get('active_session', '') if self.can_edit else ''
                 dialog_string += dialog.get('rename_delete', '') if self.can_edit else ''
                 dialog_string += dialog.get('go_back_to_parent', '') if self.can_edit else ''
         return dialog_string
     
     def name(self, args):
-        self.check_scene()
+        self.check_session()
         messages = []
         if len(args) == 0:
-            if not self.sc:
+            if not self.session:
                 return [
-                    'No active scene or name provided\n\n',
+                    'No active session or name provided\n\n',
                     self.dialog('all')
                 ]
-            messages.append(self.sc.get_string(self.channel, self.user))
+            messages.append(self.session.get_string(self.channel, self.user))
         else:
             if len(args) == 1 and args[0].lower() == 'short':
-                return [self.dialog('active_scene_short')]
-            if len(args) == 1 and self.sc:
+                return [self.dialog('active_session_short')]
+            if len(args) == 1 and self.session:
                 return [self.dialog('')]
-            scene_name = ' '.join(args[1:])
+            session_name = ' '.join(args[1:])
             if len(args) > 1 and args[1] == 'rename':
-                scene_name = ' '.join(args[2:])
-                if not self.sc:
+                session_name = ' '.join(args[2:])
+                if not self.session:
                     return [
-                        'No active scene or name provided\n\n',
+                        'No active session or name provided\n\n',
                         self.dialog('all')
                     ]
                 else:
-                    scene = Scene().find(self.guild.name, str(self.channel.id), str(self.scenario.id), scene_name)
-                    if scene:
-                        return [f'Cannot rename to _{scene_name}_. Scene already exists']
+                    session = Session().find(self.guild.name, str(self.channel.id), session_name)
+                    if session:
+                        return [f'Cannot rename to _{session_name}_. Session already exists']
                     else:
-                        self.sc.name = scene_name
-                        scene_svc.save(self.sc, self.user)
+                        self.session.name = session_name
+                        session_svc.save(self.session, self.user)
                         messages.append(self.dialog(''))
             else:
                 def canceler(cancel_args):
-                    if cancel_args[0].lower() in ['scene','s']:
-                        return SceneCommand(parent=self.parent, ctx=self.ctx, args=cancel_args, guild=self.guild, user=self.user, channel=self.channel).run()
+                    if cancel_args[0].lower() in ['session','s']:
+                        return SessionCommand(parent=self.parent, ctx=self.ctx, args=cancel_args, guild=self.guild, user=self.user, channel=self.channel).run()
                     else:
                         self.parent.args = cancel_args
                         self.parent.command = self.parent.args[0]
                         return self.parent.get_messages()
 
                 def selector(selection):
-                    self.sc = selection
-                    self.channel.set_active_scene(self.sc, self.user)
+                    self.session = selection
+                    self.channel.set_active_session(self.session, self.user)
                     return [self.dialog('')]
 
                 def creator(**params):
-                    item = Scene().get_or_create(**params)
-                    scenes = scenario_svc.get_scenes(self.scenario)
-                    characters = scenario_svc.get_characters(scenes)
+                    item = Session().get_or_create(**params)
+                    sessions = sessionenario_svc.get_sessions(self.sessionenario)
+                    characters = sessionenario_svc.get_characters(sessions)
                     item.characters = [str(c.id) for c in characters]
-                    scene_svc.save(item, self.user)
+                    session_svc.save(item, self.user)
                     return item
 
                 messages.extend(Dialog({
-                    'svc': scene_svc,
+                    'svc': session_svc,
                     'user': self.user,
-                    'title': 'Scene List',
-                    'command': 'scene ' + ' '.join(args),
+                    'title': 'Session List',
+                    'command': 'session ' + ' '.join(args),
                     'type': 'select',
-                    'type_name': 'SCENE',
+                    'type_name': 'SESSION',
                     'getter': {
-                        'method': Scene.get_by_page,
-                        'params': {'params': {'name__icontains': scene_name, 'scenario_id': str(self.scenario.id), 'guild': self.guild.name, 'archived': False}}
+                        'method': Session.get_by_page,
+                        'params': {'params': {'name__icontains': session_name, 'channel_id': str(self.channel.id), 'guild': self.guild.name, 'archived': False}}
                     },
-                    'formatter': lambda item, item_num, page_num, page_size: f'_SCENE #{item_num+1}_\n{item.get_short_string()}',
+                    'formatter': lambda item, item_num, page_num, page_size: f'_SESSION #{item_num+1}_\n{item.get_short_string()}',
                     'cancel': canceler,
                     'select': selector,
                     'empty': {
                         'method': creator,
-                        'params': {'user': self.user, 'name': scene_name, 'scenario': self.scenario, 'channel': self.channel, 'guild': self.guild.name}
+                        'params': {'user': self.user, 'name': session_name, 'channel': self.channel, 'guild': self.guild.name}
                     }
                 }).open())
         return messages
@@ -260,67 +260,67 @@ class SceneCommand():
     def select(self, args):
         messages = []
         if len(args) == 0:
-            if not self.sc:
+            if not self.session:
                 return [
-                    'No active scene or name provided\n\n',
+                    'No active session or name provided\n\n',
                     self.dialog('all')
                 ]
-            messages.append(self.sc.get_string())
+            messages.append(self.session.get_string())
         else:
             if len(args) == 1 and args[0].lower() == 'short':
-                return [self.dialog('active_scene_short')]
+                return [self.dialog('active_session_short')]
             if len(args) == 1 and self.char:
                 return [self.dialog('')]
-            sc_name = ' '.join(args[1:])
+            session_name = ' '.join(args[1:])
             def canceler(cancel_args):
-                if cancel_args[0].lower() in ['scene','s']:
-                    return SceneCommand(parent=self.parent, ctx=self.ctx, args=cancel_args, guild=self.guild, user=self.user, channel=self.channel).run()
+                if cancel_args[0].lower() in ['session']:
+                    return SessionCommand(parent=self.parent, ctx=self.ctx, args=cancel_args, guild=self.guild, user=self.user, channel=self.channel).run()
                 else:
                     self.parent.args = cancel_args
                     self.parent.command = self.parent.args[0]
                     return self.parent.get_messages()
 
             def selector(selection):
-                self.sc = selection
-                self.channel.set_active_scene(self.sc, self.user)
+                self.session = selection
+                self.channel.set_active_session(self.session, self.user)
                 return [self.dialog('')]
 
             messages.extend(Dialog({
-                'svc': scene_svc,
+                'svc': session_svc,
                 'user': self.user,
-                'title': 'Scene List',
+                'title': 'Session List',
                 'command': 's ' + ' '.join(args),
                 'type': 'select',
-                'type_name': 'SCENE',
+                'type_name': 'SESSION',
                 'getter': {
-                    'method': Scene.get_by_page,
-                    'params': {'params': {'name__icontains': sc_name, 'scenario_id': str(self.scenario.id), 'guild': self.guild.name, 'archived': False}}
+                    'method': Session.get_by_page,
+                    'params': {'params': {'name__icontains': session_name, 'channel_id': str(self.channel.id), 'guild': self.guild.name, 'archived': False}}
                 },
-                'formatter': lambda item, item_num, page_num, page_size: f'_SCENE #{item_num+1}_\n{item.get_short_string()}',
+                'formatter': lambda item, item_num, page_num, page_size: f'_SESSION #{item_num+1}_\n{item.get_short_string()}',
                 'cancel': canceler,
                 'select': selector
             }).open())
         return messages
 
-    def scene_list(self, args):
+    def session_list(self, args):
         messages = []
         def canceler(cancel_args):
-            if cancel_args[0].lower() in ['scene']:
-                return SceneCommand(parent=self.parent, ctx=self.ctx, args=cancel_args, guild=self.guild, user=self.user, channel=self.channel).run()
+            if cancel_args[0].lower() in ['session']:
+                return SessionCommand(parent=self.parent, ctx=self.ctx, args=cancel_args, guild=self.guild, user=self.user, channel=self.channel).run()
             else:
                 self.parent.args = cancel_args
                 self.parent.command = self.parent.args[0]
                 return self.parent.get_messages()
 
         messages.extend(Dialog({
-            'svc': scene_svc,
+            'svc': session_svc,
             'user': self.user,
-            'title': 'Scene List',
-            'command': 'scene ' + (' '.join(args)),
+            'title': 'Session List',
+            'command': 'session ' + (' '.join(args)),
             'type': 'view',
             'getter': {
-                'method': Scene().get_by_scenario,
-                'params': {'scenario': self.scenario, 'archived': False}
+                'method': Session().get_by_channel,
+                'params': {'channel': self.channel, 'archived': False}
             },
             'formatter': lambda item, item_num, page_num, page_size: f'{item.get_short_string(self.channel)}',
             'cancel': canceler
@@ -330,7 +330,7 @@ class SceneCommand():
     def description(self, args):
         if len(args) == 1:
             raise Exception('No description provided')
-        self.check_scene()
+        self.check_session()
         description = ' '.join(args[1:])
         self.sc.description = description
         self.sc.updated_by = str(self.user.id)
@@ -338,48 +338,48 @@ class SceneCommand():
         self.sc.save()
         return [
             f'Description updated to "{description}"',
-            self.sc.get_string(self.channel)
+            self.session.get_string(self.channel)
         ]
 
     def character(self, args):
-        self.check_scene()
+        self.check_session()
         if self.user:
-            self.user.active_character = str(self.sc.character.id)
+            self.user.active_character = str(self.session.character.id)
             self.channel.updated_by = str(self.user.id)
             self.user.updated = T.now()
             self.user.save()
-        command = CharacterCommand(parent=self.parent, ctx=self.ctx, args=args, guild=self.guild, user=self.user, channel=self.channel, char=self.sc.character)
+        command = CharacterCommand(parent=self.parent, ctx=self.ctx, args=args, guild=self.guild, user=self.user, channel=self.channel, char=self.session.character)
         return command.run()
 
     def player(self, args):
-        return scene_svc.player(args, self.channel, self.sc, self.user)
+        return session_svc.player(args, self.channel, self.session, self.user)
 
-    def delete_scene(self, args):
-        return scene_svc.delete_scene(args, self.guild, self.channel, self.scenario, self.sc, self.user)
+    def delete_session(self, args):
+        return session_svc.delete_session(args, self.guild, self.channel, self.session, self.user)
 
     def start(self, args):
-        self.check_scene()
-        if self.sc.started_on:
-            raise Exception(f'***{self.sc.name}*** already began on {T.to(self.sc.started_on, self.user)}')
+        self.check_session()
+        if self.session.started_on:
+            raise Exception(f'***{self.session.name}*** already began on {T.to(self.session.started_on, self.user)}')
         else:
-            self.sc.started_on = T.now()
-            scene_svc.save(self.sc, self.user)
+            self.session.started_on = T.now()
+            session_svc.save(self.session, self.user)
             return [self.dialog('')]
 
     def end(self, args):
-        self.check_scene()
+        self.check_session()
         if len(args) > 1 and args[1] == 'delete':
-            self.sc.ended_on = None
-            scene_svc.save(self.sc, self.user)
+            self.session.ended_on = None
+            session_svc.save(self.session, self.user)
             return [self.dialog('')]
         else:
-            if not self.sc.started_on:
-                raise Exception(f'***{self.sc.name}*** has not yet started.')
-            if self.sc.ended_on:
-                raise Exception(f'***{self.sc.name}*** already ended on {T.to(self.sc.ended_on, self.user)}')
+            if not self.session.started_on:
+                raise Exception(f'***{self.session.name}*** has not yet started.')
+            if self.session.ended_on:
+                raise Exception(f'***{self.session.name}*** already ended on {T.to(self.session.ended_on, self.user)}')
             else:
-                self.sc.ended_on = T.now()
-                scene_svc.save(self.sc, self.user)
+                self.session.ended_on = T.now()
+                session_svc.save(self.session, self.user)
                 return [self.dialog('')]
         
 

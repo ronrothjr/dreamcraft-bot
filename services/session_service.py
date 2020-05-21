@@ -1,12 +1,12 @@
-# scene_service.py
+# session_service.py
 import traceback
 import copy
 from bson.objectid import ObjectId
-from models import User, Scenario, Scene, Character
+from models import User, Channel, Session, Character
 from config.setup import Setup
 from utils import TextUtils, T
 
-class SceneService():
+class SessionService():
     def search(self, args, method, params):
         if len(args) == 0:
             return None
@@ -30,25 +30,25 @@ class SceneService():
             user.save()
 
     def get_parent_by_id(self, char, user, parent_id):
-        parent = Scene.filter(id=ObjectId(parent_id)).first()
+        parent = Session.filter(id=ObjectId(parent_id)).first()
         if parent:
             user.active_character = str(parent.id)
             self.save_user(user)
-            return [parent.get_string(user)] if parent.get_string else f'***{parent.name}*** selected as Active Scene'
+            return [parent.get_string(user)] if parent.get_string else f'***{parent.name}*** selected as Active Session'
         return ['No parent found']
 
-    def get_scene_info(self, scene, channel, user):
-        name = scene.name if scene else 'your scene'
-        get_string = scene.get_string(channel, user) if scene else ''
-        get_short_string = scene.get_short_string(channel) if scene else ''
-        return scene.character if scene else None, name, get_string, get_short_string
+    def get_session_info(self, session, channel, user):
+        name = session.name if session else 'your session'
+        get_string = session.get_string(channel, user) if session else ''
+        get_short_string = session.get_short_string(channel) if session else ''
+        return session.character if session else None, name, get_string, get_short_string
 
     def player(self, args, channel, sc, user):
         messages = []
         if len(args) == 1:
             raise Exception('No characters added')
         if not sc:
-            raise Exception('You don\'t have an active scene. Try this:```css\n.d scene SCENE_NAME```')
+            raise Exception('You don\'t have an active session. Try this:```css\n.d session SESSION_NAME```')
         elif args[1].lower() == 'list' or args[1].lower() == 'l':
             return [sc.get_string_characters(channel)]
         elif args[1].lower() in ['delete','d']:
@@ -67,27 +67,26 @@ class SceneService():
                         messages.append(f'***{char.name}*** is already in _{sc.name}_')
                     else:
                         sc.characters.append(str(char.id))
-                        messages.append(f'Added ***{char.name}*** to _{sc.name}_ scene')
+                        messages.append(f'Added ***{char.name}*** to _{sc.name}_ session')
                 else:
                     messages.append(f'***{char_name}*** not found. No character added to _{sc.name}_')
             self.save(sc, user)
             messages.append(sc.get_string_characters(user))
             return messages
 
-    def delete_scene(self, args, guild, channel, scenario, sc, user):
+    def delete_session(self, args, guild, channel, sc, user):
         messages = []
         search = ''
         if len(args) == 1:
             if not sc:
-                raise Exception('No scene provided for deletion')
+                raise Exception('No session provided for deletion')
         else:
             search = ' '.join(args[1:])
-            sc = Scene().find(guild.name, str(channel.id), str(scenario.id), search)
+            sc = Session().find(guild.name, str(channel.id), search)
         if not sc:
             return [f'{search} was not found. No changes made.']
         else:
             search = str(sc.name)
-            scenario_id = str(sc.scenario_id) if sc.scenario_id else ''
             channel_id = str(sc.channel_id) if sc.channel_id else ''
             sc.character.archive(user)
             sc.archived = True
@@ -95,10 +94,7 @@ class SceneService():
             sc.updated = T.now()
             sc.save()
             messages.append(f'***{search}*** removed')
-            if scenario_id:
-                secenario = Scenario().get_by_id(scenario_id)
-                messages.append(secenario.get_string(channel))
-            elif channel_id:
+            if channel_id:
                 channel = Channel().get_by_id(channel_id)
                 messages.append(channel.get_string())
             return messages

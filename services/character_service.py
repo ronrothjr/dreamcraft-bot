@@ -55,4 +55,4 @@ class CharacterService():
         name = char.name if char else 'your character'
         get_string = char.get_string(user) if char else ''
         get_short_string = char.get_short_string(user) if char else ''
-        return char, name, get_string, get_short_string
+        return char if char else None, name, get_string, get_short_string

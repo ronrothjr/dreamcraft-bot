@@ -5,5 +5,6 @@ from commands.character_command import CharacterCommand
 from commands.scenario_command import ScenarioCommand
 from commands.scene_command import SceneCommand
 from commands.zone_command import ZoneCommand
+from commands.session_command import SessionCommand
 from commands.roll_command import RollCommand
 from commands.undo_command import UndoCommand

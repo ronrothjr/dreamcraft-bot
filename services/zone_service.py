@@ -41,4 +41,4 @@ class ZoneService():
         name = zone.name if zone else 'your zone'
         get_string = zone.get_string(channel) if zone else ''
         get_short_string = zone.get_short_string(channel) if zone else ''
-        return zone.character, name, get_string, get_short_string
+        return zone.character if zone else None, name, get_string, get_short_string

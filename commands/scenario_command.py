@@ -149,7 +149,7 @@ class ScenarioCommand():
                 '.d scenario YOUR_SCENARIOR\'S_NAME```'
             ]),
             'active_scenario': ''.join([
-                '***YOU ARE CURRENTLY EDITING...***\n',
+                '***YOU ARE CURRENTLY EDITING...***\n' if self.can_edit else '',
                 f':point_down:\n\n{get_string}'
             ]),
             'active_scenario_short': ''.join([

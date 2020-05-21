@@ -51,7 +51,8 @@ class DreamcraftHandler():
             'Character': CharacterCommand,
             'Undo': UndoCommand,
             'User': UserCommand,
-            'Zone': ZoneCommand
+            'Zone': ZoneCommand,
+            'Session': SessionCommand
         }
         switcher = {
             'cheat': CheatCommand,
@@ -72,6 +73,7 @@ class DreamcraftHandler():
             's': SceneCommand,
             'zone': ZoneCommand,
             'z': ZoneCommand,
+            'session': SessionCommand,
             'roll': RollCommand,
             'r': RollCommand,
             'reroll': RollCommand,

@@ -11,7 +11,7 @@
 
 
 *   Get help with condensed game instructions.
-*   Commands for selecting, viewing, and editing all FATE game components.
+*   Run commands for selecting, viewing, and editing all FATE game components.
     *   Sessions, scenarios, scenes, and zones are confined to a channel.
     *   Characters are free to be used in any channel on the Discord server.
 *   Setup users for local timezone display of all dates.
@@ -30,7 +30,7 @@
 *   Manage contests, challenges, and conflicts within zones, scenes, sessions, and sessions.
     *   Start and end sessions and scenes.
     *   Enter and exit zones within scenes.
-    *   Connect zones to reach other.
+    *   Connect zones to each other.
     *   Add/move characters to zones and scenes.
     *   Display invokable/compellable aspects and stunts.
     *   Roll fate dice using character skills/approaches with invocation of aspects and stunts.

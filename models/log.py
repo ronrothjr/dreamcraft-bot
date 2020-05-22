@@ -1,4 +1,5 @@
 # log.py
+import datetime
 from mongoengine import Document, StringField, ReferenceField, DynamicField, BooleanField, DateTimeField
 from bson.objectid import ObjectId
 from utils import TextUtils, T
@@ -63,22 +64,28 @@ class Log(Document):
         self.save()
         return self
 
-    def get_string(self):
+    def get_string(self, user=None):
         data = ''
         if self.data:
             for d in self.data:
-                if d not in ['updated_by', 'created_by', 'updated', 'created']:
+                if '_id' not in d and d not in ['updated_by', 'created_by', 'updated', 'created']:
                     cleaned = d.replace('_', ' ')
-                    data += f'\n    _{cleaned}:_ {self.data[d]}'
+                    data += f'\n    _{cleaned}:_ {self.get_date_string(self.data[d], user)}'
         action = self.action if self.action else 'updated'
         if action != 'created' and 'archived' in self.data:
             action = 'archived' if self.data['archived'] else 'restored'
         undo = ''.join([
             f'**{self.name}** _({self.category})_' if self.name else f'**{self.category}**',
-            f' _{action} on: {self.updated.strftime("%m/%d/%Y, %H:%M:%S")}_{data}\n'
+            f' _{action} on: {T.to(self.updated, user)}_{data}'
         ])
         return undo
 
-    def get_short_string(self):
-        data = [f'{self.data[d]}' for d in self.data if d not in ['updated_by', 'created_by', 'updated', 'created']]
+    def get_short_string(self, user=None):
+        data = [f'{self.get_date_string(self.data[d], user)}' for d in self.data if '_id' not in d and d not in ['updated_by', 'created_by', 'updated', 'created']]
         return ': '.join(data)
+
+    def get_date_string(self, d, user=None):
+        if isinstance(d, datetime.date) or isinstance(d, datetime.datetime):
+            return T.to(d, user)
+        else:
+            return d

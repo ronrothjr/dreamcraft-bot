@@ -133,7 +133,7 @@ class ScenarioCommand():
                     'sort': 'created'
                 }
             },
-            'formatter': lambda log, num: log.get_short_string(), # if log.category == 'Log' else log.get_string()
+            'formatter': lambda log, num, page_num, page_size: log.get_string(self.user), # if log.category == 'Log' else log.get_string()
             'cancel': canceler,
             'page_size': 10
         }).open()

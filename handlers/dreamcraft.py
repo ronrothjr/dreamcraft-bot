@@ -52,7 +52,8 @@ class DreamcraftHandler():
             'Undo': UndoCommand,
             'User': UserCommand,
             'Zone': ZoneCommand,
-            'Session': SessionCommand
+            'Session': SessionCommand,
+            'Engagement': EngagementCommand
         }
         switcher = {
             'cheat': CheatCommand,
@@ -74,6 +75,9 @@ class DreamcraftHandler():
             'zone': ZoneCommand,
             'z': ZoneCommand,
             'session': SessionCommand,
+            'engagement': EngagementCommand,
+            'engage': EngagementCommand,
+            'e': EngagementCommand,
             'roll': RollCommand,
             'r': RollCommand,
             'reroll': RollCommand,
@@ -87,7 +91,7 @@ class DreamcraftHandler():
             'st': CharacterCommand,
             'consequence': CharacterCommand,
             'con': CharacterCommand
-            # 'combine': RollCommand,
+            # 'assist': RollCommand,
             # 'concede': RollCommand
         }
         self.messages = []

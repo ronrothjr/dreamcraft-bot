@@ -116,7 +116,7 @@ class Zone(Document):
         return [items] if items else []
 
     def archive(self, user):
-            self.reverse_archive(self.user)
+            self.reverse_archive(user)
             self.archived = True
             self.updated_by = str(user.id)
             self.updated = T.now()
@@ -124,14 +124,14 @@ class Zone(Document):
 
     def reverse_archive(self, user):
         for z in Zone().get_by_parent(parent_id=str(self.id)):
-            z.reverse_archive(self.user)
+            z.reverse_archive(user)
             z.archived = True
             z.updated_by = str(user.id)
             z.updated = T.now()
             z.save()
 
     def restore(self, user):
-            self.reverse_restore(self.user)
+            self.reverse_restore(user)
             self.archived = False
             self.updated_by = str(user.id)
             self.updated = T.now()
@@ -139,7 +139,7 @@ class Zone(Document):
 
     def reverse_restore(self, user):
         for z in Zone().get_by_parent(parent_id=str(self.id)):
-            z.reverse_restore(self.user)
+            z.reverse_restore(user)
             z.archived = False
             z.updated_by = str(user.id)
             z.updated = T.now()
@@ -148,7 +148,7 @@ class Zone(Document):
     def get_string_characters(self, channel=None):
         characters = [Character.get_by_id(id) for id in self.characters]
         characters = '***\n                ***'.join(c.name for c in characters if c)
-        return f'\n            _Characters:_\n                ***{characters}***'
+        return f'\n\n            _Characters:_\n                ***{characters}***'
 
     def get_string(self, channel):
         name = f'***{self.name}***'

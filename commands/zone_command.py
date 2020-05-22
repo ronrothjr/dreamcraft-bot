@@ -119,7 +119,7 @@ class ZoneCommand():
                     'sort': 'created'
                 }
             },
-            'formatter': lambda log, num, page_num, page_size: log.get_short_string(), # if log.category == 'Log' else log.get_string()
+            'formatter': lambda log, num, page_num, page_size: log.get_string(self.user), # if log.category == 'Log' else log.get_string()
             'cancel': canceler,
             'page_size': 10
         }).open()
@@ -182,7 +182,7 @@ class ZoneCommand():
                     'No active zone or name provided\n\n',
                     self.dialog('all')
                 ]
-            messages.append(self.zone.get_string())
+            messages.append(self.zone.get_string(self.channel))
         else:
             if len(args) == 1 and args[0].lower() == 'short':
                 return [self.dialog('active_zone_short')]
@@ -249,7 +249,7 @@ class ZoneCommand():
                     'No active zone or name provided\n\n',
                     self.dialog('all')
                 ]
-            messages.append(self.zone.get_string())
+            messages.append(self.zone.get_string(self.channel))
         else:
             if len(args) == 1 and args[0].lower() == 'short':
                 return [self.dialog('active_zone_short')]
@@ -340,62 +340,7 @@ class ZoneCommand():
         return command.run()
 
     def player(self, args):
-        if len(args) == 1:
-            return ['No characters added']
-        if not self.zone:
-            return ['You don\'t have an active zone.\nTry this: ".d s name {name}"']
-        elif args[1].lower() == 'list' or args[1].lower() == 'l':
-            return [self.zone.get_string_characters(self.channel)]
-        elif args[1].lower() == 'delete' or args[1].lower() == 'd':
-            char = ' '.join(args[2:])
-            [self.zone.characters.remove(s) for s in self.zone.characters if char.lower() in s.lower()]
-            self.zone.updated_by = str(self.user.id)
-            self.zone.updated = T.now()
-            self.zone.save()
-            return [
-                f'{char} removed from zone characters',
-                self.zone.get_string_characters(self.channel)
-            ]
-        else:
-            search = ' '.join(args[1:])
-            char = Character().find(None, search, self.channel.guild)
-            if char:
-                self.zone.characters.append(str(char.id))
-            else:
-                return [f'***{search}*** not found. No character added to _{self.zone.name}_']
-            self.zone.updated_by = str(self.user.id)
-            self.zone.updated = T.now()
-            self.zone.save()
-            return [
-                f'Added {char.name} to zone characters',
-                self.zone.get_string_characters(self.channel)
-            ]
+        return zone_svc.player(args, self.channel, self.zone, self.user)
 
     def delete_zone(self, args):
-        messages = []
-        search = ''
-        if len(args) == 1:
-            if not self.zone:
-                return ['No zone provided for deletion']
-        else:
-            search = ' '.join(args[1:])
-            self.zone = Zone().find(self.guild.name, str(self.channel.id), str(self.sc.id), search)
-        if not self.zone:
-            return [f'{search} was not found. No changes made.']
-        else:
-            search = str(self.zone.name)
-            zone_id = str(self.zone.zone_id) if self.zone.zone_id else ''
-            channel_id = str(self.zone.channel_id) if self.zone.channel_id else ''
-            self.zone.character.archive(self.user)
-            self.zone.archived = True
-            self.zone.updated_by = str(self.user.id)
-            self.zone.updated = T.now()
-            self.zone.save()
-            messages.append(f'***{search}*** removed')
-            if zone_id:
-                secenario = Zone().get_by_id(zone_id)
-                messages.append(secenario.get_string(self.channel))
-            elif channel_id:
-                channel = Channel().get_by_id(channel_id)
-                messages.append(channel.get_string())
-            return messages
+        return zone_svc.delete_zone(args, self.guild, self.channel, self.scene, self.zone, self.user)

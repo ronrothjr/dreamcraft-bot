@@ -4,6 +4,7 @@ from mongoengine import Document, StringField, ReferenceField, ListField, Boolea
 from models.character import User
 from models.character import Character
 from models.zone import Zone
+from models.engagement import Engagement
 from models.log import Log
 from utils import T
 
@@ -149,13 +150,17 @@ class Scene(Document):
             s.updated = T.now()
             s.save()
 
-    def get_string_zones(self):
-        zones = '\n                '.join(f'***{z.name}***' for z in Zone.filter(scene_id=str(self.id)) if z)
-        return f'\n\n            _Zones:_\n                {zones}' if zones else ''
+    def get_string_engagements(self, channel):
+        engagements = '\n                '.join(f'***{e.name}***' + (f' _(Active {str(e.type_name).title()})_' if str(e.id) == channel.active_engagement else f' _({str(e.type_name).title()})_') for e in Engagement.filter(scene_id=str(self.id), archived=False) if e)
+        return f'\n\n            _Engagements:_\n                {engagements}' if engagements else ''
+
+    def get_string_zones(self, channel):
+        zones = '\n                '.join(f'{z.get_short_string(channel)}' for z in Zone.filter(scene_id=str(self.id), archived=False) if z)
+        return f'            _Zones:_\n                {zones}' if zones else ''
 
     def get_string_characters(self, user=None):
-        characters = '\n                '.join(f'***{c.name}***' + (' _(Active Character)_' if str(c.id) == user.active_character else '') for c in Character.filter(id__in=[ObjectId(id) for id in self.characters]) if c)
-        return f'\n\n            _Characters:_\n                {characters}'
+        characters = '\n                '.join(f'***{c.name}***' + (' _(Active Character)_' if user and str(c.id) == user.active_character else '') for c in Character.filter(id__in=[ObjectId(id) for id in self.characters], archived=False) if c)
+        return f'            _Characters:_\n                {characters}'
 
     def get_string(self, channel=None, user=None):
         if not user.time_zone:
@@ -171,8 +176,9 @@ class Scene(Document):
         if self.ended_on:
             end = f'\n_Ended On:_ ***{T.to(self.ended_on, user)}***' if self.ended_on else ''
         description = f' - "{self.description}"' if self.description else ''
-        zones = f'{self.get_string_zones()}'
-        characters = f'{self.get_string_characters(user)}' if self.characters else ''
+        zones = f'\n\n{self.get_string_zones(channel)}'
+        characters = f'\n\n{self.get_string_characters(user)}' if self.characters else ''
+        engagements = self.get_string_engagements(channel)
         aspects = ''
         stress = ''
         if self.character:
@@ -180,14 +186,17 @@ class Scene(Document):
             description = f' - "{self.character.description}"' if self.character.description else description
             aspects = self.character.get_string_aspects()
             stress = self.character.get_string_stress() if self.character.has_stress else ''
-        return f'        {name}{active}{start}{end}{description}{zones}{characters}{aspects}{stress}'
+        engagements_list = ''
+        
+        return f'        {name}{active}{start}{end}{description}{zones}{engagements}{characters}{aspects}{stress}'
 
     def get_short_string(self, channel=None):
         name = f'***{self.name}***'
         active = ''
         if channel:
-            active = ' _(Active Scene)_ ' if str(self.id) == channel.active_scene else ''
-        return f'        {name}{active}'
+            active = ' _(Active Scene)_ ' if channel and str(self.id) == channel.active_scene else ''
+        characters = f'\n{self.get_string_characters()}' if self.characters else ''
+        return f'        {name}{active}{characters}'
 
 
 signals.post_save.connect(Scene.post_save, sender=Scene)

@@ -55,7 +55,7 @@ class SceneService():
             for char_name in args[2:]:
                 char = Character().find(user=user, name=char_name, guild=channel.guild, category='Character')
                 [sc.characters.remove(s) for s in sc.characters if char and str(char.id) == s]
-                messages.append(f'***{char.name}*** removed from _{sc.name}_' if char else f'**{char_name}** was not found')
+                messages.append(f'\n***{char.name}*** removed from _{sc.name}_' if char else f'**{char_name}** was not found')
             self.save(sc, user)
             messages.append(sc.get_string_characters(user))
             return messages
@@ -67,7 +67,7 @@ class SceneService():
                         messages.append(f'***{char.name}*** is already in _{sc.name}_')
                     else:
                         sc.characters.append(str(char.id))
-                        messages.append(f'Added ***{char.name}*** to _{sc.name}_ scene')
+                        messages.append(f'\nAdded ***{char.name}*** to _{sc.name}_ scene')
                 else:
                     messages.append(f'***{char_name}*** not found. No character added to _{sc.name}_')
             self.save(sc, user)

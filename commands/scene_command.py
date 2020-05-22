@@ -1,12 +1,13 @@
 # scene_command
 import traceback
 from commands import CharacterCommand
-from models import Channel, Scenario, Scene, Character, User, Log
+from models import Channel, Scenario, Scene, Zone, Engagement, Character, User, Log
 from config.setup import Setup
-from services import SceneService, ScenarioService
+from services import SceneService, ZoneService, ScenarioService
 from utils import Dialog, T
 
 scene_svc = SceneService()
+zone_svc = ZoneService()
 scenario_svc = ScenarioService()
 SETUP = Setup()
 SCENE_HELP = SETUP.scene_help
@@ -24,6 +25,7 @@ class SceneCommand():
         self.scenario = Scenario().get_by_id(self.channel.active_scenario) if self.channel and self.channel.active_scenario else None
         self.sc = Scene().get_by_id(self.channel.active_scene) if self.channel and self.channel.active_scene else None
         self.can_edit = self.user.role == 'Game Master' if self.user and self.sc else True
+        self.zone = Scene().get_by_id(self.channel.active_scene) if self.channel and self.channel.active_scene else None
         self.char = Character().get_by_id(self.user.active_character) if self.user and self.user.active_character else None
 
     def run(self):
@@ -49,7 +51,10 @@ class SceneCommand():
                 'delete': self.delete_scene,
                 'd': self.delete_scene,
                 'start': self.start,
-                'end': self.end
+                'end': self.end,
+                'enter': self.enter,
+                'move': self.move,
+                'exit': self.exit
             }
             # Get the function from switcher dictionary
             if self.command in switcher:
@@ -381,5 +386,60 @@ class SceneCommand():
                 self.sc.ended_on = T.now()
                 scene_svc.save(self.sc, self.user)
                 return [self.dialog('')]
-        
 
+    def enter(self, args):
+        self.check_scene()
+        if not self.char:
+            raise Exception(f'You have no active character.```css\n.d c CHARACTER_NAME```')      
+        if not self.sc.started_on:
+            raise Exception(f'***{self.sc.name}*** has not yet started. You may not enter.')
+        if self.sc.ended_on:
+            raise Exception(f'***{self.sc.name}*** has already ended. You missed it.')
+        messages = self.player(('p', self.char.name))
+        self.note(('note', f'***{self.char.name}*** enters the _({self.sc.name})_ scene'))
+        return messages
+
+    def move(self, args):
+        messages = []
+        self.check_scene()
+        if not self.char or  (self.char and self.char.category != 'Character'):
+            raise Exception(f'You have no active character.```css\n.d c CHARACTER_NAME```')    
+        if len(args) == 1:
+            raise Exception('No zone name provided.')
+        zones = list(Zone.filter(scene_id=str(self.sc.id), archived=False))
+        if not zones:
+            raise Exception('There are no zones to move into.')
+        if args[1] == 'to':
+            zone_name = ' '.join(args[2:])
+        else:
+            zone_name = ' '.join(args[1:])
+        zone = [z for z in zones if zone_name.lower() in z.character.name.lower()]
+        if not zone:
+            raise Exception(f'***{zone_name}*** not found in ***{self.sc.name}***')
+        if len(zone) > 1:
+            zones_string = '\n'.join([f'.d s move {z.name}' for z in zones])
+            raise Exception(f'Which zone do you want?***```css\n{zones_string}```')
+        if str(self.char.id) in zone[0].characters:
+            raise Exception(f'***{self.char.name}*** is already in _{zone[0].name}_.')
+        leaving = [z for z in zones if str(self.char.id) in z.characters]
+        for l in leaving:
+            messages.extend(zone_svc.player(('p', 'delete', self.char.name), self.channel, l, self.user))
+            self.note(('note', f'***{self.char.name}*** exits the _{l.name}_ zone')
+        )
+        messages.extend(zone_svc.player(('p', self.char.name), self.channel, zone[0], self.user))
+        self.note(('note', f'***{self.char.name}*** enters the _{zone[0].name}_ zone')
+    )
+        return messages
+
+    def exit(self, args):
+        self.check_scene()
+        if not self.char and not self.char.category == 'Character':
+            raise Exception(f'You have no active character.```css\n.d c CHARACTER_NAME```')      
+        if not self.sc.started_on:
+            raise Exception(f'***{self.sc.name}*** has not yet started. You may not enter.')
+        if self.sc.ended_on:
+            raise Exception(f'***{self.sc.name}*** has already ended. You missed it.')
+        messages = self.player(('p', 'delete', self.char.name))
+        self.note(('note', f'***{self.char.name}*** exits the _{self.sc.name}_ scene'))
+        return messages
+        

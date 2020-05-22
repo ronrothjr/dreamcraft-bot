@@ -239,7 +239,7 @@ class EngagementCommand():
                     scenes = scenario_svc.get_scenes(self.scenario)
                     characters = scenario_svc.get_characters(scenes)
                     item.characters = [str(c.id) for c in characters]
-                    item.type_name = engagement_type
+                    item.type_name = engagement_type.title()
                     engagement_svc.save(item, self.user)
                     return item
 

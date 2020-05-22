@@ -153,7 +153,7 @@ class Engagement(Document):
     def get_string_characters(self, channel=None):
         characters = [Character.get_by_id(id) for id in self.characters]
         characters = '***\n                ***'.join(c.name for c in characters if c)
-        return f'\n\n            _Characters:_\n                ***{characters}***'
+        return f'            _Characters:_\n                ***{characters}***'
 
     def get_string(self, channel, user=None):
         name = f'***{self.name}***'
@@ -167,7 +167,7 @@ class Engagement(Document):
         if self.ended_on:
             end = f'\n_Ended On:_ ***{T.to(self.ended_on, user)}***' if self.ended_on else ''
         description = f' - "{self.description}"' if self.description else ''
-        characters = f'{self.get_string_characters()}' if self.characters else ''
+        characters = f'\n\n{self.get_string_characters()}' if self.characters else ''
         aspects = ''
         stress = ''
         if self.character:
@@ -177,16 +177,17 @@ class Engagement(Document):
             stress = self.character.get_string_stress() if self.character.has_stress else ''
         return f'        {name}{active}{start}{end}{description}{characters}{aspects}{stress}'
 
-    def get_short_string(self, channel):
+    def get_short_string(self, channel=None):
         name = f'***{self.name}***'
         active = ''
         if channel:
-            active = ' _(Active Engagement)_ ' if str(self.id) == channel.active_engagement else ''
+            active = f' _(Active {str(self.type_name).title()})_ ' if str(self.id) == channel.active_engagement else f' _({str(self.type_name).title()})_ '
+        characters = f'\n{self.get_string_characters()}' if self.characters else ''
         description = f' - "{self.description}"' if self.description else ''
         if self.character:
             name = f'***{self.character.name}***' if self.character.name else name
             description = f' - "{self.character.description}"' if self.character.description else ''
-        return f'        {name}{active}{description}'
+        return f'        {name}{active}{description}{characters}'
 
 
 signals.post_save.connect(Engagement.post_save, sender=Engagement)

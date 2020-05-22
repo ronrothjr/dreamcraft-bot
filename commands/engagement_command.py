@@ -135,7 +135,7 @@ class EngagementCommand():
         return messages
 
     def dialog(self, dialog_text, engagement=None):
-        engagement, name, get_string, get_short_string = engagement_svc.get_engagement_info(engagement if engagement else self.engagement, self.channel)
+        engagement, name, get_string, get_short_string = engagement_svc.get_engagement_info(engagement if engagement else self.engagement, self.channel, self.user)
         category = engagement.category if engagement else 'Engagement'
         dialog = {
             'create_engagement': ''.join([
@@ -252,7 +252,7 @@ class EngagementCommand():
                     'type_name': 'ENGAGEMENT',
                     'getter': {
                         'method': Engagement.get_by_page,
-                        'params': {'params': {'name__icontains': engagement_name, 'channel_id': str(self.channel.id), 'guild': self.guild.name, 'archived': False}}
+                        'params': {'params': {'name__icontains': engagement_name, 'scene_id': str(self.sc.id), 'guild': self.guild.name, 'archived': False}}
                     },
                     'formatter': lambda item, item_num, page_num, page_size: f'_ENGAGEMENT #{item_num+1}_\n{item.get_short_string()}',
                     'cancel': canceler,

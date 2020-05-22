@@ -148,7 +148,12 @@ class Zone(Document):
     def get_string_characters(self, channel=None):
         characters = [Character.get_by_id(id) for id in self.characters]
         characters = '***\n                ***'.join(c.name for c in characters if c)
-        return f'\n\n            _Characters:_\n                ***{characters}***'
+        return f'            _Characters:_\n                ***{characters}***'
+
+    def get_short_string_characters(self, channel=None):
+        characters = [Character.get_by_id(id) for id in self.characters]
+        characters = ', '.join(f'***{c.name}***' for c in characters if c)
+        return f'({characters})'
 
     def get_string(self, channel):
         name = f'***{self.name}***'
@@ -156,7 +161,7 @@ class Zone(Document):
         if channel:
             active = ' _(Active Zone)_ ' if str(self.id) == channel.active_zone else ''
         description = f' - "{self.description}"' if self.description else ''
-        characters = f'{self.get_string_characters()}' if self.characters else ''
+        characters = f'\n\n{self.get_string_characters(channel)}' if self.characters else ''
         aspects = ''
         stress = ''
         if self.character:
@@ -166,21 +171,17 @@ class Zone(Document):
             stress = self.character.get_string_stress() if self.character.has_stress else ''
         return f'        {name}{active}{description}{characters}{aspects}{stress}'
 
-    def get_short_string(self, channel):
+    def get_short_string(self, channel=None):
         name = f'***{self.name}***'
         active = ''
         if channel:
-            active = ' _(Active Zone)_ ' if str(self.id) == channel.active_zone else ''
+            active = ' _(Active Zone)_ ' if channel and str(self.id) == channel.active_zone else ''
         description = f' - "{self.description}"' if self.description else ''
-        characters = f'{self.get_string_characters()}' if self.characters else ''
-        aspects = ''
-        stress = ''
+        characters = f' {self.get_short_string_characters(channel)}' if self.characters else ''
         if self.character:
             name = f'***{self.character.name}***' if self.character.name else name
             description = f' - "{self.character.description}"' if self.character.description else description
-            aspects = self.character.get_string_aspects()
-            stress = self.character.get_string_stress() if self.character.has_stress else ''
-        return f'        {name}{active}{description}{characters}{aspects}{stress}'
+        return f'        {name}{active}{description}{characters}'
 
 
 signals.post_save.connect(Zone.post_save, sender=Zone)

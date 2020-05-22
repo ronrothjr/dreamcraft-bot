@@ -403,10 +403,13 @@ class SceneCommand():
         messages = []
         self.check_scene()
         if not self.char or  (self.char and self.char.category != 'Character'):
-            raise Exception(f'You have no active character.```css\n.d c CHARACTER_NAME```')    
-        if len(args) == 1:
-            raise Exception('No zone name provided.')
+            raise Exception(f'You have no active character.```css\n.d c CHARACTER_NAME```')
         zones = list(Zone.filter(scene_id=str(self.sc.id), archived=False))
+        if len(args) == 1:
+            leaving = [z for z in zones if str(self.char.id) in z.characters]
+            leaving_str = f'You are currently in the _{leaving[0].name}_ zone.\n' if leaving else ''
+            zones_string = '\n'.join([f'.d s move {z.name}' for z in zones])
+            raise Exception(f'{leaving_str}Which zone do you want?```css\n{zones_string}```')
         if not zones:
             raise Exception('There are no zones to move into.')
         if args[1] == 'to':
@@ -418,9 +421,9 @@ class SceneCommand():
             raise Exception(f'***{zone_name}*** not found in ***{self.sc.name}***')
         if len(zone) > 1:
             zones_string = '\n'.join([f'.d s move {z.name}' for z in zones])
-            raise Exception(f'Which zone do you want?***```css\n{zones_string}```')
+            raise Exception(f'Which zone do you want?```css\n{zones_string}```')
         if str(self.char.id) in zone[0].characters:
-            raise Exception(f'***{self.char.name}*** is already in _{zone[0].name}_.')
+            raise Exception(f'***{self.char.name}*** is already in the _{zone[0].name}_ zone.')
         leaving = [z for z in zones if str(self.char.id) in z.characters]
         for l in leaving:
             messages.extend(zone_svc.player(('p', 'delete', self.char.name), self.channel, l, self.user))

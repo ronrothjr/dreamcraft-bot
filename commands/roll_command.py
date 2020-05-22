@@ -3,7 +3,7 @@ import traceback
 import random
 import copy
 from bson.objectid import ObjectId
-from models import Channel, Scenario, Scene, Zone, User, Character
+from models import Channel, Scenario, Scene, Zone, Engagement, User, Character
 from commands import CharacterCommand
 from config.setup import Setup
 from utils import T
@@ -27,6 +27,7 @@ class RollCommand():
         self.command = args[0].lower()
         self.scenario = Scenario().get_by_id(self.channel.active_scenario) if self.channel and self.channel.active_scenario else None
         self.sc = Scene().get_by_id(self.channel.active_scene) if self.channel and self.channel.active_scene else None
+        self.engagement = Engagement().get_by_id(self.channel.engagement_scene) if self.channel and self.channel.active_engagement else None
         self.zone = Zone().get_by_id(self.channel.active_zone) if self.channel and self.channel.active_zone else None
         self.char = Character().get_by_id(self.user.active_character) if self.user and self.user.active_character else None
         self.skill = self.args[1] if len(args) > 1 else ''
@@ -78,7 +79,7 @@ class RollCommand():
 
             # Resolve the invokes against their targets
             if self.invokes:
-                self.handle_invokes()
+                self.resolve_invokes()
 
             # Resolve the compels against their targets
             if self.compels:
@@ -92,6 +93,9 @@ class RollCommand():
             return list(err.args)
 
     def save_char(self):
+        messages = copy.deepcopy(self.char.last_roll['messages'])
+        messages.extend(self.messages)
+        self.char.last_roll['messages'] = messages
         self.char.updated_by = str(self.user.id)
         self.char.updated = T.now()
         self.char.save()
@@ -115,7 +119,7 @@ class RollCommand():
         if self.invoke_index and self.compel_index:
             raise Exception('You cannot invoke and compel on the same roll')
 
-    def handle_invokes(self):
+    def resolve_invokes(self):
         char = self.get_parent_with_refresh(self.char)
         if char and self.invokes_cost >= char.fate_points + self.invokes_cost:
             raise Exception(f'***{char.name}*** does not have enough fate points')

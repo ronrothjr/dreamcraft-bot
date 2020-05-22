@@ -131,7 +131,7 @@ class Dialog(object):
         content = ''
         if items:
             items_string = '\n\n'.join([self.formatter(items[i], i, self.page_num, self.page_size) for i in range(0, len(items))])
-            content = f'***{self.title}:***\n\n{items_string}\n'
+            content = f'***{self.title}:***\n\n{items_string}'
         return content
 
     def no_items(self):

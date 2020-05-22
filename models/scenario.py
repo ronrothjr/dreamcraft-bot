@@ -106,7 +106,7 @@ class Scenario(Document):
         return [items] if items else []
 
     def archive(self, user):
-            self.reverse_archive(self.user)
+            self.reverse_archive(user)
             self.archived = True
             self.updated_by = str(user.id)
             self.updated = T.now()
@@ -114,14 +114,14 @@ class Scenario(Document):
 
     def reverse_archive(self, user):
         for s in Scenario().get_by_parent(parent_id=str(self.id)):
-            s.reverse_archive(self.user)
+            s.reverse_archive(user)
             s.archived = True
             s.updated_by = str(user.id)
             s.updated = T.now()
             s.save()
 
     def restore(self, user):
-            self.reverse_restore(self.user)
+            self.reverse_restore(user)
             self.archived = False
             self.updated_by = str(user.id)
             self.updated = T.now()
@@ -129,7 +129,7 @@ class Scenario(Document):
 
     def reverse_restore(self, user):
         for s in Scenario().get_by_parent(parent_id=str(self.id)):
-            s.reverse_restore(self.user)
+            s.reverse_restore(user)
             s.archived = False
             s.updated_by = str(user.id)
             s.updated = T.now()

@@ -3,3 +3,4 @@ from services.scenario_service import ScenarioService
 from services.scene_service import SceneService
 from services.zone_service import ZoneService
 from services.session_service import SessionService
+from services.engagement_service import EngagementService

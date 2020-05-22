@@ -8,6 +8,7 @@ from models.scenario import Scenario
 from models.scene import Scene
 from models.zone import Zone
 from models.session import Session
+from models.engagement import Engagement
 from models.log import Log
 from utils import T
 
@@ -18,6 +19,7 @@ class Channel(Document):
     active_scene = StringField()
     active_zone = StringField()
     active_session = StringField()
+    active_engagement = StringField()
     users = ListField(StringField())
     archived = BooleanField(default=False)
     history_id = StringField()
@@ -106,6 +108,12 @@ class Channel(Document):
         self.updated = T.now()
         self.save()
 
+    def set_active_engagement(self, engagement, user):
+        self.active_engagement = str(engagement.id)
+        self.updated_by = str(user.id)
+        self.updated = T.now()
+        self.save()
+
     def get_users_string(self):
         users_string = '\n_Players:_\n        ' + '\n        '.join([f'***{u}*** ' for u in self.users]) if self.users else ''
         return f'{users_string}'
@@ -125,6 +133,15 @@ class Channel(Document):
         scenes_string = '\n_Scenes:_\n        ' + '\n        '.join([s for s in scenes]) if scenes else ''
         return f'{scenes_string}'
 
+    def get_engagements(self):
+        engagements = list(Engagement.filter(channel_id=str(self.id), archived=False).all())
+        return engagements
+
+    def get_engagements_string(self, engagement_list):
+        engagements = [s.get_short_string(self) for s in engagement_list]
+        engagements_string = '\n_Engagements:_\n        ' + '\n        '.join([s for s in engagements]) if engagements else ''
+        return f'{engagements_string}'
+
     def get_characters(self, scenes):
         characters_list = []
         [[characters_list.append(c) for c in Character.filter(id__in=[ObjectId(id) for id in s.characters]).all() if c not in characters_list] for s in scenes]
@@ -140,9 +157,11 @@ class Channel(Document):
         scenarios = f'\n{self.get_scenarios_string()}' if self.users else ''
         scenes_list = self.get_scenes()
         scenes = f'\n{self.get_scenes_string(scenes_list)}'
+        engagements_list = self.get_engagements()
+        engagements = f'\n{self.get_engagements_string(engagements_list)}'
         characters_list = self.get_characters(scenes_list)
         characters = f'\n{self.get_characters_string(characters_list, user)}'
-        return f'_Channel:_ ***{self.name}***\n_Guild:_ ***{self.guild}***{users}{scenarios}{scenes}{characters}'
+        return f'_Channel:_ ***{self.name}***\n_Guild:_ ***{self.guild}***{users}{scenarios}{scenes}{engagements}{characters}'
 
 
 signals.post_save.connect(Channel.post_save, sender=Channel)

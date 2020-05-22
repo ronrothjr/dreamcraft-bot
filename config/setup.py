@@ -104,15 +104,25 @@ class Setup():
             .d z (c)haracter [(d)elete] \{character} - add/remove character for active zone\n\
             .d z (d)delete \{name} - removes a zone'
 
-    session_help = '.d z help - display these instructions\nZone Help:\n\
-            .d (z)one - display active session\n\
-            .d z (n)ame \{name\} - add/display/set active session\n\
-            .d z (l)ist - display list of sessions\n\
-            .d z (desc)ription \{description\} - set the description for the active session\n\
-            .d z (a)spect [(d)elete] \{aspect} - add/remove aspect for active session\n\
-            .d z (a)spect (c)character - set the current aspect as the active character\n\
-            .d z (c)haracter [(d)elete] \{character} - add/remove character for active session\n\
-            .d z (d)delete \{name} - removes a session'
+    session_help = '.d session help - display these instructions\nSession Help:\n\
+            .d session - display active session\n\
+            .d session (n)ame \{name\} - add/display/set active session\n\
+            .d session (l)ist - display list of sessions\n\
+            .d session (desc)ription \{description\} - set the description for the active session\n\
+            .d session (a)spect [(d)elete] \{aspect} - add/remove aspect for active session\n\
+            .d session (a)spect (c)character - set the current aspect as the active character\n\
+            .d session (c)haracter [(d)elete] \{character} - add/remove character for active session\n\
+            .d session (d)delete \{name} - removes a session'
+
+    engagement_help = '.d e help - display these instructions\nEngagement Help:\n\
+            .d (e)ngagement - display active engagement\n\
+            .d e (n)ame \{name\} - add/display/set active engagement\n\
+            .d e (l)ist - display list of engagements\n\
+            .d e (desc)ription \{description\} - set the description for the active engagement\n\
+            .d e (a)spect [(d)elete] \{aspect} - add/remove aspect for active engagement\n\
+            .d e (a)spect (c)character - set the current aspect as the active character\n\
+            .d e (c)haracter [(d)elete] \{character} - add/remove character for active engagement\n\
+            .d e (d)delete \{name} - removes a engagement'
 
     approaches = [
         'Careful - pay close attention to detail and take your time.',

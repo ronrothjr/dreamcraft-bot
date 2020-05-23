@@ -713,7 +713,7 @@ class CharacterCommand():
             if not self.char.fate_points:
                 self.char.fate_points = 2
             points = int(args[2]) if len(args) == 3 and args[2].isdigit() else 1
-            self.char.fate_points += points if self.char.fate_points < 5 else 0
+            self.char.fate_points -= points if self.char.fate_points < 5 else 0
         char_svc.save(self.char, self.user)
         return [f'Fate Points: {self.char.get_string_fate()}'] if self.char.get_string_fate() else ['Fate points not used by this character']
 

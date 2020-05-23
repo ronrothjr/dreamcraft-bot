@@ -162,6 +162,10 @@ class Scene(Document):
         characters = '\n                '.join(f'***{c.name}***' + (' _(Active Character)_' if user and str(c.id) == user.active_character else '') for c in Character.filter(id__in=[ObjectId(id) for id in self.characters], archived=False) if c)
         return f'            _Characters:_\n                {characters}'
 
+    def get_short_string_characters(self, user=None):
+        characters = ', '.join(c.name for c in Character.filter(id__in=[ObjectId(id) for id in self.characters], archived=False) if c)
+        return f'\n...({characters})'
+
     def get_string(self, channel=None, user=None):
         if not user.time_zone:
             raise Exception('No time zone defined```css\n.d user timezone New_York```')
@@ -186,16 +190,14 @@ class Scene(Document):
             description = f' - "{self.character.description}"' if self.character.description else description
             aspects = self.character.get_string_aspects()
             stress = self.character.get_string_stress() if self.character.has_stress else ''
-        engagements_list = ''
-        
         return f'        {name}{active}{start}{end}{description}{zones}{engagements}{characters}{aspects}{stress}'
 
-    def get_short_string(self, channel=None):
+    def get_short_string(self, channel=None, user=None):
         name = f'***{self.name}***'
         active = ''
         if channel:
             active = ' _(Active Scene)_ ' if channel and str(self.id) == channel.active_scene else ''
-        characters = f'\n{self.get_string_characters()}' if self.characters else ''
+        characters = f' {self.get_short_string_characters(user)}' if self.characters else ''
         return f'        {name}{active}{characters}'
 
 

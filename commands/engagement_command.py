@@ -46,6 +46,9 @@ class EngagementCommand():
                 'players': self.player,
                 'player': self.player,
                 'p': self.player,
+                'opposition': self.oppose,
+                'oppose': self.oppose,
+                'o': self.oppose,
                 'list': self.engagement_list,
                 'l': self.engagement_list,
                 'delete': self.delete_engagement,
@@ -364,6 +367,9 @@ class EngagementCommand():
 
     def player(self, args):
         return engagement_svc.player(args, self.channel, self.engagement, self.user)
+
+    def oppose(self, args):
+        return engagement_svc.oppose(args, self.channel, self.engagement, self.user)
 
     def delete_engagement(self, args):
         return engagement_svc.delete_engagement(args, self.guild, self.channel, self.scene, self.engagement, self.user)

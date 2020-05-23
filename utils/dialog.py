@@ -50,7 +50,7 @@ class Dialog(object):
                 if not selection.isdigit():
                     raise Exception('Your selection is invalid')
                 item_num = int(selection)
-                items = list(self.get_list())
+                items = list(self.get_entire_list())
                 if item_num < 1 or item_num > len(items):
                     raise Exception('Your selection is invalid')
                 self.set_dialog()
@@ -124,6 +124,17 @@ class Dialog(object):
         if not params:
             raise Exception('No data getter params supplied')
         items = method(**params, page_num=self.page_num, page_size=self.page_size)
+        # items = self.get_descendants(items, data_params)
+        return items
+
+    def get_entire_list(self):
+        method = self.getter.get('method', None)
+        if not method:
+            raise Exception('No data getter method supplied')
+        params = self.getter.get('params', None)
+        if not params:
+            raise Exception('No data getter params supplied')
+        items = method(**params, page_num=0)
         # items = self.get_descendants(items, data_params)
         return items
 

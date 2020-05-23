@@ -93,9 +93,6 @@ class RollCommand():
             return list(err.args)
 
     def save_char(self):
-        messages = copy.deepcopy(self.char.last_roll['messages'])
-        messages.extend(self.messages)
-        self.char.last_roll['messages'] = messages
         self.char.updated_by = str(self.user.id)
         self.char.updated = T.now()
         self.char.save()

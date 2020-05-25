@@ -6,15 +6,19 @@ class Setup():
 
     help = '\n***ADDITIONAL INSTRUCTIONS***\n\
             \n**Character Setup:**```css\n.d c help\n/* Display active character */\n.d character\n.d c```\
+            \n**Revisions:**```css\n/* Display a list of revisions to the bot */\n.d revision```\
             \n**Undo Help**```css\n.d undo help```\
             \n**Roll Help**```css\n.d roll help```\
             \n**User Setup:**```css\n.d u help\n/* Display user info */\n.d user```\
             \n**Scenario Setup**```css\n.d scenario help\n/* Display active scenario */\n.d scenario```\
             \n**Scene Setup**```css\n.d s help\n/* Display active scene */\n.d scene```\
-            \n**Zone Setup**```css\n.d z help\n/* Display active zone */\n.d zone```'
+            \n**Zone Setup**```css\n.d z help\n/* Display active zone */\n.d zone```\
+            \n**Engagement Setup**```css\n.d e help\n/* Display active zone */\n.d zone```'
 
     undo_help = '\n***UNDO INSTRUCTIONS***\n\
-            \n**Unod List:**```css\n.d undo list\n/* Display a list of changes to undo */```'
+            \n**Undo List:**```css\n.d undo list\n/* Display a list of changes to undo */```\n\
+            \n**Undo Last:**```css\n.d undo last\n/* Undo the last change */```\n\
+            \n**Redo Next:**```css\n.d redo next\n/* Redo the next change */```'
 
     roll_help = 'd r help = display rol help\n\
             \nRoll Fate Dice\n\
@@ -32,6 +36,11 @@ class Setup():
             .d (u)ser - display user info\n\
             .d u tz {timezone} - set user time zone\n\
             .d u tz (l)ist {search} - search the list of time zones\n'
+
+    revision_help = '.d u help - display user help\n\
+            \nRevision Setup:\n\
+            .d (rev)ision - display revision info\n\
+            .d (rev)ision {name} {number} {text} - add/edit a revision'
 
     character_help = '.d c help - display these instructions\nCharacter Help:\n\
             .d (c)haracter - display active character\n\

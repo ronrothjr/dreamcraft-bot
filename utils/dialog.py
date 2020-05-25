@@ -66,7 +66,7 @@ class Dialog(object):
         else:
             items = list(self.get_list()) if self.page_count else None
         # If this is a selection list and there is only one item, select the first item
-        if items and len(items) == 1 and self.select:
+        if items and self.item_count == 1 and self.select:
             return self.select(items[0])
         else:
             paging_question = self.get_page_str() if self.page_count and self.page_count > 0 else ''
@@ -93,7 +93,7 @@ class Dialog(object):
 
     def get_page_str(self):
         return ''.join([
-            f'Page {self.page_num} of {self.page_count} ({self.item_count} total) - Enter page number, **\'<<\'**, **\'<\'**, **\'>\'** or **\'>>\'**',
+            f'\nPage {self.page_num} of {self.page_count} ({self.item_count} total) - Enter page number, **\'<<\'**, **\'<\'**, **\'>\'** or **\'>>\'**',
             '```css\n.d 1 /* to jump to a page */\n',
             '.d << /* to go to the first page */\n',
             '.d < /* to go to the previous page */\n',

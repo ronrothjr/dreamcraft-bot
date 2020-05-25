@@ -61,6 +61,8 @@ class DreamcraftHandler():
             'redo': UndoCommand,
             'log': UndoCommand,
             'l': UndoCommand,
+            'revision': RevisionCommand,
+            'rev': RevisionCommand,
             'user': UserCommand,
             'u': UserCommand,
             'channel': ChannelCommand,

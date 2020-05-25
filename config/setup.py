@@ -7,6 +7,7 @@ class Setup():
     help = '\n***ADDITIONAL INSTRUCTIONS***\n\
             \n**Character Setup:**```css\n.d c help\n/* Display active character */\n.d character\n.d c```\
             \n**Revisions:**```css\n/* Display a list of revisions to the bot */\n.d revision```\
+            \n**Suggestions:**```css\n/* Display a list of suggestions to the bot */\n.d suggest```\
             \n**Undo Help**```css\n.d undo help```\
             \n**Roll Help**```css\n.d roll help```\
             \n**User Setup:**```css\n.d u help\n/* Display user info */\n.d user```\
@@ -37,10 +38,14 @@ class Setup():
             .d u tz {timezone} - set user time zone\n\
             .d u tz (l)ist {search} - search the list of time zones\n'
 
-    revision_help = '.d u help - display user help\n\
+    revision_help = '.d revision help - display revision help\n\
             \nRevision Setup:\n\
-            .d (rev)ision - display revision info\n\
-            .d (rev)ision {name} {number} {text} - add/edit a revision'
+            .d (rev)ision - display revision info'
+
+    suggestion_help = '.d suggest help - display suggestion help\n\
+            \nSuggestion Setup:\n\
+            .d suggest "SUGGESTION" - make a suggestion\n\
+            .d suggest list - display the list of suggestions'
 
     character_help = '.d c help - display these instructions\nCharacter Help:\n\
             .d (c)haracter - display active character\n\

@@ -51,10 +51,6 @@ class RevisionCommand():
     def help(self):
         return [REVISION_HELP]
 
-    def search(self, args):
-        params = {'name__icontains': ' '.join(args[0:]), 'archived': False}
-        return revision_svc.search(args, Revision.filter, params)
-
     def name(self, args):
         messages = []
         rev_name = ' '.join(args[1:])
@@ -79,48 +75,9 @@ class RevisionCommand():
             rev_name = args[1]
             rev_number = args[2]
             rev_text = args[3]
-            def canceler(cancel_args):
-                if cancel_args[0].lower() in ['revision','rev']:
-                    return RevisionCommand(parent=self.parent, ctx=self.ctx, args=cancel_args, guild=self.guild, user=self.user, channel=self.channel).run()
-                else:
-                    self.parent.args = cancel_args
-                    self.parent.command = self.parent.args[0]
-                    return self.parent.get_messages()
-
-            def selector(selection):
-                revision = selection
-                revision.name = rev_name
-                revision.number = rev_number
-                revision.text = rev_text
-                revision_svc.save(revision, self.user)
-                return [revision.get_string(self.user)]
-
-            def formatter(item, item_num, page_num, page_size):
-                return f'_REVISION #{((page_num-1)*page_size)+item_num+1}_\n{item.get_short_string()}'
-
-            def creator(**params):
-                revision = Revision().get_or_create(**params)
-                return revision
-
-            messages.extend(Dialog({
-                'svc': revision_svc,
-                'user': self.user,
-                'title': 'Revision List',
-                'command': 'revision ' + ' '.join(args),
-                'type': 'select',
-                'type_name': 'REVISION',
-                'getter': {
-                    'method': Revision.get_by_page,
-                    'params': {'params': {'name__icontains': rev_name, 'archived': False}}
-                },
-                'formatter': formatter,
-                'cancel': canceler,
-                'select': selector,
-                'empty': {
-                    'method': creator,
-                    'params': {'name': rev_name, 'number': rev_number, 'text': rev_text}
-                }
-            }).open())
+            params = {'name': rev_name, 'number': rev_number, 'text': rev_text}
+            revision = Revision().get_or_create(**params)
+            messages.append(revision.get_string(self.user))
         return messages
 
     def revision_list(self, args):

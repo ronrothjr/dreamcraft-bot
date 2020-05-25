@@ -92,14 +92,19 @@ class Dialog(object):
         return math.ceil(self.item_count/self.page_size) if self.item_count else 0
 
     def get_page_str(self):
-        return ''.join([
+        page_str = ''
+        if self.page_count == 1:
+            page_str = f'\nPage {self.page_num} of {self.page_count} ({self.item_count} total)'
+        elif self.page_count > 1:
+            page_str = ''.join([
             f'\nPage {self.page_num} of {self.page_count} ({self.item_count} total) - Enter page number, **\'<<\'**, **\'<\'**, **\'>\'** or **\'>>\'**',
             '```css\n.d 1 /* to jump to a page */\n',
             '.d << /* to go to the first page */\n',
             '.d < /* to go to the previous page */\n',
             '.d > /* to go to the next page */\n',
             '.d >> /* to go to the last page */```'
-        ]) if self.page_count > 1 else ''
+        ])
+        return page_str
 
     def get_select_str(self):
         select_str = ''

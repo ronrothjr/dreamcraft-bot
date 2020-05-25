@@ -1,12 +1,10 @@
-# revision.py
+# suggestion.py
 from mongoengine import Document, StringField, BooleanField, DateTimeField
 from bson.objectid import ObjectId
 from utils import T
-from models import User
 
-class Revision(Document):
+class Suggestion(Document):
     name = StringField(required=True)
-    number = StringField(required=True)
     text = StringField(required=True)
     archived = BooleanField(default=False)
     created_by = StringField()
@@ -16,12 +14,12 @@ class Revision(Document):
 
     @staticmethod
     def filter(**params):
-        return Revision.objects.filter(**params)
+        return Suggestion.objects.filter(**params)
 
     def find(self, name, archived=False):
-        filter = Revision.objects(name__icontains=name, archived=archived)
-        revision = filter.first()
-        return revision
+        filter = Suggestion.objects(name__icontains=name, archived=archived)
+        suggestion = filter.first()
+        return suggestion
 
     @classmethod
     def get_by_id(cls, id):
@@ -37,25 +35,23 @@ class Revision(Document):
             logs = cls.filter(**params).order_by(sort).all()
         return logs
 
-    def create_new(self, name, number, text):
+    def create_new(self, name, text):
         self.name = name
-        self.number = number
         self.text = text
         self.created = T.now()
         self.updated = T.now()
         self.save()
         return self
 
-    def get_or_create(self, name, number, text, archived=False):
-        revision = self.find(name, archived)
-        if revision is None:
-            revision = self.create_new(name, number, text)
-        return revision
+    def get_or_create(self, name, text, archived=False):
+        suggestion = self.find(name, archived)
+        if suggestion is None:
+            suggestion = self.create_new(name, text)
+        return suggestion
 
     def get_string(self, user):
         return ''.join([
             f'_Name:_ ***{self.name}***\n',
-            f'_Number:_ ***{self.number}***\n',
             f'_Date:_ ***{T.to(self.updated, user)}***\n',
             f'_Notes:_ {self.text}'
         ])
@@ -63,7 +59,6 @@ class Revision(Document):
     def get_short_string(self, user):
         return ''.join([
             f'_Name:_ ***{self.name}***\n',
-            f'_Number:_ ***{self.number}***\n',
             f'_Date:_ ***{T.to(self.updated, user)}***\n',
             f'_Notes:_ {self.text}'
         ])

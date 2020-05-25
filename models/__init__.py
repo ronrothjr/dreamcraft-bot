@@ -8,3 +8,4 @@ from models.engagement import Engagement
 from models.channel import Channel
 from models.log import Log
 from models.revision import Revision
+from models.suggestion import Suggestion

@@ -9,3 +9,4 @@ from commands.session_command import SessionCommand
 from commands.engagement_command import EngagementCommand
 from commands.roll_command import RollCommand
 from commands.undo_command import UndoCommand
+from commands.revision_command import RevisionCommand

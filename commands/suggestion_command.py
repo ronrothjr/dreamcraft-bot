@@ -60,8 +60,6 @@ class SuggestionCommand():
 
     def suggestion_list(self, args):
         messages = []
-        if not self.can_edit:
-            raise Exception('You are not allowed to delete suggestions.')
         def canceler(cancel_args):
             if cancel_args[0].lower() in ['suggestion','suggest']:
                 return SuggestionCommand(parent=self.parent, ctx=self.ctx, args=cancel_args, guild=self.guild, user=self.user, channel=self.channel).run()
@@ -91,4 +89,6 @@ class SuggestionCommand():
         return messages
 
     def delete_suggestion(self, args):
+        if not self.can_edit:
+            raise Exception('You are not allowed to delete suggestions.')
         return suggestion_svc.delete_suggestion(args, self.user)

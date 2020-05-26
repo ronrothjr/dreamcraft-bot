@@ -17,7 +17,7 @@ class RevisionCommand():
         self.parent = parent
         self.ctx = ctx
         self.args = args[1:] if args[0] in ['revision', 'rev'] else args
-        self.command = self.args[0].lower() if len(self.args) > 0 else 'list'
+        self.command = self.args[0].lower() if len(self.args) > 0 else ''
         self.guild = guild
         self.user = user
         self.channel = channel
@@ -28,6 +28,7 @@ class RevisionCommand():
             switcher = {
                 'help': self.help,
                 'list': self.revision_list,
+                'l': self.revision_list,
                 'name': self.name,
                 'n': self.name,
                 'delete': self.delete_revision
@@ -38,9 +39,9 @@ class RevisionCommand():
                 # Execute the function
                 messages = func(self.args)
             else:
-                self.args = ('n',) + self.args
-                self.command = 'n'
-                func = self.name
+                self.args = ('list',) + self.args
+                self.command = 'list'
+                func = self.revision_list
                 messages = func(self.args)
             # Send messages
             return messages

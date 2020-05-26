@@ -31,12 +31,12 @@ class SuggestionService():
         if len(args) <= 1:
             raise Exception('Suggestion delte syntax\n```css\n.d suggestion delete "NAME"```')
         if len(args) > 1:
-            search = ' '.join(args[2:])
+            search = ' '.join(args[1:])
             suggestion = Suggestion().find(search)
         if not suggestion:
-            return [f'"{search}"" was not found. No changes made.']
+            return [f'_"{search}"_ was not found. No changes made.']
         else:
-            search = str(suggestion.name)
+            search = str(suggestion.text)
             suggestion.archived = True
             self.save(suggestion, user)
             messages.append(f'***{search}*** removed')

@@ -57,7 +57,6 @@ class CharacterCommand():
                 'parent': self.parent,
                 'p': self.get_parent,
                 'name': self.name,
-                'new': self.name,
                 'n': self.name,
                 '=': self.select,
                 'image': self.image,

@@ -7,7 +7,7 @@ class Setup():
     help = '\n***ADDITIONAL INSTRUCTIONS***\n\
             \n**Character Setup:**```css\n.d c help\n/* Display active character */\n.d character\n.d c```\
             \n**Revisions:**```css\n/* Display a list of revisions to the bot */\n.d revision```\
-            \n**Suggestions:**```css\n/* Display a list of suggestions to the bot */\n.d suggest```\
+            \n**Suggestions:**```css\n/* Suggest changes for the bot */\n.d suggest```\
             \n**Undo Help**```css\n.d undo help```\
             \n**Roll Help**```css\n.d roll help```\
             \n**User Setup:**```css\n.d u help\n/* Display user info */\n.d user```\
@@ -44,7 +44,7 @@ class Setup():
 
     suggestion_help = '.d suggest help - display suggestion help\n\
             \nSuggestion Setup:\n\
-            .d suggest "SUGGESTION" - make a suggestion\n\
+            .d suggest "SUGGESTION TEXT" - make a suggestion\n\
             .d suggest list - display the list of suggestions'
 
     character_help = '.d c help - display these instructions\nCharacter Help:\n\

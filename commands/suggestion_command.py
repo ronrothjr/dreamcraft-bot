@@ -17,7 +17,7 @@ class SuggestionCommand():
         self.parent = parent
         self.ctx = ctx
         self.args = args[1:] if args[0] in ['suggestion', 'suggest'] else args
-        self.command = self.args[0].lower() if len(self.args) > 0 else 'list'
+        self.command = self.args[0].lower() if len(self.args) > 0 else ''
         self.guild = guild
         self.user = user
         self.channel = channel
@@ -29,18 +29,18 @@ class SuggestionCommand():
                 'help': self.help,
                 'list': self.suggestion_list,
                 'name': self.name,
-                'n': self.name
+                'n': self.name,
+                'delete': self.delete_suggestion
             }
             # Get the function from switcher dictionary
             if self.command in switcher:
                 func = switcher.get(self.command, lambda: self.name)
-                # Execute the function
-                messages = func(self.args)
             else:
                 self.args = ('n',) + self.args
                 self.command = 'n'
                 func = self.name
-                messages = func(self.args)
+                # Execute the function
+            messages = func(self.args)
             # Send messages
             return messages
         except Exception as err:
@@ -60,6 +60,8 @@ class SuggestionCommand():
 
     def suggestion_list(self, args):
         messages = []
+        if not self.can_edit:
+            raise Exception('You are not allowed to delete suggestions.')
         def canceler(cancel_args):
             if cancel_args[0].lower() in ['suggestion','suggest']:
                 return SuggestionCommand(parent=self.parent, ctx=self.ctx, args=cancel_args, guild=self.guild, user=self.user, channel=self.channel).run()
@@ -87,3 +89,6 @@ class SuggestionCommand():
             'cancel': canceler
         }).open())
         return messages
+
+    def delete_suggestion(self, args):
+        return suggestion_svc.delete_suggestion(args, self.user)

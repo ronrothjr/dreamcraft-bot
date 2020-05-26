@@ -16,8 +16,8 @@ class Suggestion(Document):
     def filter(**params):
         return Suggestion.objects.filter(**params)
 
-    def find(self, name, archived=False):
-        filter = Suggestion.objects(name__icontains=name, archived=archived)
+    def find(self, text, archived=False):
+        filter = Suggestion.objects(text__icontains=text, archived=archived)
         suggestion = filter.first()
         return suggestion
 

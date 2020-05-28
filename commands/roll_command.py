@@ -27,7 +27,7 @@ class RollCommand():
         self.command = args[0].lower()
         self.scenario = Scenario().get_by_id(self.channel.active_scenario) if self.channel and self.channel.active_scenario else None
         self.sc = Scene().get_by_id(self.channel.active_scene) if self.channel and self.channel.active_scene else None
-        self.engagement = Engagement().get_by_id(self.channel.engagement_scene) if self.channel and self.channel.active_engagement else None
+        self.engagement = Engagement().get_by_id(self.channel.active_engagement) if self.channel and self.channel.active_engagement else None
         self.zone = Zone().get_by_id(self.channel.active_zone) if self.channel and self.channel.active_zone else None
         self.char = Character().get_by_id(self.user.active_character) if self.user and self.user.active_character else None
         self.skill = self.args[1] if len(args) > 1 else ''
@@ -141,7 +141,7 @@ class RollCommand():
             'channel': self.channel,
             'char': target
         })
-        stress_messages = command.stress(('stress', stress, target))
+        stress_messages = command.stress(('stress', title, stress))
         if 'cannot absorb' in ''.join(stress_messages):
             raise Exception(*stress_messages)
         self.messages.extend(stress_messages)

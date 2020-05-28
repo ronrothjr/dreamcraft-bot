@@ -226,29 +226,43 @@ class CharacterCommand():
             ]),
             'add_skills': ''.join([
                 f'\nAdd approaches or skills for ***{name}***',
+                '/* Delete approaches/skills */\n',
+                '```css\n.d c delete approach Forceful\n',
+                '```css\n.d c delete skill Fight\n',
                 '```css\n.d c approach Fo +4 Cl +2 Qu +1 Sn +2 Ca +1 Fl 0...\n',
+                '/* Custom approaches/skills should be spelled out */\n',
+                '.d c approach Wanding +4 Potions +3 Broomstick +2\n',
                 '/* GET LIST OF APPROACHES or ADD YOUR OWN */\n',
-                '.d c approach help\n\n\n.d c skill Will +4 Rapport +2 Lore +1 ...\n',
+                '.d c approach help\n\n',
+                '.d c skill Will +4 Rapport +2 Lore +1 ...\n',
+                '/* Spaces require double quotes */\n',
+                '.d c skill "Basket Weaving" +1 ...\n',
                 '/* GET LIST OF SKILLS or ADD YOUR OWN */',
                 '\n.d c skill help```'
             ]),
             'add_aspects_and_stunts': ''.join([
                 f'\n\nAdd an aspect or two for ***{name}***',
-                '```css\n.d c aspect ASPECT_NAME```',
+                '```css\n.d c aspect ASPECT_NAME\n',
+                '.d c aspect delete ASPECT_NAME```',
                 f'Give  ***{name}*** some cool stunts',
-                '```css\n.d c stunt STUNT_NAME```'
+                '```css\n.d c stunt STUNT_NAME\n',
+                '.d c stunt delete STUNT_NAME```'
             ]),
             'edit_active_aspect': ''.join([
                 f'\n***You can edit this aspect as if it were a character***',
                 '```css\n.d c aspect character\n',
                 '/* THIS WILL SHOW THE ASPECT IS THE ACTIVE CHARACTER */\n',
-                '.d c```'
+                '.d c\n',
+                '/* THIS WILL RETURN YOU TO EDITING THE CHARACTER */\n',
+                '.d c parent```'
             ]),
             'edit_active_stunt': ''.join([
                 f'\n***You can edit this stunt as if it were a character***',
                 '```css\n.d c stunt character\n',
                 '/* THIS WILL SHOW THE STUNT IS THE ACTIVE CHARACTER */\n',
-                '.d c```'
+                '.d c\n',
+                '/* THIS WILL RETURN YOU TO EDITING THE CHARACTER */\n',
+                '.d c parent```'
             ]),
             'manage_stress': ''.join([
                 f'\n***Modify the stress tracks.\n',
@@ -292,7 +306,6 @@ class CharacterCommand():
                     dialog_string += dialog.get('add_skills', '') if self.can_edit else ''
                 elif char.skills:  
                     dialog_string += dialog.get('add_aspects_and_stunts', '') if self.can_edit else ''
-                else:
                     dialog_string += dialog.get('manage_stress', '') if self.can_edit else ''
                     dialog_string += dialog.get('manage_conditions', '') if self.can_edit else ''
         else:
@@ -643,10 +656,10 @@ class CharacterCommand():
         elif not self.can_edit:
             raise Exception('You do not have permission to edit this character')
         else:
-            description = ' '.join(args[1:])
+            description = TextUtils.value_with_quotes(args[1:])
             self.char.description = description
             char_svc.save(self.char, self.user)
-            messages.append(f'Description updated to {description}\n')
+            messages.append(f'Description updated to _{description}_\n')
             messages.append(self.dialog('active_character_short') + '\n')
             messages.append(self.dialog(''))
         return messages
@@ -662,9 +675,9 @@ class CharacterCommand():
         else:
             hc = ''
             if args[1].lower() == 'concept':
-                hc = ' '.join(args[2:])
+                hc = TextUtils.value_with_quotes(args[2:])
             else:
-                hc = ' '.join(args[1:])
+                hc = TextUtils.value_with_quotes(args[1:])
             self.char.high_concept = hc
             char_svc.save(self.char, self.user)
             messages.append(f'High Concept updated to _{hc}_\n')
@@ -681,7 +694,7 @@ class CharacterCommand():
         if not self.char:
             messages.append('You don\'t have an active character.\nTry this: ```css\n.d c CHARACTER_NAME```')
         else:
-            trouble = ' '.join(args[1:])
+            trouble = TextUtils.value_with_quotes(args[1:])
             self.char.trouble = trouble
             char_svc.save(self.char, self.user)
             messages.append(f'Trouble updated to _{trouble}_\n')
@@ -736,7 +749,7 @@ class CharacterCommand():
         else:
             display_name = TextUtils.clean(args[1])
             property_name = display_name.lower().replace(' ', '_')
-            property_value = ' '.join(args[2:])
+            property_value = TextUtils.value_with_quotes(args[2:])
             custom_properties = copy.deepcopy(self.char.custom_properties) if self.char.custom_properties else {}
             custom_properties[property_name] = {
                 'display_name': display_name,
@@ -816,7 +829,7 @@ class CharacterCommand():
         if args[1].lower() == 'help':
             sk_str = '\n        '.join(SKILLS)
             messages.append(f'**Skills:**\n        {sk_str}')
-        elif len(args) != 3 and len(args) != 2:
+        elif len(args) < 3:
             messages.append('Skill syntax: .d (sk)ill {skill} {bonus}')
         else:
             if not self.char:
@@ -836,12 +849,15 @@ class CharacterCommand():
                     char_svc.save(self.char, self.user)
                     messages.append(f'Removed {skill} skill') 
                 else:
-                    skill = [s for s in SKILLS if args[1][0:2].lower() == s[0:2].lower()]
-                    skill = skill[0].split(' - ')[0] if skill else args[1]
-                    self.char.skills[skill] = args[2]
+                    for i in range(1, len(args), 2):
+                        abbr = args[i][0:2].lower()
+                        val = args[i+1]
+                        skill = [s for s in SKILLS if abbr == s[0:2].lower()]
+                        skill = skill[0].split(' - ')[0] if skill else args[i]
+                        self.char.skills[skill] = val
+                        messages.append(f'Updated {skill} to {val}')
                     self.char.use_approaches = False
-                    char_svc.save(self.char, self.user)
-                    messages.append(f'Updated {skill} to {args[2]}')                
+                    char_svc.save(self.char, self.user)            
                 messages.append(self.char.get_string_skills() + '\n')
                 messages.append(self.dialog(''))
         return messages

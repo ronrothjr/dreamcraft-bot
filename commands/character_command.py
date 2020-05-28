@@ -226,10 +226,10 @@ class CharacterCommand():
             ]),
             'add_skills': ''.join([
                 f'\nAdd approaches or skills for ***{name}***',
-                '/* Delete approaches/skills */\n',
-                '```css\n.d c delete approach Forceful\n',
-                '```css\n.d c delete skill Fight\n',
                 '```css\n.d c approach Fo +4 Cl +2 Qu +1 Sn +2 Ca +1 Fl 0...\n',
+                '/* Delete approaches/skills */\n',
+                '.d c delete approach Forceful\n',
+                '.d c delete skill Fight\n',
                 '/* Custom approaches/skills should be spelled out */\n',
                 '.d c approach Wanding +4 Potions +3 Broomstick +2\n',
                 '/* GET LIST OF APPROACHES or ADD YOUR OWN */\n',
@@ -237,8 +237,8 @@ class CharacterCommand():
                 '.d c skill Will +4 Rapport +2 Lore +1 ...\n',
                 '/* Spaces require double quotes */\n',
                 '.d c skill "Basket Weaving" +1 ...\n',
-                '/* GET LIST OF SKILLS or ADD YOUR OWN */',
-                '\n.d c skill help```'
+                '/* GET LIST OF SKILLS or ADD YOUR OWN */\n',
+                '.d c skill help```'
             ]),
             'add_aspects_and_stunts': ''.join([
                 f'\n\nAdd an aspect or two for ***{name}***',

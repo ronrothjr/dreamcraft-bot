@@ -53,7 +53,9 @@ class DreamcraftHandler():
             'User': UserCommand,
             'Zone': ZoneCommand,
             'Session': SessionCommand,
-            'Engagement': EngagementCommand
+            'Engagement': EngagementCommand,
+            'Revision': RevisionCommand,
+            'Suggestion': SuggestionCommand
         }
         switcher = {
             'cheat': CheatCommand,
@@ -61,6 +63,10 @@ class DreamcraftHandler():
             'redo': UndoCommand,
             'log': UndoCommand,
             'l': UndoCommand,
+            'revision': RevisionCommand,
+            'rev': RevisionCommand,
+            'suggestion': SuggestionCommand,
+            'suggest': SuggestionCommand,
             'user': UserCommand,
             'u': UserCommand,
             'channel': ChannelCommand,

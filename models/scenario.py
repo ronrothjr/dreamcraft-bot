@@ -85,7 +85,7 @@ class Scenario(Document):
     @classmethod
     def get_by_channel(cls, channel, archived=False, page_num=1, page_size=5):
         if page_num:
-            offset = (page_num - 1) * 5
+            offset = (page_num - 1) * page_size
             scenarios = cls.filter(channel_id=str(channel.id), archived=archived).skip(offset).limit(page_size).all()
         else:
             scenarios = cls.filter(channel_id=str(channel.id), archived=archived).order_by('name', 'created').all()
@@ -94,7 +94,7 @@ class Scenario(Document):
     @classmethod
     def get_by_page(cls, params, page_num=1, page_size=5):
         if page_num:
-            offset = (page_num - 1) * 5
+            offset = (page_num - 1) * page_size
             items = cls.filter(**params).order_by('name', 'created').skip(offset).limit(page_size).all()
         else:
             items = cls.filter(**params).order_by('name', 'created').all()

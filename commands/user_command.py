@@ -15,6 +15,7 @@ class UserCommand():
         self.args = args[1:]
         self.guild = guild
         self.user = user
+        self.channel = channel
         self.command = self.args[0].lower() if len(self.args) > 0 else 'u'
 
     def run(self):

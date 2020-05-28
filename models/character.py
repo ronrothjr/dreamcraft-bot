@@ -284,7 +284,20 @@ class Character(Document):
 
     def get_string_skills(self):
         title = 'Approaches' if self.use_approaches else 'Skills'
-        skills_string = self.sep().join([f'{self.skills[key]} - {key}' for key in self.skills])
+        skills = {}
+        for key in self.skills:
+            sort_key = self.skills[key].replace('+','a').replace('-','b')
+            if 'a' not in sort_key and 'b' not in sort_key:
+                sort_key = 'a' + sort_key
+            if sort_key in skills:
+                skills[sort_key] = skills[sort_key] + f', {key}'
+            else:
+                skills[sort_key] = key
+        keys = sorted(skills.keys(), reverse=True)
+        skills_arr = []
+        for key in keys:
+            skills_arr.append([key.replace('a','+').replace('b','-'), skills[key]])
+        skills_string = self.sep().join([f'{skill[0]} - {skill[1]}' for skill in skills_arr])
         return f'{self.sep()}{self.sep()}**{title}:**{self.sep()}{skills_string}' if skills_string else ''
 
     def get_string_stress(self):
@@ -321,7 +334,7 @@ class Character(Document):
         archived = '```css\nARCHIVED```' if self.archived else ''
         name = self.get_string_name(user)
         fate_points = self.get_string_fate()
-        description = f'{self.sep()}"{self.description}"' if self.description else ''
+        description = f'{self.sep()}**Description:** {self.description}' if self.description else ''
         high_concept = f'{self.sep()}**High Concept:** {self.high_concept}' if self.high_concept else ''
         trouble = f'{self.sep()}**Trouble:** {self.trouble}' if self.trouble else ''
         custom = self.get_string_custom()
@@ -337,7 +350,7 @@ class Character(Document):
         archived = '```css\nARCHIVED```' if self.archived else ''
         name = self.get_string_name(user)
         fate_points = self.get_string_fate()
-        description = f'{self.nl()}"{self.description}"' if self.description else ''
+        description = f'{self.nl()}**Description:** {self.description}' if self.description else ''
         high_concept = f'{self.nl()}**High Concept:** {self.high_concept}' if self.high_concept else ''
         trouble = f'{self.nl()}**Trouble:** {self.trouble}' if self.trouble else ''
         return f'{archived}{name}{description}{high_concept}{trouble}{fate_points}'

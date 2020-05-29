@@ -8,6 +8,8 @@ from services import CharacterService, SceneService, ScenarioService
 from models import User, Channel, Scenario, Scene, Character, Log
 from config.setup import Setup
 from utils import TextUtils, Dialog
+import inflect
+p = inflect.engine()
 
 char_svc = CharacterService()
 scene_svc = SceneService()
@@ -226,10 +228,10 @@ class CharacterCommand():
             ]),
             'add_skills': ''.join([
                 f'\nAdd approaches or skills for ***{name}***',
-                '/* Delete approaches/skills */\n',
-                '```css\n.d c delete approach Forceful\n',
-                '```css\n.d c delete skill Fight\n',
                 '```css\n.d c approach Fo +4 Cl +2 Qu +1 Sn +2 Ca +1 Fl 0...\n',
+                '/* Delete approaches/skills */\n',
+                '.d c delete approach Forceful\n',
+                '.d c delete skill Fight\n',
                 '/* Custom approaches/skills should be spelled out */\n',
                 '.d c approach Wanding +4 Potions +3 Broomstick +2\n',
                 '/* GET LIST OF APPROACHES or ADD YOUR OWN */\n',
@@ -237,8 +239,8 @@ class CharacterCommand():
                 '.d c skill Will +4 Rapport +2 Lore +1 ...\n',
                 '/* Spaces require double quotes */\n',
                 '.d c skill "Basket Weaving" +1 ...\n',
-                '/* GET LIST OF SKILLS or ADD YOUR OWN */',
-                '\n.d c skill help```'
+                '/* GET LIST OF SKILLS or ADD YOUR OWN */\n',
+                '.d c skill help```'
             ]),
             'add_aspects_and_stunts': ''.join([
                 f'\n\nAdd an aspect or two for ***{name}***',
@@ -725,7 +727,7 @@ class CharacterCommand():
             if not self.char.fate_points:
                 self.char.fate_points = 2
             points = int(args[2]) if len(args) == 3 and args[2].isdigit() else 1
-            self.char.fate_points += points if self.char.fate_points < 5 else 0
+            self.char.fate_points -= points if self.char.fate_points < 5 else 0
         char_svc.save(self.char, self.user)
         return [f'Fate Points: {self.char.get_string_fate()}'] if self.char.get_string_fate() else ['Fate points not used by this character']
 
@@ -1105,6 +1107,7 @@ class CharacterCommand():
             if not check_user:
                 messages.append(f'***{self.char.name}*** absorbed {shift} {stress_type_name} stress')
                 self.char.stress = modified
+                messages.extend(self.absorb_shifts(int(shift)))
                 messages.append(f'{self.char.get_string_stress()}')
         if check_user:
             return messages
@@ -1240,6 +1243,20 @@ class CharacterCommand():
             messages.append(f'***{self.char.name}*** absorbed {severity_shift} shift for a {severity_name} {consequences_name} "{aspect}"')
             messages.extend(self.aspect(['a', aspect]))
             self.char.consequences = modified
+            messages.extend(self.absorb_shifts(int(severity_shift)))
         messages.append(f'{self.char.get_string_consequences()}')
         char_svc.save(self.char, self.user)
+        return messages
+
+    def absorb_shifts(self, shift_int):
+        messages = []
+        targeted_by = Character.filter(active_target=str(self.char.id)).first()
+        if targeted_by and targeted_by.last_roll and targeted_by.last_roll.get('shifts_remaining', 0) > 0:
+            last_roll = copy.deepcopy(targeted_by.last_roll)
+            shifts_remaining = last_roll['shifts_remaining']
+            shifts_remaining = shifts_remaining - shift_int if shifts_remaining >= shift_int else 0
+            last_roll['shifts_remaining'] = shifts_remaining
+            targeted_by.last_roll = last_roll
+            char_svc.save(targeted_by, self.user)
+            messages.append(f'{targeted_by.active_action} from ***{targeted_by.name}*** has {p.no("shift", shifts_remaining)} left to absorb.')
         return messages

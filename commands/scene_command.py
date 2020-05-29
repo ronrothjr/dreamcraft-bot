@@ -350,9 +350,7 @@ class SceneCommand():
         self.check_scene()
         if self.user:
             self.user.active_character = str(self.sc.character.id)
-            self.channel.updated_by = str(self.user.id)
-            self.user.updated = T.now()
-            self.user.save()
+            scene_svc.save_user(self.user)
         command = CharacterCommand(parent=self.parent, ctx=self.ctx, args=args, guild=self.guild, user=self.user, channel=self.channel, char=self.sc.character)
         return command.run()
 

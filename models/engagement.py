@@ -1,5 +1,5 @@
 # engagement.py
-from mongoengine import Document, StringField, ReferenceField, ListField, BooleanField, DateTimeField, signals
+from mongoengine import Document, StringField, ReferenceField, ListField, BooleanField, DateTimeField, DynamicField, signals
 from models.character import User
 from models.character import Character
 from models.log import Log
@@ -16,6 +16,7 @@ class Engagement(Document):
     character = ReferenceField(Character)
     characters = ListField(StringField())
     opposition = ListField(StringField())
+    active_exchange = StringField()
     started_on = DateTimeField()
     ended_on = DateTimeField()
     archived = BooleanField(default=False)
@@ -155,6 +156,21 @@ class Engagement(Document):
         characters = '***\n                ***'.join(c.name for c in characters if c)
         return f'            _Characters:_\n                ***{characters}***'
 
+    def get_short_string_characters(self, channel=None):
+        characters = [Character.get_by_id(id) for id in self.characters]
+        characters = ', '.join(c.name for c in characters if c)
+        return f' _({characters})_'
+
+    def get_string_opposition(self, channel=None):
+        opposition = [Character.get_by_id(id) for id in self.opposition]
+        opposition = '***\n                ***'.join(c.name for c in opposition if c)
+        return f'            _Opposition:_\n                ***{opposition}***'
+
+    def get_short_string_opposition(self, channel=None):
+        opposition = [Character.get_by_id(id) for id in self.opposition]
+        opposition = ', '.join(c.name for c in opposition if c)
+        return f' _({opposition})_'
+
     def get_string(self, channel, user=None):
         name = f'***{self.name}***'
         active = ''
@@ -168,6 +184,7 @@ class Engagement(Document):
             end = f'\n_Ended On:_ ***{T.to(self.ended_on, user)}***' if self.ended_on else ''
         description = f' - "{self.description}"' if self.description else ''
         characters = f'\n\n{self.get_string_characters()}' if self.characters else ''
+        opposition = f'\n\n{self.get_string_opposition()}' if self.opposition else ''
         aspects = ''
         stress = ''
         if self.character:
@@ -175,19 +192,20 @@ class Engagement(Document):
             description = f' - "{self.character.description}"' if self.character.description else description
             aspects = self.character.get_string_aspects()
             stress = self.character.get_string_stress() if self.character.has_stress else ''
-        return f'        {name}{active}{start}{end}{description}{characters}{aspects}{stress}'
+        return f'        {name}{active}{start}{end}{description}{characters}{opposition}{aspects}{stress}'
 
     def get_short_string(self, channel=None):
         name = f'***{self.name}***'
         active = ''
         if channel:
             active = f' _(Active {str(self.type_name).title()})_ ' if str(self.id) == channel.active_engagement else f' _({str(self.type_name).title()})_ '
-        characters = f'\n{self.get_string_characters()}' if self.characters else ''
+        characters = f'\n{self.get_short_string_characters()}' if self.characters else ''
+        opposition = f' v. {self.get_short_string_opposition()}' if self.opposition else ''
         description = f' - "{self.description}"' if self.description else ''
         if self.character:
             name = f'***{self.character.name}***' if self.character.name else name
             description = f' - "{self.character.description}"' if self.character.description else ''
-        return f'        {name}{active}{description}{characters}'
+        return f'        {name}{active}{description}{characters}{opposition}'
 
 
 signals.post_save.connect(Engagement.post_save, sender=Engagement)

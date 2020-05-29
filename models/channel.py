@@ -114,6 +114,12 @@ class Channel(Document):
         self.updated = T.now()
         self.save()
 
+    def set_active_exchange(self, exchange, user):
+        self.active_exchange = str(exchange.id)
+        self.updated_by = str(user.id)
+        self.updated = T.now()
+        self.save()
+
     def get_users_string(self):
         users_string = '\n_Players:_\n        ' + '\n        '.join([f'***{u}*** ' for u in self.users]) if self.users else ''
         return f'{users_string}'
@@ -138,8 +144,8 @@ class Channel(Document):
         return engagements
 
     def get_engagements_string(self, engagement_list):
-        engagements = [s.get_short_string(self) for s in engagement_list]
-        engagements_string = '\n_Engagements:_\n        ' + '\n        '.join([s for s in engagements]) if engagements else ''
+        engagements = [e.get_short_string(self) for e in engagement_list]
+        engagements_string = '\n_Engagements:_\n        ' + '\n        '.join([e for e in engagements]) if engagements else ''
         return f'{engagements_string}'
 
     def get_characters(self, scenes):

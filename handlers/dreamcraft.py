@@ -1,4 +1,5 @@
 # dreamcraft.py
+import os
 import re
 from dotenv import load_dotenv
 from discord import Embed
@@ -7,6 +8,10 @@ from models import Channel, User, Character
 from commands import *
 from config.setup import Setup
 from utils import T
+
+load_dotenv()
+PREFIX = os.getenv('DISCORD_PREFIX')
+COMMAND = os.getenv('DISCORD_COMMAND')
 
 SETUP = Setup()
 APPROACHES = SETUP.approaches
@@ -84,6 +89,8 @@ class DreamcraftHandler():
             'engagement': EngagementCommand,
             'engage': EngagementCommand,
             'e': EngagementCommand,
+            'attack': RollCommand,
+            'defend': RollCommand,
             'roll': RollCommand,
             'r': RollCommand,
             'reroll': RollCommand,
@@ -92,6 +99,7 @@ class DreamcraftHandler():
             'i': RollCommand,
             'compel': RollCommand,
             'available': RollCommand,
+            'avail': RollCommand,
             'av': RollCommand,
             'stress': CharacterCommand,
             'st': CharacterCommand,
@@ -139,7 +147,7 @@ class DreamcraftHandler():
             message = image_split[0]
             if len(image_split) > 2:
                  message += ''.join(image_split[2:])
-            embed = Embed(type='rich', title=self.module, colour=13400320, description=message)
+            embed = Embed(type='rich', title=f'{self.module} Module - {PREFIX}{COMMAND} {self.module.lower()} help', colour=13400320, description=message)
             # embed.set_author(name='Dreamcraft Bot', icon_url='http://drive.google.com/uc?export=view&id=1jSmg-SJx5YwjgIepYA6SYjtPZ_aNQnNr')
             if len(image_split) > 1:
                 embed.set_image(url=image_split[1])

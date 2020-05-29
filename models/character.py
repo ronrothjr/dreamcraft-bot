@@ -30,6 +30,9 @@ class Character(Document):
     trouble = StringField()
     active_stunt = StringField()
     active_aspect = StringField()
+    active_action = StringField()
+    active_target = StringField()
+    active_target_by = StringField()
     skills = DictField()
     use_approaches = BooleanField()
     fate_points = IntField()
@@ -156,7 +159,9 @@ class Character(Document):
             self.refresh = 3
             self.fate_points = 3
             self.stress = STRESS
+            self.stress_titles = STRESS_TITLES
             self.consequences = CONSEQUENCES
+            self.consequences_titles = CONSEQUENCES_TITLES
         if parent_id:
             self.parent_id = parent_id
         self.created_by = str(user.id)

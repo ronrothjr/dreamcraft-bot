@@ -1251,7 +1251,7 @@ class CharacterCommand():
     def absorb_shifts(self, shift_int):
         messages = []
         targeted_by = Character.filter(active_target=str(self.char.id)).first()
-        if targeted_by and targeted_by.last_roll and targeted_by.last_roll['shifts_remaining'] > 0:
+        if targeted_by and targeted_by.last_roll and targeted_by.last_roll.get('shifts_remaining', 0) > 0:
             last_roll = copy.deepcopy(targeted_by.last_roll)
             shifts_remaining = last_roll['shifts_remaining']
             shifts_remaining = shifts_remaining - shift_int if shifts_remaining >= shift_int else 0

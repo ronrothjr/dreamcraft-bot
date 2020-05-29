@@ -1,22 +1,21 @@
-# engagement.py
-from mongoengine import Document, StringField, ReferenceField, ListField, BooleanField, DateTimeField, DynamicField, signals
+# exchange.py
+from mongoengine import Document, StringField, ReferenceField, ListField, BooleanField, DateTimeField, signals
 from models.character import User
 from models.character import Character
 from models.log import Log
 from utils import T
 
-class Engagement(Document):
+class Exchange(Document):
     parent_id = StringField()
     name = StringField(required=True)
     guild = StringField(required=True)
     description = StringField()
     channel_id = StringField()
-    scene_id = StringField()
+    engagement_id = StringField()
     type_name = StringField()
-    character = ReferenceField(Character)
     characters = ListField(StringField())
     opposition = ListField(StringField())
-    active_exchange = StringField()
+    active_turn = StringField()
     started_on = DateTimeField()
     ended_on = DateTimeField()
     archived = BooleanField(default=False)
@@ -42,7 +41,7 @@ class Engagement(Document):
                 action = 'created' if kwargs['created'] else action
             if action == 'updated' and 'archived' in changes:
                 action = 'archived' if changes['archived'] else 'restored'
-            Log().create_new(str(document.id), document.name, document.updated_by, document.guild, 'Engagement', changes, action)
+            Log().create_new(str(document.id), document.name, document.updated_by, document.guild, 'Exchange', changes, action)
             user = User().get_by_id(document.updated_by)
             if user.history_id:
                 user.history_id = None
@@ -53,18 +52,18 @@ class Engagement(Document):
 
     @staticmethod
     def query():
-        return Engagement.objects
+        return Exchange.objects
 
     @staticmethod
     def filter(**params):
-        return Engagement.objects.filter(**params)
+        return Exchange.objects.filter(**params)
 
-    def create_new(self, user, guild, channel_id, scene_id, name, archived):
+    def create_new(self, user, guild, channel_id, engagement_id, name, archived):
         self.name = name
         self.guild = guild
-        self.parent_id = scene_id
+        self.parent_id = engagement_id
         self.channel_id = channel_id
-        self.scene_id = scene_id
+        self.engagement_id = engagement_id
         self.created_by = str(user.id)
         self.created = T.now()
         self.updated_by = str(user.id)
@@ -72,22 +71,22 @@ class Engagement(Document):
         self.save()
         return self
 
-    def find(self, guild, channel_id, scene_id, name, archived=False):
-        filter = Engagement.objects(guild=guild, channel_id=channel_id, scene_id=scene_id, name__icontains=name, archived=archived)
-        engagement = filter.first()
-        return engagement
+    def find(self, guild, channel_id, engagement_id, name, archived=False):
+        filter = Exchange.objects(guild=guild, channel_id=channel_id, engagement_id=engagement_id, name__icontains=name, archived=archived)
+        exchange = filter.first()
+        return exchange
 
-    def get_or_create(self, user, guild, channel, scene, name, archived=False):
-        engagement = self.find(guild, str(channel.id), str(scene.id), name, archived)
-        if engagement is None:
-            engagement = self.create_new(user, guild, str(channel.id), str(scene.id), name, archived)
-            engagement.character = Character().get_or_create(user, name, guild, engagement, 'Engagement', archived)
-            engagement.save()
-        return engagement
+    def get_or_create(self, user, guild, channel, engagement, name, archived=False):
+        exchange = self.find(guild, str(channel.id), str(engagement.id), name, archived)
+        if exchange is None:
+            exchange = self.create_new(user, guild, str(channel.id), str(engagement.id), name, archived)
+            exchange.character = Character().get_or_create(user, name, guild, exchange, 'Exchange', archived)
+            exchange.save()
+        return exchange
 
     def get_by_id(self, id):
-        engagement = Engagement.objects(id=id).first()
-        return engagement
+        exchange = Exchange.objects(id=id).first()
+        return exchange
 
     @classmethod
     def get_by_channel(cls, channel, archived=False, page_num=1, page_size=5):
@@ -99,12 +98,12 @@ class Engagement(Document):
         return items
 
     @classmethod
-    def get_by_scene(cls, scene, archived=False, page_num=1, page_size=5):
+    def get_by_engagement(cls, engagement, archived=False, page_num=1, page_size=5):
         if page_num:
             offset = (page_num - 1) * page_size
-            items = cls.filter(scene_id=str(scene.id), archived=archived).skip(offset).limit(page_size).all()
+            items = cls.filter(engagement_id=str(engagement.id), archived=archived).skip(offset).limit(page_size).all()
         else:
-            items = cls.filter(scene_id=str(scene.id), archived=archived).order_by('name', 'created').all()
+            items = cls.filter(engagement_id=str(engagement.id), archived=archived).order_by('name', 'created').all()
         return items
 
     @classmethod
@@ -129,7 +128,7 @@ class Engagement(Document):
             self.save()
 
     def reverse_archive(self, user):
-        for z in Engagement().get_by_parent(parent_id=str(self.id)):
+        for z in Exchange().get_by_parent(parent_id=str(self.id)):
             z.reverse_archive(user)
             z.archived = True
             z.updated_by = str(user.id)
@@ -144,7 +143,7 @@ class Engagement(Document):
             self.save()
 
     def reverse_restore(self, user):
-        for z in Engagement().get_by_parent(parent_id=str(self.id)):
+        for z in Exchange().get_by_parent(parent_id=str(self.id)):
             z.reverse_restore(user)
             z.archived = False
             z.updated_by = str(user.id)
@@ -175,7 +174,7 @@ class Engagement(Document):
         name = f'***{self.name}***'
         active = ''
         if channel:
-            active = ' _(Active Engagement)_ ' if str(self.id) == channel.active_engagement else ''
+            active = ' _(Active Exchange)_ ' if str(self.id) == channel.active_exchange else ''
         start = ''
         if self.started_on:
             start = f'\n_Started On:_ ***{T.to(self.started_on, user)}***' if self.started_on else ''
@@ -198,7 +197,7 @@ class Engagement(Document):
         name = f'***{self.name}***'
         active = ''
         if channel:
-            active = f' _(Active {str(self.type_name).title()})_ ' if str(self.id) == channel.active_engagement else f' _({str(self.type_name).title()})_ '
+            active = f' _(Active {str(self.type_name).title()})_ ' if str(self.id) == channel.active_exchange else f' _({str(self.type_name).title()})_ '
         characters = f'\n{self.get_short_string_characters()}' if self.characters else ''
         opposition = f' v. {self.get_short_string_opposition()}' if self.opposition else ''
         description = f' - "{self.description}"' if self.description else ''
@@ -208,5 +207,5 @@ class Engagement(Document):
         return f'        {name}{active}{description}{characters}{opposition}'
 
 
-signals.post_save.connect(Engagement.post_save, sender=Engagement)
+signals.post_save.connect(Exchange.post_save, sender=Exchange)
         

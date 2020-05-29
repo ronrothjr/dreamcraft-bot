@@ -8,6 +8,8 @@ from services import CharacterService, SceneService, ScenarioService
 from models import User, Channel, Scenario, Scene, Character, Log
 from config.setup import Setup
 from utils import TextUtils, Dialog
+import inflect
+p = inflect.engine()
 
 char_svc = CharacterService()
 scene_svc = SceneService()
@@ -1105,6 +1107,7 @@ class CharacterCommand():
             if not check_user:
                 messages.append(f'***{self.char.name}*** absorbed {shift} {stress_type_name} stress')
                 self.char.stress = modified
+                messages.extend(self.absorb_shifts(int(shift)))
                 messages.append(f'{self.char.get_string_stress()}')
         if check_user:
             return messages
@@ -1240,6 +1243,20 @@ class CharacterCommand():
             messages.append(f'***{self.char.name}*** absorbed {severity_shift} shift for a {severity_name} {consequences_name} "{aspect}"')
             messages.extend(self.aspect(['a', aspect]))
             self.char.consequences = modified
+            messages.extend(self.absorb_shifts(int(severity_shift)))
         messages.append(f'{self.char.get_string_consequences()}')
         char_svc.save(self.char, self.user)
+        return messages
+
+    def absorb_shifts(self, shift_int):
+        messages = []
+        targeted_by = Character.filter(active_target=str(self.char.id)).first()
+        if targeted_by and targeted_by.last_roll and targeted_by.last_roll['shifts_remaining'] > 0:
+            last_roll = copy.deepcopy(targeted_by.last_roll)
+            shifts_remaining = last_roll['shifts_remaining']
+            shifts_remaining = shifts_remaining - shift_int if shifts_remaining >= shift_int else 0
+            last_roll['shifts_remaining'] = shifts_remaining
+            targeted_by.last_roll = last_roll
+            char_svc.save(targeted_by, self.user)
+            messages.append(f'{targeted_by.active_action} from ***{targeted_by.name}*** has {p.no("shift", shifts_remaining)} left to absorb.')
         return messages

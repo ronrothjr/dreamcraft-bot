@@ -114,6 +114,12 @@ class Channel(Document):
         self.updated = T.now()
         self.save()
 
+    def set_active_exchange(self, exchange, user):
+        self.active_exchange = str(exchange.id)
+        self.updated_by = str(user.id)
+        self.updated = T.now()
+        self.save()
+
     def get_users_string(self):
         users_string = '\n_Players:_\n        ' + '\n        '.join([f'***{u}*** ' for u in self.users]) if self.users else ''
         return f'{users_string}'

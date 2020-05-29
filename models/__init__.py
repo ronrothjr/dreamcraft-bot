@@ -5,6 +5,7 @@ from models.scene import Scene
 from models.zone import Zone
 from models.session import Session
 from models.engagement import Engagement
+from models.exchange import Exchange
 from models.channel import Channel
 from models.log import Log
 from models.revision import Revision

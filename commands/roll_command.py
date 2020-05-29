@@ -18,19 +18,19 @@ class RollCommand():
     def __init__(self, parent, ctx, args, guild=None, user=None, channel=None):
         self.parent = parent
         self.ctx = ctx
-        self.args = args
+        self.command = args[0].lower()
+        self.args = args[1:]
         self.guild = guild
         self.user = user
         self.channel = channel
         self.invoke_index = [i for i in range(0, len(self.args)) if self.args[i] in ['invoke', 'i']]
         self.compel_index = [i for i in range(0, len(self.args)) if self.args[i] in ['compel', 'c']]
-        self.command = args[0].lower()
         self.scenario = Scenario().get_by_id(self.channel.active_scenario) if self.channel and self.channel.active_scenario else None
         self.sc = Scene().get_by_id(self.channel.active_scene) if self.channel and self.channel.active_scene else None
         self.engagement = Engagement().get_by_id(self.channel.active_engagement) if self.channel and self.channel.active_engagement else None
         self.zone = Zone().get_by_id(self.channel.active_zone) if self.channel and self.channel.active_zone else None
         self.char = Character().get_by_id(self.user.active_character) if self.user and self.user.active_character else None
-        self.skill = self.args[1] if len(args) > 1 else ''
+        self.skill = self.args[0] if len(self.args) > 0 else ''
         self.messages = []
         self.invokes = []
         self.compels = []
@@ -39,58 +39,94 @@ class RollCommand():
 
     def run(self):
         try:
-            if len(self.args) > 1 and self.args[1] == 'help':
-                raise Exception(ROLL_HELP)
-            if not self.char:
-                raise Exception('No active character. Try this: ```css\n.d c CHARACTER_NAME```')
-            self.messages = [self.char.get_string_name(self.user)]
-            self.last_roll = None
-            # parse skill from args
-            self.get_skill()
-
-            # Find and validate invokes and compels
-            self.validate()
-            if self.errors:
-                raise Exception(*[e.error for e in self.errors])
-
-            # Show available aspects and stunts to invoke
-            if self.command in ['available', 'avail', 'av']:
-                raise Exception(*self.available_aspects())
-
-            # Execute the roll command and apply fate point cost
-            if self.command in ['roll', 'r']:
-                self.roll_invokes = copy.deepcopy(self.invokes)
-                self.last_roll = self.roll()
-                self.char.last_roll = self.last_roll
-                self.invokes_cost = sum([invoke['fate_points'] for invoke in self.invokes])
-                self.messages.append(self.char.last_roll['roll_text'])
-
-            # Execute the re-roll command to apply additional invokes
-            elif self.command in ['reroll', 're']:
-                # Re-rolling requires invokes. If there are none, return an error
-                if not self.invokes:
-                    raise Exception('You did not include an invoke for the reroll')
-                else:
-                    # Calculate fate point cost from invokes
-                    self.invokes_cost = sum([invoke['fate_points'] for invoke in self.invokes])
-                    self.last_roll = self.reroll()
-                    self.char.last_roll = self.last_roll
-                    self.messages.append(self.char.last_roll['roll_text'])
-
-            # Resolve the invokes against their targets
-            if self.invokes:
-                self.resolve_invokes()
-
-            # Resolve the compels against their targets
-            if self.compels:
-                self.handle_compels()
-
-            self.save_char()
-
-            return self.messages
+            switcher = {
+                'help': self.help,
+                'roll': self.roll,
+                'r': self.roll,
+                'reroll': self.roll,
+                're': self.roll,
+                'attack': self.attack,
+                'available': self.show_available,
+                'avail': self.show_available,
+                'av': self.show_available
+            }
+            # Get the function from switcher dictionary
+            if self.command in switcher:
+                func = switcher.get(self.command, lambda: self.roll)
+                # Execute the function
+                messages = func()
+            else:
+                messages = [f'Unknown command: {self.command}']
+            # Send messages
+            return messages
         except Exception as err:
             traceback.print_exc()
             return list(err.args)
+
+    def help(self):
+        return [ROLL_HELP]
+
+    # Show available aspects and stunts to invoke
+    def show_available(self):
+        self.get_available_invokes()
+        self.available_invokes = []
+        [self.available_invokes.extend(a['char'].get_available_aspects(a['parent'])) for a in self.available]
+        if self.available_invokes:
+            return ['**Available invokes:**\n        ' + '\n        '.join([a for a in self.available_invokes])]
+        else:
+            return ['No available aspects to invoke']
+
+    def attack(self):
+        if len(self.args) == 0:
+            raise Exception('No target identified for attack action')
+        return ['Implement attack roll']
+
+    def roll(self):
+        if len(self.args) > 0 and self.args[0].lower() in ['help','h']:
+            return self.help()
+        if not self.char:
+            raise Exception('No active character. Try this to create/select one: ```css\n.d c CHARACTER_NAME```')
+        self.messages = [self.char.get_string_name(self.user)]
+        self.last_roll = None
+        # parse skill from args
+        self.get_skill()
+
+        # Find and validate invokes and compels
+        self.validate()
+        if self.errors:
+            raise Exception(*[e.error for e in self.errors])
+
+        # Execute the roll command and apply fate point cost
+        if self.command in ['roll', 'r']:
+            self.roll_invokes = copy.deepcopy(self.invokes)
+            self.last_roll = self.roll_next()
+            self.char.last_roll = self.last_roll
+            self.invokes_cost = sum([invoke['fate_points'] for invoke in self.invokes])
+            self.messages.append(self.char.last_roll['roll_text'])
+
+        # Execute the re-roll command to apply additional invokes
+        elif self.command in ['reroll', 're']:
+            # Re-rolling requires invokes. If there are none, return an error
+            if not self.invokes:
+                raise Exception('You did not include an invoke for the reroll')
+            else:
+                # Calculate fate point cost from invokes
+                self.invokes_cost = sum([invoke['fate_points'] for invoke in self.invokes])
+                self.last_roll = self.reroll()
+                self.char.last_roll = self.last_roll
+                self.messages.append(self.char.last_roll['roll_text'])
+
+        # Resolve the invokes against their targets
+        if self.invokes:
+            self.resolve_invokes()
+
+        # Resolve the compels against their targets
+        if self.compels:
+            self.handle_compels()
+
+        self.save_char()
+
+        return self.messages
 
     def save_char(self):
         self.char.updated_by = str(self.user.id)
@@ -300,15 +336,6 @@ class RollCommand():
                     self.available.extend(char.get_invokable_objects())
         return self.available
 
-    def available_aspects(self):
-        self.get_available_invokes()
-        self.available_invokes = []
-        [self.available_invokes.extend(a['char'].get_available_aspects(a['parent'])) for a in self.available]
-        if self.available_invokes:
-            return ['**Available invokes:**\n        ' + '\n        '.join([a for a in self.available_invokes])]
-        else:
-            return ['No available aspects to invoke']
-
     def find_aspect(self, aspect):
         aspect = aspect.replace('_', ' ')
         available = self.get_available_invokes()
@@ -332,7 +359,7 @@ class RollCommand():
                 return aspects[0]
         return aspects
 
-    def roll(self):
+    def roll_next(self):
         skill_str, bonus = self.get_skill_bonus()
         bonus_invokes, bonus_invokes_total, invokes_bonus_string, invoke_string = \
             self.get_invoke_bonus()
@@ -363,7 +390,7 @@ class RollCommand():
         self.char.last_roll['invokes'].extend(copy.deepcopy(self.invokes))
         self.skill = self.char.last_roll['skill']
         self.roll_invokes = self.char.last_roll['invokes']
-        return self.roll()
+        return self.roll_next()
 
     def match_skill(self):
         if self.skill !='':

@@ -198,13 +198,13 @@ class Engagement(Document):
         active = ''
         if channel:
             active = f' _(Active {str(self.type_name).title()})_ ' if str(self.id) == channel.active_engagement else f' _({str(self.type_name).title()})_ '
-        characters = f'\n+++{self.get_short_string_characters()}' if self.characters else ''
-        opposition = f'\n---{self.get_short_string_opposition()}' if self.opposition else ''
+        characters = f'\n{self.get_short_string_characters()}' if self.characters else ''
+        opposition = f' v. {self.get_short_string_opposition()}' if self.opposition else ''
         description = f' - "{self.description}"' if self.description else ''
         if self.character:
             name = f'***{self.character.name}***' if self.character.name else name
             description = f' - "{self.character.description}"' if self.character.description else ''
-        return f'        {name}{active}{description}{opposition}'
+        return f'        {name}{active}{description}{characters}{opposition}'
 
 
 signals.post_save.connect(Engagement.post_save, sender=Engagement)

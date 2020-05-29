@@ -21,7 +21,7 @@ class Setup():
             \n**Undo Last:**```css\n.d undo last\n/* Undo the last change */```\n\
             \n**Redo Next:**```css\n.d redo next\n/* Redo the next change */```'
 
-    roll_help = 'd r help = display rol help\n\
+    roll_help = 'd r help = display roll help\n\
             \nRoll Fate Dice\n\
             .d r - roll fate dice\n\
             .d r (i)nvoke {aspect} [...(i)nvoke {aspect}] - roll fate dice and apply\n\

@@ -84,6 +84,15 @@ class Channel(Document):
         channel = Channel.filter(id=id).first()
         return channel
 
+    @classmethod
+    def get_by_page(cls, params, page_num=1, page_size=5):
+        if page_num:
+            offset = (page_num - 1) * page_size
+            logs = cls.filter(**params).order_by('name', 'created').skip(offset).limit(page_size).all()
+        else:
+            logs = cls.filter(**params).order_by('name', 'created').all()
+        return logs
+
     def set_active_scenario(self, scenario, user):
         self.active_scenario = str(scenario.id)
         self.updated_by = str(user.id)
@@ -168,6 +177,10 @@ class Channel(Document):
         characters_list = self.get_characters(scenes_list)
         characters = f'\n{self.get_characters_string(characters_list, user)}'
         return f'_Channel:_ ***{self.name}***\n_Guild:_ ***{self.guild}***{users}{scenarios}{scenes}{engagements}{characters}'
+
+    def get_short_string(self, user=None):
+        users = f'\n{self.get_users_string()}' if self.users else ''
+        return f'_Channel:_ ***{self.name}***\n_Guild:_ ***{self.guild}***{users}'
 
 
 signals.post_save.connect(Channel.post_save, sender=Channel)

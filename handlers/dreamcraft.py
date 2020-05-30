@@ -143,15 +143,34 @@ class DreamcraftHandler():
 
     async def send(self, message):
         if message:
-            image_split = message.split('!image')
-            message = image_split[0]
-            if len(image_split) > 2:
-                 message += ''.join(image_split[2:])
-            embed = Embed(type='rich', title=f'{self.module} Module - {PREFIX}{COMMAND} {self.module.lower()} help', colour=13400320, description=message)
-            # embed.set_author(name='Dreamcraft Bot', icon_url='http://drive.google.com/uc?export=view&id=1jSmg-SJx5YwjgIepYA6SYjtPZ_aNQnNr')
-            if len(image_split) > 1:
-                embed.set_image(url=image_split[1])
-            await self.ctx.send(embed=embed)
+            if len(message) > 2048:
+                chunks = message.split('\n')
+                chunked = []
+                for cursor in range(0, len(chunks)):
+                    chunk = chunks[cursor]
+                    if len('\n'.join(chunked) + '\n' + chunk) > 2048:
+                        await self.send_message('\n'.join(chunked))
+                        chunked = []
+                    else:
+                        chunked.append(chunk)
+                if chunked:
+                    if len('\n'.join(chunked)) > 2048:
+                        await self.send_message('Mesage exceeds maximum length of 2048')
+                    else:
+                        await self.send_message('\n'.join(chunked))
+            else:
+                await self.send_message(message)
+
+    async def send_message(self, message):
+        image_split = message.split('!image')
+        message = image_split[0]
+        if len(image_split) > 2:
+            message += ''.join(image_split[2:])
+        embed = Embed(type='rich', title=f'{self.module} Module - {PREFIX}{COMMAND} {self.module.lower()} help', colour=13400320, description=message)
+        # embed.set_author(name='Dreamcraft Bot', icon_url='http://drive.google.com/uc?export=view&id=1jSmg-SJx5YwjgIepYA6SYjtPZ_aNQnNr')
+        if len(image_split) > 1:
+            embed.set_image(url=image_split[1])
+        await self.ctx.send(embed=embed)
 
     def get_answer(self):
         guild = self.ctx.guild if self.ctx.guild else self.ctx.author

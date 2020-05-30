@@ -53,6 +53,8 @@ class RevisionCommand():
         return [REVISION_HELP]
 
     def name(self, args):
+        if not self.can_edit:
+            raise Exception('You do not have permission to add revision text')
         messages = []
         rev_name = ' '.join(args[1:])
         if args[1] == 'rename':
@@ -77,7 +79,7 @@ class RevisionCommand():
             rev_number = args[2]
             rev_text = args[3]
             params = {'name': rev_name, 'number': rev_number, 'text': rev_text}
-            revision = Revision().get_or_create(**params)
+            revision = Revision().create_new(**params)
             messages.append(revision.get_string(self.user))
         return messages
 

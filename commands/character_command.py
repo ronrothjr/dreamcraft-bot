@@ -37,7 +37,7 @@ class CharacterCommand():
         if self.args and len(self.args) and self.args[0] and self.args[0].lower() == 'npc':
             self.npc = True
             self.args = self.args[1:]
-        self.command = self.args[0].lower() if len(self.args) > 0 else '='
+        self.command = self.args[0].lower() if len(self.args) > 0 else 'select'
         self.guild = guild
         self.user = user
         self.channel = channel
@@ -60,7 +60,7 @@ class CharacterCommand():
                 'p': self.get_parent,
                 'name': self.name,
                 'n': self.name,
-                '=': self.select,
+                'select': self.select,
                 'image': self.image,
                 'list': self.character_list,
                 'l': self.character_list,

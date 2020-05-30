@@ -110,7 +110,7 @@ class Dialog(object):
         select_str = ''
         if self.page_count:
             select_str = ''.join([
-                f'SELECT a {self.type_name} by entering **\'=\'** followed by the {self.type_name} number:',
+                f'\nSELECT a {p.an(self.type_name)} by entering **\'=\'** followed by the {self.type_name} number:',
                 '```css\n.d =2 /* select item 2 from the list */```'
             ]) if self.type == 'select' else ''
         elif self.empty:

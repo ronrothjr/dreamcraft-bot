@@ -14,10 +14,10 @@ class ZoneCommand():
     def __init__(self, parent, ctx, args, guild, user, channel):
         self.parent = parent
         self.ctx = ctx
-        self.args = args[1:]
+        self.args = args[1:] if args[0] in ['zone', 'z'] else args
         self.guild = guild
         self.user = user
-        self.command = self.args[0].lower() if len(self.args) > 0 else 'n'
+        self.command = self.args[0].lower() if len(self.args) > 0 else 'select'
         channel = 'private' if ctx.channel.type.name == 'private' else ctx.channel.name
         self.channel = Channel().get_or_create(channel, self.guild.name, self.user)
         self.scenario = Scenario().get_by_id(self.channel.active_scenario) if self.channel and self.channel.active_scenario else None
@@ -55,9 +55,15 @@ class ZoneCommand():
                 # Execute the function
                 messages = func(self.args)
             else:
-                self.args = ('n',) + self.args
-                self.command = 'n'
-                func = self.name
+                match = self.search(self.args)
+                if match:
+                    self.args = ('select',) + self.args
+                    self.command = 'select'
+                    func = self.select
+                else:
+                    self.args = ('n',) + self.args
+                    self.command = 'n'
+                    func = self.name
                 # Execute the function
                 messages = func(self.args)
             # Send messages

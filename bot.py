@@ -43,7 +43,42 @@ async def command_handler(ctx, *args):
         return
     
     handler = DreamcraftHandler(ctx, args)
-    await handler.handle()
+    title, messages = handler.get_messages()
+    # Concatenate messages and send
+    if isinstance(messages, list):
+        [await send(ctx, title, f'{m}\n') for m in messages]
+    else:
+        await send(ctx, title, messages)
 
+async def send(ctx, title, message):
+    if message:
+        if len(message) > 2048:
+            chunks = message.split('\n')
+            chunked = []
+            for cursor in range(0, len(chunks)):
+                chunk = chunks[cursor]
+                if len('\n'.join(chunked) + '\n' + chunk) > 2048:
+                    await send_message(ctx, title, '\n'.join(chunked))
+                    chunked = []
+                else:
+                    chunked.append(chunk)
+            if chunked:
+                if len('\n'.join(chunked)) > 2048:
+                    await send_message(ctx, title, 'Mesage exceeds maximum length of 2048')
+                else:
+                    await send_message(ctx, title, '\n'.join(chunked))
+        else:
+            await send_message(ctx, title, message)
+
+async def send_message(ctx, title, message):
+    image_split = message.split('!image')
+    message = image_split[0]
+    if len(image_split) > 2:
+        message += ''.join(image_split[2:])
+    embed = Embed(type='rich', title=f'{title} Module - {PREFIX}{COMMAND} {title.lower()} help', colour=13400320, description=message)
+    # embed.set_author(name='Dreamcraft Bot', icon_url='http://drive.google.com/uc?export=view&id=1jSmg-SJx5YwjgIepYA6SYjtPZ_aNQnNr')
+    if len(image_split) > 1:
+        embed.set_image(url=image_split[1])
+    await ctx.send(embed=embed)
 
 bot.run(TOKEN)

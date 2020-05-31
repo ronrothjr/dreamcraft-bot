@@ -2,7 +2,6 @@
 import os
 import re
 from dotenv import load_dotenv
-from discord import Embed
 
 from models import Channel, User, Character
 from commands import *
@@ -39,14 +38,6 @@ class DreamcraftHandler():
         self.command = args[0].lower()
         self.func = None
         self.messages = []
-
-    async def handle(self):
-        self.messages = self.get_messages()
-        # Concatenate messages and send
-        if self.command == 'cheat':
-            [await self.send(f'{m}\n') for m in self.messages]
-        else:
-            await self.send('\n'.join(self.messages))
 
     def get_messages(self):
         modules = {
@@ -139,19 +130,11 @@ class DreamcraftHandler():
             else:
                 self.messages = [f'Unknown command: {self.command}']
             
-        return self.messages
-
-    async def send(self, message):
-        if message:
-            image_split = message.split('!image')
-            message = image_split[0]
-            if len(image_split) > 2:
-                 message += ''.join(image_split[2:])
-            embed = Embed(type='rich', title=f'{self.module} Module - {PREFIX}{COMMAND} {self.module.lower()} help', colour=13400320, description=message)
-            # embed.set_author(name='Dreamcraft Bot', icon_url='http://drive.google.com/uc?export=view&id=1jSmg-SJx5YwjgIepYA6SYjtPZ_aNQnNr')
-            if len(image_split) > 1:
-                embed.set_image(url=image_split[1])
-            await self.ctx.send(embed=embed)
+        # Concatenate messages and send
+        if self.command == 'cheat':
+            return self.module, [f'{m}\n' for m in self.messages]
+        else:
+            return self.module, '\n'.join(self.messages)
 
     def get_answer(self):
         guild = self.ctx.guild if self.ctx.guild else self.ctx.author

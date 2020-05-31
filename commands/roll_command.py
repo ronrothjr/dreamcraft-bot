@@ -91,8 +91,9 @@ class RollCommand():
         is_conflict = self.engagement and self.engagement.type_name != 'Conflict'
         if not self.engagement or not is_conflict:
             messages.append('"There is no conflict." -_Darth Vader in **Return of the Jedi**_')
-        if str(self.char.id) not in self.engagement.characters and str(self.char.id) not in self.engagement.opposition:
-            messages.append(f'***{self.char.name}*** is not in a conflict. Sure you wanna pick a fight?')
+        if self.engagement and self.engagement.characters:
+            if str(self.char.id) not in self.engagement.characters and str(self.char.id) not in self.engagement.opposition:
+                messages.append(f'***{self.char.name}*** is not in a conflict. Sure you wanna pick a fight?')
         return messages
 
     def add_chars_to_engagement(self):

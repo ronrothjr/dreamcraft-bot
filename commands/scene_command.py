@@ -16,10 +16,10 @@ class SceneCommand():
     def __init__(self, parent, ctx, args, guild, user, channel):
         self.parent = parent
         self.ctx = ctx
-        self.args = args[1:]
+        self.args = args[1:] if args[0] in ['scene', 's'] else args
         self.guild = guild
         self.user = user
-        self.command = self.args[0].lower() if len(self.args) > 0 else 'n'
+        self.command = self.args[0].lower() if len(self.args) > 0 else 'select'
         channel = 'private' if ctx.channel.type.name == 'private' else ctx.channel.name
         self.channel = Channel().get_or_create(channel, self.guild.name, self.user)
         self.scenario = Scenario().get_by_id(self.channel.active_scenario) if self.channel and self.channel.active_scenario else None
@@ -189,7 +189,6 @@ class SceneCommand():
         return dialog_string
     
     def name(self, args):
-        self.check_scene()
         messages = []
         if len(args) == 0:
             if not self.sc:
@@ -343,7 +342,7 @@ class SceneCommand():
         self.sc.save()
         return [
             f'Description updated to "{description}"',
-            self.sc.get_string(self.channel)
+            self.sc.get_string(self.channel, self.user)
         ]
 
     def character(self, args):
@@ -425,11 +424,9 @@ class SceneCommand():
         leaving = [z for z in zones if str(self.char.id) in z.characters]
         for l in leaving:
             messages.extend(zone_svc.player(('p', 'delete', self.char.name), self.channel, l, self.user))
-            self.note(('note', f'***{self.char.name}*** exits the _{l.name}_ zone')
-        )
+            self.note(('note', f'***{self.char.name}*** exits the _{l.name}_ zone'))
         messages.extend(zone_svc.player(('p', self.char.name), self.channel, zone[0], self.user))
-        self.note(('note', f'***{self.char.name}*** enters the _{zone[0].name}_ zone')
-    )
+        self.note(('note', f'***{self.char.name}*** enters the _{zone[0].name}_ zone'))
         return messages
 
     def exit(self, args):

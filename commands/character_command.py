@@ -424,7 +424,7 @@ class CharacterCommand():
                 self.char = selection
                 self.user.set_active_character(self.char)
                 char_svc.save_user(self.user)
-                return [self.dialog('')]
+                return [self.dialog('active_character')]
 
             def formatter(item, item_num, page_num, page_size):
                 return f'_CHARACTER #{((page_num-1)*page_size)+item_num+1}_\n{item.get_short_string(self.user)}'
@@ -438,7 +438,7 @@ class CharacterCommand():
                 'type_name': 'CHARACTER',
                 'getter': {
                     'method': Character.get_by_page,
-                    'params': {'params': {'user': self.user, 'name__icontains': char_name, 'guild': self.guild.name, 'npc': False, 'archived': False}}
+                    'params': {'params': {'user': self.user, 'name__icontains': char_name, 'guild': self.guild.name, 'npc': self.npc, 'archived': False}}
                 },
                 'formatter': formatter,
                 'cancel': canceler,
@@ -460,7 +460,7 @@ class CharacterCommand():
             self.char = selection
             self.user.set_active_character(self.char)
             char_svc.save_user(self.user)
-            return [self.dialog('')]
+            return [self.dialog('active_character')]
 
         def formatter(item, item_num, page_num, page_size):
             return f'_CHARACTER #{((page_num-1)*page_size)+item_num+1}_\n{item.get_short_string(self.user)}'
@@ -662,8 +662,7 @@ class CharacterCommand():
             self.char.description = description
             char_svc.save(self.char, self.user)
             messages.append(f'Description updated to _{description}_\n')
-            messages.append(self.dialog('active_character_short') + '\n')
-            messages.append(self.dialog(''))
+            messages.append(self.dialog('active_character_short'))
         return messages
 
     def high_concept(self, args):
@@ -683,7 +682,6 @@ class CharacterCommand():
             self.char.high_concept = hc
             char_svc.save(self.char, self.user)
             messages.append(f'High Concept updated to _{hc}_\n')
-            messages.append(self.dialog('active_character_short') + '\n')
             messages.append(self.dialog(''))
         return messages
 
@@ -700,7 +698,6 @@ class CharacterCommand():
             self.char.trouble = trouble
             char_svc.save(self.char, self.user)
             messages.append(f'Trouble updated to _{trouble}_\n')
-            messages.append(self.dialog('active_character_short') + '\n')
             messages.append(self.dialog(''))
         return messages
 
@@ -823,7 +820,6 @@ class CharacterCommand():
                     self.char.use_approaches = True
                     char_svc.save(self.char, self.user)
                 messages.append(self.char.get_string_skills() + '\n')
-                messages.append(self.dialog(''))
         return messages
 
     def skill(self, args):
@@ -861,7 +857,6 @@ class CharacterCommand():
                     self.char.use_approaches = False
                     char_svc.save(self.char, self.user)            
                 messages.append(self.char.get_string_skills() + '\n')
-                messages.append(self.dialog(''))
         return messages
 
     def aspect(self, args):
@@ -940,7 +935,7 @@ class CharacterCommand():
             self.char.active_character = str(self.stu.id)
             char_svc.save(self.char, self.user)
             messages.append(self.char.get_string_stunts(self.user) + '\n')
-        messages.append(self.dialog(''))
+            messages.append(self.dialog('edit_active_stunt'))
         return messages
 
     def get_available_stress(self, stress_type):

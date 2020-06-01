@@ -12,7 +12,42 @@ SETUP = Setup()
 UNDO_HELP = SETUP.undo_help
 
 class UndoCommand():
+    """
+    Handle 'undo', 'redo' commands and subcommands
+
+    Subcommands:
+        help - display a set of instructions on UndoCommand usage
+        note - add a note to the log
+        story - display the undo/redo story
+        list, l - display a list of existing changes
+        last - undo the last logged change
+        next - redo the next logged change (based on the current history_id)
+    """
+
     def __init__(self, parent, ctx, args, guild, user, channel):
+        """
+        Command handler for UndoCommand
+
+        Parameters
+        ----------
+        parent : DreamcraftHandler
+            The handler for Dreamcraft Bot commands and subcommands
+        ctx : object(Context)
+            The Discord.Context object used to retrieve and send information to Discord users
+        args : array(str)
+            The arguments sent to the bot to parse and evaluate
+        guild : Guild
+            The guild object containing information about the server issuing commands
+        user : User
+            The user database object containing information about the user's current setttings, and dialogs
+        channel : Channel
+            The channel from which commands were issued
+
+        Returns
+        -------
+        UndoCommand - object for processing undo/redo commands and subcommands
+        """
+
         self.parent = parent
         self.ctx = ctx
         self.args = args[1:]

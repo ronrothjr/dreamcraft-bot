@@ -29,6 +29,7 @@ class SessionCommand():
         end - add an end time to the session
         delete - remove an session (archive)
     """
+
     def __init__(self, parent, ctx, args, guild, user, channel):
         """
         Command handler for SessionCommand
@@ -52,6 +53,7 @@ class SessionCommand():
         -------
         SessionCommand - object for processing session commands and subcommands
         """
+    
         self.parent = parent
         self.ctx = ctx
         self.args = args[1:]

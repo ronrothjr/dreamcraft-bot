@@ -9,6 +9,7 @@ class CheatCommand():
     """
     Handle 'cheat' commands and subcommands
     """
+
     def __init__(self, parent, ctx, args, guild=None, user=None, channel=None):
         """
         Command handler for cheat command
@@ -34,6 +35,7 @@ class CheatCommand():
         -------
         CharacterCommand - object for processing cheat commands
         """
+    
         self.parent = parent
         self.ctx = ctx
         self.args = args[1:]

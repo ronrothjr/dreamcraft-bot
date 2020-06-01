@@ -27,6 +27,7 @@ class ZoneCommand():
         players, player, p - add players to the zone
         delete - remove an zone (archive)
     """
+
     def __init__(self, parent, ctx, args, guild, user, channel):
         """
         Command handler for ZoneCommand
@@ -50,6 +51,7 @@ class ZoneCommand():
         -------
         ZoneCommand - object for processing zone commands and subcommands
         """
+    
         self.parent = parent
         self.ctx = ctx
         self.args = args[1:] if args[0] in ['zone', 'z'] else args

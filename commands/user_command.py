@@ -17,6 +17,7 @@ class UserCommand():
         user, u - display and create new users by name
         timezone, tz - set or display a list of existing timezones
     """
+
     def __init__(self, parent, ctx, args, guild, user, channel):
         """
         Command handler for UserCommand
@@ -40,6 +41,7 @@ class UserCommand():
         -------
         UserCommand - object for processing user commands and subcommands
         """
+
         self.parent = parent
         self.ctx = ctx
         self.args = args[1:]

@@ -32,6 +32,7 @@ class EngagementCommand():
         end - add an end time to the engagement
         delete - remove an engagement (archive)
     """
+
     def __init__(self, parent, ctx, args, guild, user, channel):
         """
         Command handler for EngagementCommand

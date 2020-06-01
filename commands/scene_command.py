@@ -34,6 +34,7 @@ class SceneCommand():
         exit - remove a character from the scene
         delete - remove an scene (archive)
     """
+
     def __init__(self, parent, ctx, args, guild, user, channel):
         """
         Command handler for SceneCommand

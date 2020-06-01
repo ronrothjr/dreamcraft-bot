@@ -39,6 +39,7 @@ class ChannelCommand():
         -------
         ChannelCommand - object for processing channel subcommands
         """
+
         self.parent = parent
         self.ctx = ctx
         self.args = args[1:]

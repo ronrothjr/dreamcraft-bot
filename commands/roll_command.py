@@ -58,6 +58,7 @@ class RollCommand():
         -------
         RollCommand - object for processing roll commands and subcommands
         """
+    
         self.parent = parent
         self.ctx = ctx
         self.command = args[0].lower()

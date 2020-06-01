@@ -22,6 +22,7 @@ class SuggestionCommand():
         list, l - display a list of existing suggestions
         delete - remove an suggestion (archive)
     """
+
     def __init__(self, parent, ctx, args, guild, user, channel):
         """
         Command handler for SuggestionCommand
@@ -45,6 +46,7 @@ class SuggestionCommand():
         -------
         SuggestionCommand - object for processing suggestion commands and subcommands
         """
+
         self.parent = parent
         self.ctx = ctx
         self.args = args[1:] if args[0] in ['suggestion', 'suggest'] else args

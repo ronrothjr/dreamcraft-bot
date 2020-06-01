@@ -22,6 +22,7 @@ class RevisionCommand():
         list, l - display a list of existing revisions
         delete - remove an revision (archive)
     """
+
     def __init__(self, parent, ctx, args, guild, user, channel):
         """
         Command handler for RevisionCommand

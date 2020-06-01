@@ -27,6 +27,7 @@ class ScenarioCommand():
         players, player, p - add players to the scenario
         delete - remove an scenario (archive)
     """
+
     def __init__(self, parent, ctx, args, guild, user, channel):
         """
         Command handler for ScenarioCommand

@@ -1,4 +1,7 @@
 # exchange_service.py
+__author__ = 'Ron Roth Jr'
+__contact__ = 'u/ensosati'
+
 import traceback
 import copy
 from bson.objectid import ObjectId

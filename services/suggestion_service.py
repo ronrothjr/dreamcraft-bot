@@ -1,4 +1,7 @@
 # suggestion_service.py
+__author__ = 'Ron Roth Jr'
+__contact__ = 'u/ensosati'
+
 from models import Suggestion
 from utils import T
 

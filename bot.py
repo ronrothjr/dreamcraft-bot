@@ -1,6 +1,10 @@
 # bot.py
+__author__ = 'Ron Roth Jr'
+__contact__ = 'u/ensosati'
+__version__ = 'v1.0.57'
+
 import os
-from mongoengine import *
+from mongoengine import connect
 
 from discord.ext import commands
 from discord import Embed, Game, Status

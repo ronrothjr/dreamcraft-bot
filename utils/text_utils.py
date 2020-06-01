@@ -1,4 +1,7 @@
 # text_utils.py
+__author__ = 'Ron Roth Jr'
+__contact__ = 'u/ensosati'
+
 import re
 
 class TextUtils(object):

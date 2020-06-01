@@ -1,4 +1,7 @@
 # undo_command
+__author__ = 'Ron Roth Jr'
+__contact__ = 'u/ensosati'
+
 import traceback
 import math
 from commands import CharacterCommand
@@ -61,7 +64,16 @@ class UndoCommand():
         self.char = Character().get_by_id(self.user.active_character) if self.user and self.user.active_character else None
 
     def run(self):
+        """
+        Execute the channel commands by validating and finding their respective methods
+
+        Returns
+        -------
+        list(str) - a list of messages in response the command validation and execution
+        """
+
         try:
+            # List of subcommands mapped the command methods
             switcher = {
                 'help': self.help,
                 'note': self.note,

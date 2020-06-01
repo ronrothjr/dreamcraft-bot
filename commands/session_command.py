@@ -1,4 +1,7 @@
 # session_command
+__author__ = 'Ron Roth Jr'
+__contact__ = 'u/ensosati'
+
 import traceback
 from commands import CharacterCommand
 from models import Channel, Scenario, Scene, Session, Character, User, Log
@@ -69,7 +72,16 @@ class SessionCommand():
         self.char = Character().get_by_id(self.user.active_character) if self.user and self.user.active_character else None
 
     def run(self):
+        """
+        Execute the channel commands by validating and finding their respective methods
+
+        Returns
+        -------
+        list(str) - a list of messages in response the command validation and execution
+        """
+
         try:
+            # List of subcommands mapped the command methods
             switcher = {
                 'help': self.help,
                 'note': self.note,

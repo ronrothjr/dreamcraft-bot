@@ -1,4 +1,7 @@
 # dreamcraft.py
+__author__ = 'Ron Roth Jr'
+__contact__ = 'u/ensosati'
+
 import os
 import re
 from dotenv import load_dotenv

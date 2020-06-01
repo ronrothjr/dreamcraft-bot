@@ -1,4 +1,7 @@
 # character_command.py
+__author__ = 'Ron Roth Jr'
+__contact__ = 'u/ensosati'
+
 import traceback
 import datetime
 from datetime import timezone
@@ -105,7 +108,16 @@ class CharacterCommand():
         self.stu = Character().get_by_id(self.char.active_stunt) if self.char and self.char.active_stunt else None
 
     def run(self):
+        """
+        Execute the channel commands by validating and finding their respective methods
+
+        Returns
+        -------
+        list(str) - a list of messages in response the command validation and execution
+        """
+
         try:
+            # List of subcommands mapped the command methods
             switcher = {
                 'help': self.help,
                 'note': self.note,

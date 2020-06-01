@@ -1,4 +1,7 @@
 # engagement.py
+__author__ = 'Ron Roth Jr'
+__contact__ = 'u/ensosati'
+
 from mongoengine import Document, StringField, ReferenceField, ListField, BooleanField, DateTimeField, DynamicField, signals
 from models.character import User
 from models.character import Character

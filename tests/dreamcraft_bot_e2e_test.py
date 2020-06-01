@@ -1,4 +1,7 @@
 # dreamcraft_bot_e2e_test.py
+__author__ = 'Ron Roth Jr'
+__contact__ = 'u/ensosati'
+
 import unittest
 import datetime
 import asyncio

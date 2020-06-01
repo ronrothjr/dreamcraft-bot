@@ -1,5 +1,8 @@
 # cheat_command.py
+__author__ = 'Ron Roth Jr'
+__contact__ = 'u/ensosati'
 
+import traceback
 from config.setup import Setup
 
 SETUP = Setup()
@@ -41,10 +44,22 @@ class CheatCommand():
         self.args = args[1:]
 
     def run(self):
-        messages = []
-        if not self.args:
-            [messages.append(f'\n \n***{k}***{CHEATS[k]}') for k in CHEATS]
-        else:
-            search = ' '.join(self.args).lower()
-            [messages.append(f'\n \n***{k}***{CHEATS[k]}') for k in CHEATS if search in k.lower() or search in CHEATS[k].lower()]
-        return messages
+        """
+        Execute the channel commands by validating and finding their respective methods
+
+        Returns
+        -------
+        list(str) - a list of messages in response the command validation and execution
+        """
+
+        try:
+            messages = []
+            if not self.args:
+                [messages.append(f'\n \n***{k}***{CHEATS[k]}') for k in CHEATS]
+            else:
+                search = ' '.join(self.args).lower()
+                [messages.append(f'\n \n***{k}***{CHEATS[k]}') for k in CHEATS if search in k.lower() or search in CHEATS[k].lower()]
+            return messages
+        except Exception as err:
+            traceback.print_exc()
+            return list(err.args)

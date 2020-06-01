@@ -1,4 +1,7 @@
 # session.py
+__author__ = 'Ron Roth Jr'
+__contact__ = 'u/ensosati'
+
 from bson import ObjectId
 from mongoengine import Document, StringField, ReferenceField, ListField, BooleanField, DateTimeField, signals
 from models.character import User

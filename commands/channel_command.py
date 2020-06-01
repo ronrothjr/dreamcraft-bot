@@ -1,4 +1,8 @@
 # channel_command
+__author__ = 'Ron Roth Jr'
+__contact__ = 'u/ensosati'
+
+import traceback
 from models import Channel, User, Character, Scene
 from services import ChannelService, ScenarioService
 from utils import Dialog, T
@@ -55,22 +59,35 @@ class ChannelCommand():
         self.char = Character().get_by_id(self.user.active_character) if self.user and self.user.active_character else None
 
     def run(self):
-        switcher = {
-            'channel': self.chan,
-            'chan': self.chan,
-            'list': self.channel_list,
-            'users': self.users,
-            'u': self.users
-        }
-        # Get the function from switcher dictionary
-        if self.command in switcher:
-            func = switcher.get(self.command, lambda: self.chan)
-            # Execute the function
-            messages = func(self.args)
-        else:
-            messages = [f'Unknown command: {self.command}']
-        # Send messages
-        return messages
+        """
+        Execute the channel commands by validating and finding their respective methods
+
+        Returns
+        -------
+        list(str) - a list of messages in response the command validation and execution
+        """
+
+        try:
+            # List of subcommands mapped the command methods
+            switcher = {
+                'channel': self.chan,
+                'chan': self.chan,
+                'list': self.channel_list,
+                'users': self.users,
+                'u': self.users
+            }
+            # Get the function from switcher dictionary
+            if self.command in switcher:
+                func = switcher.get(self.command, lambda: self.chan)
+                # Execute the function
+                messages = func(self.args)
+            else:
+                messages = [f'Unknown command: {self.command}']
+            # Send messages
+            return messages
+        except Exception as err:
+            traceback.print_exc()
+            return list(err.args)
 
     def chan(self, args):
         return [self.channel.get_string(self.user)]

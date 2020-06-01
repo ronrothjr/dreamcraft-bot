@@ -1,4 +1,7 @@
-# dialof.py
+# dialog.py
+__author__ = 'Ron Roth Jr'
+__contact__ = 'u/ensosati'
+
 import math
 import copy
 import inflect

@@ -1,4 +1,7 @@
 # suggestion_command.py
+__author__ = 'Ron Roth Jr'
+__contact__ = 'u/ensosati'
+
 import traceback
 import pytz
 from config.setup import Setup
@@ -57,7 +60,16 @@ class SuggestionCommand():
         self.can_edit = self.user.role == 'Admin' if self.user else False
 
     def run(self):
+        """
+        Execute the channel commands by validating and finding their respective methods
+
+        Returns
+        -------
+        list(str) - a list of messages in response the command validation and execution
+        """
+
         try:
+            # List of subcommands mapped the command methods
             switcher = {
                 'help': self.help,
                 'list': self.suggestion_list,

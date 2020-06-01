@@ -1,4 +1,7 @@
 # revision_service.py
+__author__ = 'Ron Roth Jr'
+__contact__ = 'u/ensosati'
+
 from models import Revision
 from utils import T
 

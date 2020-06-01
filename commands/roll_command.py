@@ -1,4 +1,7 @@
 # roll_command.py
+__author__ = 'Ron Roth Jr'
+__contact__ = 'u/ensosati'
+
 import traceback
 import random
 import copy
@@ -84,7 +87,16 @@ class RollCommand():
         self.invokes_cost = 0
 
     def run(self):
+        """
+        Execute the channel commands by validating and finding their respective methods
+
+        Returns
+        -------
+        list(str) - a list of messages in response the command validation and execution
+        """
+
         try:
+            # List of subcommands mapped the command methods
             switcher = {
                 'help': self.help,
                 'roll': self.roll,

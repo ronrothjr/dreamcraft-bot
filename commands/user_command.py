@@ -1,5 +1,8 @@
 # user_command.py
+__author__ = 'Ron Roth Jr'
+__contact__ = 'u/ensosati'
 
+import traceback
 import pytz
 from config.setup import Setup
 from models.user import User
@@ -51,22 +54,35 @@ class UserCommand():
         self.command = self.args[0].lower() if len(self.args) > 0 else 'u'
 
     def run(self):
-        switcher = {
-            'help': self.help,
-            'user': self.get_user,
-            'u': self.get_user,
-            'timezone': self.time_zone,
-            'tz': self.time_zone
-        }
-        # Get the function from switcher dictionary
-        if self.command in switcher:
-            func = switcher.get(self.command, lambda: self.time_zone)
-            # Execute the function
-            messages = func()
-        else:
-            messages = [f'Unknown command: {self.command}']
-        # Send messages
-        return messages
+        """
+        Execute the channel commands by validating and finding their respective methods
+
+        Returns
+        -------
+        list(str) - a list of messages in response the command validation and execution
+        """
+        
+        try:
+            # List of subcommands mapped the command methods
+            switcher = {
+                'help': self.help,
+                'user': self.get_user,
+                'u': self.get_user,
+                'timezone': self.time_zone,
+                'tz': self.time_zone
+            }
+            # Get the function from switcher dictionary
+            if self.command in switcher:
+                func = switcher.get(self.command, lambda: self.time_zone)
+                # Execute the function
+                messages = func()
+            else:
+                messages = [f'Unknown command: {self.command}']
+            # Send messages
+            return messages
+        except Exception as err:
+            traceback.print_exc()
+            return list(err.args)
 
     def help(self):
         return [USER_HELP]

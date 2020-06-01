@@ -44,7 +44,7 @@ class CharacterCommand():
         self.scenario = Scenario().get_by_id(self.channel.active_scenario) if self.channel and self.channel.active_scenario else None
         self.sc = Scene().get_by_id(self.channel.active_scene) if self.channel and self.channel.active_scene else None
         self.char = char if char else (Character().get_by_id(self.user.active_character) if self.user and self.user.active_character else None)
-        self.can_edit = str(self.user.id) == str(self.user.id) or self.user.role == 'Game Master' if self.user and self.char else True
+        self.can_edit = str(self.user.id) == str(self.char.user.id) or self.user.role == 'Game Master' if self.user and self.char else True
         self.asp = Character().get_by_id(self.char.active_aspect) if self.char and self.char.active_aspect else None
         self.stu = Character().get_by_id(self.char.active_stunt) if self.char and self.char.active_stunt else None
 
@@ -635,8 +635,11 @@ class CharacterCommand():
                                 f'Try deleting and retoring one of them.```css\n.d c delete {char_name}\n',
                                 f'\n.d c restore {char_name}```'
                             ]))
-                        self.char.archived = False
-                        char_svc.save(self.char, self.user)
+                        if self.user.role in ['Admin', 'Game Master'] or str(self.user.id) == str(self.user.char.id):
+                            self.char.archived = False
+                            char_svc.save(self.char, self.user)
+                        else:
+                            raise Exception('You do not have permission to edit this character')
                         messages.append(self.dialog(''))
                     else:
                         raise Exception(prompt)
@@ -644,8 +647,11 @@ class CharacterCommand():
                 self.char = chars[0]
                 self.user.set_active_character(self.char)
                 char_svc.save_user(self.user)
-                self.char.archived = False
-                char_svc.save(self.char, self.user)
+                if self.user.role in ['Admin', 'Game Master'] or str(self.user.id) == str(self.user.char.id):
+                    self.char.archived = False
+                    char_svc.save(self.char, self.user)
+                else:
+                    raise Exception('You do not have permission to edit this character')
                 messages.append(self.dialog(''))
         return messages
 

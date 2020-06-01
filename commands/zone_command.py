@@ -349,4 +349,4 @@ class ZoneCommand():
         return zone_svc.player(args, self.channel, self.zone, self.user)
 
     def delete_zone(self, args):
-        return zone_svc.delete_zone(args, self.guild, self.channel, self.scene, self.zone, self.user)
+        return zone_svc.delete_zone(args, self.guild, self.channel, self.sc, self.zone, self.user)

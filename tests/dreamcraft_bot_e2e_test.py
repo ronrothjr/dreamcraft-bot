@@ -5,14 +5,15 @@ import asyncio
 from handlers import DreamcraftHandler
 from mocks import CTX
 
-ctx = CTX('Test Guild', 'Test User', 'bot_testing')
+ctx1 = CTX('Test Guild', 'Test User 1', 'bot_testing')
+ctx2 = CTX('Test Guild', 'Test User 2', 'bot_testing')
 
 class TestDreamcraftBotE2E(unittest.TestCase):
 
-    def send_and_validate_commands(self, commands):
+    def send_and_validate_commands(self, ctx, commands):
         for command in commands:
             print('\nCommand: ' + ' '.join(command['args']) + '\n')
-            handler = DreamcraftHandler(ctx, command['args'])
+            handler = DreamcraftHandler(command['ctx'] if 'ctx' in command else ctx, command['args'])
             messages = handler.get_messages()
             [print(message) for message in messages]
             if 'assertions' in command:
@@ -25,7 +26,17 @@ class TestDreamcraftBotE2E(unittest.TestCase):
         self.assertTrue(assert_test, err_str)
 
     def test_user_setup(self):
-        self.send_and_validate_commands([
+        self.send_and_validate_commands(ctx1, [
+            {
+                'args': ('user', 'timezone', 'America/New_York'),
+                'assertions': [
+                    ['Saved time zone as ***America/New_York***', 'should save user time_zone as New York']
+                ]
+            }
+        ])
+
+    def test_user_2_setup(self):
+        self.send_and_validate_commands(ctx2, [
             {
                 'args': ('user', 'timezone', 'America/New_York'),
                 'assertions': [
@@ -35,7 +46,7 @@ class TestDreamcraftBotE2E(unittest.TestCase):
         ])
 
     def test_npc_character_creation(self):
-        self.send_and_validate_commands([  
+        self.send_and_validate_commands(ctx2, [  
             {
                 'args': ('c',),
                 'assertions': [
@@ -71,9 +82,9 @@ class TestDreamcraftBotE2E(unittest.TestCase):
         ])
 
     def test_character_creation(self):
-        self.send_and_validate_commands([
+        self.send_and_validate_commands(ctx1, [
             {
-                'args': ('Test Character',),
+                'args': ('c', 'Test Character'),
                 'assertions': [
                     ['Create a new CHARACTER named ***Test Character***', 'Should ask Create Test Character question']
                 ]
@@ -214,8 +225,27 @@ class TestDreamcraftBotE2E(unittest.TestCase):
             }
         ])
 
+    def test_character_permissions(self):
+        self.send_and_validate_commands(ctx2, [
+            {
+                'args': ('c','list')
+            },
+            {
+                'args': ('=1',),
+                'assertions': [
+                    ['***Test Character*** _(Active)_  _(Character)_', 'Test Character should be the active character']
+                ]
+            },
+            {
+                'args': ('t','Trouble 2'),
+                'assertions': [
+                    ['You do not have permission', 'should not allow Test User 2 to edit Test Character']
+                ]
+            }
+        ])
+
     def test_scenario_creation(self):
-        self.send_and_validate_commands([
+        self.send_and_validate_commands(ctx1, [
             {
                 'args': ('scenario',),
                 'assertions': [
@@ -244,7 +274,7 @@ class TestDreamcraftBotE2E(unittest.TestCase):
         ])
 
     def test_scene_creation(self):
-        self.send_and_validate_commands([
+        self.send_and_validate_commands(ctx1, [
             {
                 'args': ('scene',),
                 'assertions': [
@@ -285,7 +315,7 @@ class TestDreamcraftBotE2E(unittest.TestCase):
         ])
 
     def test_zone_creation(self):
-        self.send_and_validate_commands([
+        self.send_and_validate_commands(ctx1, [
             {
                 'args': ('zone',),
                 'assertions': [
@@ -313,17 +343,20 @@ class TestDreamcraftBotE2E(unittest.TestCase):
         ])
 
     def test_scene_features(self):
-        self.send_and_validate_commands([
+        self.send_and_validate_commands(ctx1, [
             {
+                'ctx': ctx2,
                 'args': ('c', 'npc', 'Test NPC')
             },
             {
+                'ctx': ctx2,
                 'args': ('scene', 'enter'),
                 'assertions': [
                     ['Added ***Test NPC*** to _Test Scene_ scene', 'should add \'Test NPC\' to \'Test Scene\'']
                 ]
             },
             {
+                'ctx': ctx2,
                 'args': ('scene', 'move', 'Test Zone'),
                 'assertions': [
                     ['Added ***Test NPC*** to _Test Zone_ zone', 'should move \'Test NPC\' to \'Test Zone\'']
@@ -352,15 +385,18 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                 ]
             },
             {
+                'ctx': ctx2,
                 'args': ('c', 'npc', 'Test NPC')
             },
             {
+                'ctx': ctx2,
                 'args': ('defend', 'Forceful'),
                 'assertions': [
                     [' shifts to absorb', 'should display \'Test NPC\' rolling with shifts to absorb']
                 ]
             },
             {
+                'ctx': ctx2,
                 'args': ('c', 'st', 'Physical'),
                 'assertions': [
                     [' left to absorb.', 'should display remaining shifts to absorb']

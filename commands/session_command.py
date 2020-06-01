@@ -17,7 +17,7 @@ class SessionCommand():
     Subcommands:
         help - display a set of instructions on SessionCommand usage
         note - add a note to the session
-        say - add dialog to the scene from the session
+        say - add dialog to the session from the session
         story - display the session's story
         name, n - display and create new sessions by name
         description, desc - add/edit the Description in the engeagement

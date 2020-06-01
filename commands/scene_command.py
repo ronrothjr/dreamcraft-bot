@@ -14,7 +14,7 @@ SCENE_HELP = SETUP.scene_help
 
 class SceneCommand():
     """
-    Handle 'scene' commands and subcommands
+    Handle 'scene', 's' commands and subcommands
 
     Subcommands:
         help - display a set of instructions on SceneCommand usage

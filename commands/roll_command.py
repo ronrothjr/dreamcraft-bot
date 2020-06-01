@@ -21,7 +21,43 @@ FATE_DICE = SETUP.fate_dice
 LADDER = SETUP.fate_ladder
 
 class RollCommand():
-    def __init__(self, parent, ctx, args, guild=None, user=None, channel=None):
+    """
+    Handle 'roll', 'r' commands and subcommands
+
+    Subcommands:
+        help - display a set of instructions on RollCommand usage
+        roll, r - roll fate dice with approach/skill and invoke/compel options
+        reroll, re - reroll a previous roll with additional invoke/compel options
+        attack, att - attack another roll within a scene and roll
+        defend, def - defend from an attack by another roll within the scene and roll
+        available, avail, av - display a list of available aspects and stunts to invoke
+    """
+
+    def __init__(self, parent, ctx, args, guild, user=None, channel=None, char=None):
+        """
+        Command handler for roll command
+
+        Parameters
+        ----------
+        parent : DreamcraftHandler
+            The handler for Dreamcraft Bot commands and subcommands
+        ctx : object(Context)
+            The Discord.Context object used to retrieve and send information to Discord users
+        args : array(str)
+            The arguments sent to the bot to parse and evaluate
+        guild : Guild
+            The guild object containing information about the server issuing commands
+        user : User
+            The user database object containing information about the user's current setttings, and dialogs
+        channel : Channel
+            The channel from which commands were issued
+        char : Character, optional
+            The database roll object 
+
+        Returns
+        -------
+        RollCommand - object for processing roll commands and subcommands
+        """
         self.parent = parent
         self.ctx = ctx
         self.command = args[0].lower()
@@ -55,7 +91,9 @@ class RollCommand():
                 'reroll': self.roll,
                 're': self.roll,
                 'attack': self.attack,
+                'att': self.attack,
                 'defend': self.defend,
+                'def': self.defend,
                 'available': self.show_available,
                 'avail': self.show_available,
                 'av': self.show_available

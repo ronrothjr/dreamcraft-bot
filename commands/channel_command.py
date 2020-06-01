@@ -18,7 +18,7 @@ class ChannelCommand():
 
     def __init__(self, parent, ctx, args, guild, user, channel):
         """
-        Command handler for character command
+        Command handler for channel command
 
         Parameters
         ----------

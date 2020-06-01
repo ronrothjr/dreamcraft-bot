@@ -25,7 +25,7 @@ class EngagementCommand():
         description, desc - add/edit the Description in the engeagement
         select - display existing engeagement
         character, char, c - edit the engagement as a character
-        list, l - display a list of existing engagements and NPCs
+        list, l - display a list of existing engagements
         players, player, p - add players to the engagement
         opposition, opp, o - add opposition to the engagement
         start - add a start time to the engagement

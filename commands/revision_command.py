@@ -19,7 +19,7 @@ class RevisionCommand():
     Subcommands:
         help - display a set of instructions on RevisionCommand usage
         name, n - display and create new revisions by name
-        list, l - display a list of existing revisions and NPCs
+        list, l - display a list of existing revisions
         delete - remove an revision (archive)
     """
     def __init__(self, parent, ctx, args, guild, user, channel):

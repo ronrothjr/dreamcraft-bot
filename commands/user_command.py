@@ -38,7 +38,7 @@ class UserCommand():
 
         Returns
         -------
-        UserCommand - object for processing suggestion commands and subcommands
+        UserCommand - object for processing user commands and subcommands
         """
         self.parent = parent
         self.ctx = ctx

@@ -15,7 +15,7 @@ class ScenarioCommand():
     Handle 'scenario' commands and subcommands
 
     Subcommands:
-        help - display a set of instructions on CharacterCommand usage
+        help - display a set of instructions on ScenarioCommand usage
         note - add a note to the scenario
         say - add dialog to the scene from the scenario
         story - display the scenario's story
@@ -23,7 +23,7 @@ class ScenarioCommand():
         description, desc - add/edit the Description in the engeagement
         select, = - display existing engeagement
         character, char, c - edit the scenario as a character
-        list, l - display a list of existing characters and NPCs
+        list, l - display a list of existing scenarios
         players, player, p - add players to the scenario
         delete - remove an scenario (archive)
     """

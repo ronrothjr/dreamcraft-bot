@@ -5,7 +5,7 @@ __contact__ = 'u/ensosati'
 import traceback
 import copy
 from bson.objectid import ObjectId
-from models import User, Scenario, Scene, Character
+from models import User, Scenario, Scene, Character, Channel
 from config.setup import Setup
 from utils import TextUtils, T
 

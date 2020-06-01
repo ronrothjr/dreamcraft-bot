@@ -101,13 +101,38 @@ class UndoCommand():
             return list(err.args)
 
     def help(self, args):
+        """Returns the help text for the command"""
         return [UNDO_HELP]
 
     def note(self, args):
+        """Add a note the change log
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         Log().create_new(str(self.user.id), 'Log', str(self.user.id), self.guild.name, 'Log', {'by': self.user.name, 'note': ' '.join(args[1:])}, 'created')
         return ['Log created']
 
     def story(self, args):
+        """Disaply the log story
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         messages =[]
         command = 'log ' + (' '.join(args))
         def canceler(cancel_args):
@@ -147,6 +172,18 @@ class UndoCommand():
         char_svc.save_user(self.user)
 
     def undo_list(self, args):
+        """Display a dialog for viewing and selecting Changes to undo
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         messages =[]
         command = 'undo ' + (' '.join(args))
         def canceler(cancel_args):
@@ -178,6 +215,18 @@ class UndoCommand():
         return messages
 
     def get_undo(self, undo):
+        """Get the change information to undo or redo it
+        
+        Parameters
+        ----------
+        undo : str
+            The id of the current change history to work forward from
+
+        Returns
+        -------
+        str - the response messages string array
+        """
+
         switcher = {
             'Character': Character,
             'Stunt': Character,
@@ -199,6 +248,18 @@ class UndoCommand():
         return changes, item, undo_changes_str
 
     def last(self, args):
+        """Display a dialog to verify the change to undo
+        
+        Parameters
+        ----------
+        redo : stre
+            The id of the current change history to work forward from
+
+        Returns
+        -------
+        str - the response messages string array
+        """
+
         messages = []
         undos = None
         if self.user.history_id:
@@ -239,6 +300,18 @@ class UndoCommand():
         return messages
 
     def undo_changes(self, undo):
+        """Apply the changes to undo a previous change
+        
+        Parameters
+        ----------
+        undo : str
+            The id of the change to undo
+
+        Returns
+        -------
+        str - the response messages string array
+        """
+
         changes, item, undo_changes_str = self.get_undo(undo)
         undos = list(Log.get_by_page(params={'parent_id': undo.parent_id, 'updated__lt': undo.updated, 'category__ne': 'Log'}, page_num=0))
         if undo.action == 'created':
@@ -276,6 +349,18 @@ class UndoCommand():
             return f'{undo.category} {TextUtils.clean(item.name)} has been undone:\n\n{item.get_string()}'
 
     def next(self, args):
+        """Display a dialog for viewing and selecting Changes to redo
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         messages = []
         redo = None
         if not self.user.history_id:
@@ -312,6 +397,18 @@ class UndoCommand():
         return messages
 
     def redo_changes(self, redo):
+        """Apply the changes to redo a previous undone change
+        
+        Parameters
+        ----------
+        redo : str
+            The id of the current change history to work forward from
+
+        Returns
+        -------
+        str - the response messages string array
+        """
+
         changes, item, undo_changes_str = self.get_undo(redo)
         history = Log.get_by_page(params={'updated__gt': redo.updated, 'category__ne': 'Log'}, page_num=0).first()
         item.history_id = str(history.id) if history else None

@@ -32,9 +32,9 @@ class SceneCommand():
         players, player, p - add players to the scene
         start - add a start time to the scene
         end - add an end time to the scene
-        enter - add a character to a scene with a stage note
+        enter - add a character to a scene with a staging note
         move - add a character to the current zone
-        exit - remove a character from the scene
+        exit - remove a character from the scene with a staging note
         delete - remove an scene (archive)
     """
 
@@ -136,6 +136,7 @@ class SceneCommand():
             return list(err.args)
 
     def help(self, args):
+        """Returns the help text for the command"""
         return [SCENE_HELP]
 
     def check_scene(self):
@@ -143,10 +144,34 @@ class SceneCommand():
             raise Exception('You don\'t have an active scene. Try this:```css\n.d scene SCENE_NAME```')
 
     def search(self, args):
+        """Search for an existing Scene using the command string
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         params = {'name__icontains': ' '.join(args[0:]), 'guild': self.guild.name, 'channel_id': str(self.channel.id), 'archived': False}
         return scene_svc.search(args, Scene.filter, params)
 
     def note(self, args):
+        """Add a note to the Scene story
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         if self.sc:
             Log().create_new(str(self.sc.id), f'Scene: {self.sc.name}', str(self.user.id), self.guild.name, 'Scene', {'by': self.user.name, 'note': ' '.join(args[1:])}, 'created')
             return ['Log created']
@@ -154,6 +179,18 @@ class SceneCommand():
             return ['No active scene to log']
 
     def say(self, args):
+        """Add dialog to the Scene story
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         if not self.sc:
             return ['No active scene to log']
         else:
@@ -162,6 +199,18 @@ class SceneCommand():
             return ['Log created']
 
     def story(self, args):
+        """Disaply the Scene story
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         messages =[]
         command = 'scene ' + (' '.join(args))
         def canceler(cancel_args):
@@ -200,6 +249,18 @@ class SceneCommand():
         return messages
 
     def dialog(self, dialog_text, sc=None):
+        """Display Scene information and help text
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         sc, name, get_string, get_short_string = scene_svc.get_scene_info(self.sc, self.channel, self.user)
         category = sc.category if sc else 'Scene'
         dialog = {
@@ -246,6 +307,18 @@ class SceneCommand():
         return dialog_string
     
     def name(self, args):
+        """Display and create a new Scene by name
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         messages = []
         if len(args) == 0:
             if not self.sc:
@@ -319,6 +392,18 @@ class SceneCommand():
         return messages
 
     def select(self, args):
+        """Select an existing Scene by name
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         messages = []
         if len(args) == 0:
             if not self.sc:
@@ -364,6 +449,18 @@ class SceneCommand():
         return messages
 
     def scene_list(self, args):
+        """Display a dialog for viewing and selecting Scenes
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         messages = []
         def canceler(cancel_args):
             if cancel_args[0].lower() in ['scene']:
@@ -389,6 +486,18 @@ class SceneCommand():
         return messages
 
     def description(self, args):
+        """Add/edit the description for a Scene
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         if len(args) == 1:
             raise Exception('No description provided')
         self.check_scene()
@@ -403,6 +512,18 @@ class SceneCommand():
         ]
 
     def character(self, args):
+        """Edit the Scene as a character
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         self.check_scene()
         if self.user:
             self.user.active_character = str(self.sc.character.id)
@@ -411,12 +532,48 @@ class SceneCommand():
         return command.run()
 
     def player(self, args):
+        """Add/remove a player from the Scene
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         return scene_svc.player(args, self.channel, self.sc, self.user)
 
     def delete_scene(self, args):
+        """Delete (archive) the current active Scene
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         return scene_svc.delete_scene(args, self.guild, self.channel, self.scenario, self.sc, self.user)
 
     def start(self, args):
+        """Add a start time to the Scene
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         self.check_scene()
         if self.sc.started_on:
             raise Exception(f'***{self.sc.name}*** already began on {T.to(self.sc.started_on, self.user)}')
@@ -426,6 +583,18 @@ class SceneCommand():
             return [self.dialog('')]
 
     def end(self, args):
+        """Add an end time to the Engagement
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         self.check_scene()
         if len(args) > 1 and args[1] == 'delete':
             self.sc.ended_on = None
@@ -442,6 +611,18 @@ class SceneCommand():
                 return [self.dialog('')]
 
     def enter(self, args):
+        """Add a character to a scene with a stage note
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         self.check_scene()
         if not self.char:
             raise Exception(f'You have no active character.```css\n.d c CHARACTER_NAME```')      
@@ -454,6 +635,18 @@ class SceneCommand():
         return messages
 
     def move(self, args):
+        """Move a Character to the current zone
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         messages = []
         self.check_scene()
         if not self.char or  (self.char and self.char.category != 'Character'):
@@ -487,6 +680,18 @@ class SceneCommand():
         return messages
 
     def exit(self, args):
+        """Remove a character from the scene with a staging note
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         self.check_scene()
         if not self.char and not self.char.category == 'Character':
             raise Exception(f'You have no active character.```css\n.d c CHARACTER_NAME```')      

@@ -90,9 +90,25 @@ class ChannelCommand():
             return list(err.args)
 
     def chan(self, args):
+        """Returns the list of strings with channel info
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+        """
+
         return [self.channel.get_string(self.user)]
 
     def channel_list(self, args):
+        """
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+        """
+
         messages = []
         def canceler(cancel_args):
             if cancel_args[0].lower() in ['chan']:
@@ -127,5 +143,13 @@ class ChannelCommand():
         return messages
 
     def users(self, args):
+        """
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+        """
+
         return [self.channel.get_users_string()]
 

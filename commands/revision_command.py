@@ -95,9 +95,22 @@ class RevisionCommand():
             return list(err.args)
 
     def help(self):
+        """Returns the help text for the command"""
         return [REVISION_HELP]
 
     def name(self, args):
+        """Display and create a new Revision by name
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         if not self.can_edit:
             raise Exception('You do not have permission to add revision text')
         messages = []
@@ -129,6 +142,18 @@ class RevisionCommand():
         return messages
 
     def revision_list(self, args):
+        """Display a dialog for viewing revisions
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         messages = []
         def canceler(cancel_args):
             if cancel_args[0].lower() in ['revision','rev']:
@@ -159,4 +184,16 @@ class RevisionCommand():
         return messages
 
     def delete_revision(self, args):
+        """Delete a revision
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         return revision_svc.delete_revision(args, self.user)

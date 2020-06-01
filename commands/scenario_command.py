@@ -125,9 +125,22 @@ class ScenarioCommand():
             return list(err.args)
 
     def help(self, args):
+        """Returns the help text for the command"""
         return [SCENARIO_HELP]
 
     def search(self, args):
+        """Search for an existing Scenario using the command string
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         params = {'name__icontains': ' '.join(args[0:]), 'guild': self.guild.name, 'channel_id': str(self.channel.id), 'archived': False}
         return scenario_svc.search(args, Scenario.filter, params)
 
@@ -140,6 +153,18 @@ class ScenarioCommand():
         return messages
 
     def note(self, args):
+        """Add a note to the Scenario story
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         if self.scenario:
             Log().create_new(str(self.scenario.id), f'Scenario: {self.scenario.name}', str(self.user.id), self.guild.name, 'Scenario', {'by': self.user.name, 'note': ' '.join(args[1:])}, 'created')
             return ['Log created']
@@ -147,6 +172,18 @@ class ScenarioCommand():
             return ['No active scenario to log']
 
     def say(self, args):
+        """Add dialog to the Scenario story
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         if not self.scenario:
             return ['No active scenario to log']
         else:
@@ -155,6 +192,18 @@ class ScenarioCommand():
             return ['Log created']
 
     def story(self, args):
+        """Disaply the Scenario story
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         messages =[]
         command = 'scenario ' + (' '.join(args))
         def canceler(cancel_args):
@@ -193,6 +242,18 @@ class ScenarioCommand():
         return messages
 
     def dialog(self, dialog_text, char=None):
+        """Display Scenario information and help text
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         char, name, get_string, get_short_string = scenario_svc.get_scenario_info(self.scenario, self.channel, self.user)
         category = char.category if char else 'Scenario'
         dialog = {
@@ -239,6 +300,18 @@ class ScenarioCommand():
         return dialog_string
     
     def name(self, args):
+        """Display and create a new Scenario by name
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         messages = []
         if len(args) == 0:
             if not self.scenario:
@@ -306,6 +379,18 @@ class ScenarioCommand():
         return messages
     
     def select(self, args):
+        """Select an existing Scenario by name
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         messages = []
         if len(args) == 0:
             if not self.scenario:
@@ -353,6 +438,18 @@ class ScenarioCommand():
         return messages
 
     def scenario_list(self, args):
+        """Display a dialog for viewing and selecting Scenarios
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         messages = []
         def canceler(cancel_args):
             if cancel_args[0].lower() in ['scenario']:
@@ -378,6 +475,18 @@ class ScenarioCommand():
         return messages
 
     def description(self, args):
+        """Add/edit the description for a Scenario
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         if len(args) == 1:
             return ['No description provided']
         if not self.scenario:
@@ -394,6 +503,18 @@ class ScenarioCommand():
             ]
 
     def character(self, args):
+        """Edit the Scenario as a character
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         if self.user:
             self.user.active_character = str(self.scenario.character.id)
             self.user.updated_by = str(self.user.id)
@@ -403,6 +524,18 @@ class ScenarioCommand():
         return command.run()
 
     def player(self, args):
+        """Add/remove a player from the Scenario
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         if len(args) == 1:
             return ['No characters added']
         if not self.scenario:
@@ -435,6 +568,18 @@ class ScenarioCommand():
             ]
 
     def delete_scenario(self, args):
+        """Delete (archive) the current active Scenario
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         messages = []
         search = ''
         if len(args) == 1:

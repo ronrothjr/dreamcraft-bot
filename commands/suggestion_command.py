@@ -94,9 +94,22 @@ class SuggestionCommand():
             return list(err.args)
 
     def help(self):
+        """Returns the help text for the command"""
         return [SUGGESTION_HELP]
 
     def name(self, args):
+        """Display and create a new Suggestion by name
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         messages = []
         if len(args) < 2:
             raise Exception('syntax: ```css\n.d suggest "SUGGESTION_TEXT"```')
@@ -105,6 +118,18 @@ class SuggestionCommand():
         return messages
 
     def suggestion_list(self, args):
+        """Display a dialog for viewing and selecting Suggestions
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         messages = []
         def canceler(cancel_args):
             if cancel_args[0].lower() in ['suggestion','suggest']:
@@ -135,6 +160,18 @@ class SuggestionCommand():
         return messages
 
     def delete_suggestion(self, args):
+        """Delete (archive) the current active Suggestion
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         if not self.can_edit:
             raise Exception('You are not allowed to delete suggestions.')
         return suggestion_svc.delete_suggestion(args, self.user)

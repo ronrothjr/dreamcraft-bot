@@ -85,12 +85,15 @@ class UserCommand():
             return list(err.args)
 
     def help(self):
+        """Returns the help text for the command"""
         return [USER_HELP]
 
     def get_user(self):
+        """Diplsay the current user information"""
         return [self.user.get_string()]
     
     def time_zone(self):
+        """Set/edit the user's timezone information"""
         tz_help = 'Try this:```css\n.d u timezone ZONE_SEARCH\n/* ZONE_SEARCH must be at least 3 characters */```'
         if len(self.args) == 0:
             if not self.user:

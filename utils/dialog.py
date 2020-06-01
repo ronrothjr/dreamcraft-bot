@@ -132,7 +132,6 @@ class Dialog(object):
         if not params:
             raise Exception('No data getter params supplied')
         items = method(**params, page_num=self.page_num, page_size=self.page_size)
-        # items = self.get_descendants(items, data_params)
         return items
 
     def get_entire_list(self):
@@ -143,7 +142,6 @@ class Dialog(object):
         if not params:
             raise Exception('No data getter params supplied')
         items = method(**params, page_num=0)
-        # items = self.get_descendants(items, data_params)
         return items
 
     def get_content(self, items):
@@ -169,33 +167,3 @@ class Dialog(object):
             return content
         else:
             return [f'You don\'t have anything in your {self.title}.']
-
-    def get_descendants(self, items, params):
-        parent_method = self.getter.get('parent_method', None)
-        params = copy.deepcopy(self.getter.get('params', None))
-        if parent_method is not null and params is not null and hasattr(item, 'parent_id'):
-            parent_ids = []
-            for item in items:
-                parent_ids.extend(self.get_parent_ids(child))
-            method = self.getter.get('method', None)
-            parent_ids = []
-            [parent_ids.extend(self.get_parent_ids(item)) for item in items if 'parent_id' in params]
-            self.getter.get('method', None)
-            params = [f'{self.data[d]}' for d in params if d == 'parent_id']
-            params.update(parent_id__in=parent_ids)
-            items = list(method(**params))
-            items.sort(key=lambda i: i.created)
-            offset = (self.page_num-1) * self.page_size
-            items = items[offset:offset+self.page_size]
-        return items
-
-    def get_parent_ids(self, item):
-        parent_ids = []
-        if item and 'parent_id' in params:
-            parent_method = self.getter.get('parent_method', None)
-            got_attr = hasattr(item, 'category') and item.category in ['Character', 'Stunt', 'Aspect']
-            got_parent_id = hasattr(item, 'parent_id') and item.parent_id
-            child_items = parent_method({'parent_id': item.parent_id}, page_num=0)
-            [parent_ids.append(str(child.id)) for child in child_items]
-            parent_ids.extend(self.get_parent_ids(child) for child in child_items)
-        return parent_ids

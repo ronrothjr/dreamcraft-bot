@@ -11,7 +11,45 @@ SETUP = Setup()
 ZONE_HELP = SETUP.zone_help
 
 class ZoneCommand():
+    """
+    Handle 'zone', 'z' commands and subcommands
+
+    Subcommands:
+        help - display a set of instructions on ZoneCommand usage
+        note - add a note to the zone
+        say - add dialog to the zone from the zone
+        story - display the zone's story
+        name, n - display and create new zones by name
+        description, desc - add/edit the Description in the zone
+        select - display existing zone
+        character, char, c - edit the zone as a character
+        list, l - display a list of existing characters and NPCs
+        players, player, p - add players to the zone
+        delete - remove an zone (archive)
+    """
     def __init__(self, parent, ctx, args, guild, user, channel):
+        """
+        Command handler for ZoneCommand
+
+        Parameters
+        ----------
+        parent : DreamcraftHandler
+            The handler for Dreamcraft Bot commands and subcommands
+        ctx : object(Context)
+            The Discord.Context object used to retrieve and send information to Discord users
+        args : array(str)
+            The arguments sent to the bot to parse and evaluate
+        guild : Guild
+            The guild object containing information about the server issuing commands
+        user : User
+            The user database object containing information about the user's current setttings, and dialogs
+        channel : Channel
+            The channel from which commands were issued
+
+        Returns
+        -------
+        ZoneCommand - object for processing zone commands and subcommands
+        """
         self.parent = parent
         self.ctx = ctx
         self.args = args[1:] if args[0] in ['zone', 'z'] else args

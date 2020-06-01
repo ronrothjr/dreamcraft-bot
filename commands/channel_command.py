@@ -7,7 +7,38 @@ channel_svc = ChannelService()
 scenario_svc = ScenarioService()
 
 class ChannelCommand():
+    """
+    Handle 'channel' and 'chan' commands and subcommands
+
+    Subcommands:
+        channel, chan - display channel information
+        list - dipslay a list of channels within the current guild
+        users, u - display a list of users interacting wtih the channel
+    """
+
     def __init__(self, parent, ctx, args, guild, user, channel):
+        """
+        Command handler for character command
+
+        Parameters
+        ----------
+        parent : DreamcraftHandler
+            The handler for Dreamcraft Bot commands and subcommands
+        ctx : object(Context)
+            The Discord.Context object used to retrieve and send information to Discord users
+        args : array(str)
+            The arguments sent to the bot to parse and evaluate
+        guild : Guild
+            The guild object containing information about the server issuing commands
+        user : User
+            The user database object containing information about the user's current setttings, and dialogs
+        channel : Channel
+            The channel from which commands were issued        
+
+        Returns
+        -------
+        ChannelCommand - object for processing channel subcommands
+        """
         self.parent = parent
         self.ctx = ctx
         self.args = args[1:]
@@ -24,6 +55,7 @@ class ChannelCommand():
 
     def run(self):
         switcher = {
+            'channel': self.chan,
             'chan': self.chan,
             'list': self.channel_list,
             'users': self.users,

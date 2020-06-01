@@ -9,7 +9,37 @@ SETUP = Setup()
 USER_HELP = SETUP.user_help
 
 class UserCommand():
+    """
+    Handle 'user', 'u' commands and subcommands
+
+    Subcommands:
+        help - display a set of instructions on UserCommand usage
+        user, u - display and create new users by name
+        timezone, tz - set or display a list of existing timezones
+    """
     def __init__(self, parent, ctx, args, guild, user, channel):
+        """
+        Command handler for UserCommand
+
+        Parameters
+        ----------
+        parent : DreamcraftHandler
+            The handler for Dreamcraft Bot commands and subcommands
+        ctx : object(Context)
+            The Discord.Context object used to retrieve and send information to Discord users
+        args : array(str)
+            The arguments sent to the bot to parse and evaluate
+        guild : Guild
+            The guild object containing information about the server issuing commands
+        user : User
+            The user database object containing information about the user's current setttings, and dialogs
+        channel : Channel
+            The channel from which commands were issued
+
+        Returns
+        -------
+        UserCommand - object for processing suggestion commands and subcommands
+        """
         self.parent = parent
         self.ctx = ctx
         self.args = args[1:]

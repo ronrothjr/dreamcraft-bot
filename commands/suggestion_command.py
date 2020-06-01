@@ -13,7 +13,38 @@ SUGGESTION_HELP = SETUP.suggestion_help
 suggestion_svc = SuggestionService()
 
 class SuggestionCommand():
+    """
+    Handle 'suggestion', 'suggest' commands and subcommands
+
+    Subcommands:
+        help - display a set of instructions on SuggestionCommand usage
+        name, n - display and create new suggestions by name
+        list, l - display a list of existing suggestions
+        delete - remove an suggestion (archive)
+    """
     def __init__(self, parent, ctx, args, guild, user, channel):
+        """
+        Command handler for SuggestionCommand
+
+        Parameters
+        ----------
+        parent : DreamcraftHandler
+            The handler for Dreamcraft Bot commands and subcommands
+        ctx : object(Context)
+            The Discord.Context object used to retrieve and send information to Discord users
+        args : array(str)
+            The arguments sent to the bot to parse and evaluate
+        guild : Guild
+            The guild object containing information about the server issuing commands
+        user : User
+            The user database object containing information about the user's current setttings, and dialogs
+        channel : Channel
+            The channel from which commands were issued
+
+        Returns
+        -------
+        SuggestionCommand - object for processing suggestion commands and subcommands
+        """
         self.parent = parent
         self.ctx = ctx
         self.args = args[1:] if args[0] in ['suggestion', 'suggest'] else args
@@ -28,6 +59,7 @@ class SuggestionCommand():
             switcher = {
                 'help': self.help,
                 'list': self.suggestion_list,
+                'l': self.suggestion_list,
                 'name': self.name,
                 'n': self.name,
                 'delete': self.delete_suggestion

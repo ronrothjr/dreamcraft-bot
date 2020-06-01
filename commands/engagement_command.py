@@ -12,7 +12,50 @@ SETUP = Setup()
 ENGAGEMENT_HELP = SETUP.engagement_help
 
 class EngagementCommand():
+    """
+    Handle 'engagement', 'engage', 'e' commands and subcommands
+
+    Subcommands:
+        help - display a set of instructions on CharacterCommand usage
+        note - add a note to the character
+        say - add dialog to the scene from the character
+        story - display the character's story
+        parent, p - return viewing and editing focus to the character's parent component
+        name, n - display and create new engagements by name
+        description, desc - add/edit the Description in the engeagement
+        select - display existing engeagement
+        character, char, c - edit the engagement as a character
+        list, l - display a list of existing engagements and NPCs
+        players, player, p - add players to the engagement
+        opposition, opp, o - add opposition to the engagement
+        start - add a start time to the engagement
+        end - add an end time to the engagement
+        delete - remove an engagement (archive)
+    """
     def __init__(self, parent, ctx, args, guild, user, channel):
+        """
+        Command handler for EngagementCommand
+
+        Parameters
+        ----------
+        parent : DreamcraftHandler
+            The handler for Dreamcraft Bot commands and subcommands
+        ctx : object(Context)
+            The Discord.Context object used to retrieve and send information to Discord users
+        args : array(str)
+            The arguments sent to the bot to parse and evaluate
+        guild : Guild
+            The guild object containing information about the server issuing commands
+        user : User
+            The user database object containing information about the user's current setttings, and dialogs
+        channel : Channel
+            The channel from which commands were issued
+
+        Returns
+        -------
+        EngagementCommand - object for processing engagement commands and subcommands
+        """
+
         self.parent = parent
         self.ctx = ctx
         self.args = args[1:]

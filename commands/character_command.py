@@ -29,7 +29,63 @@ CONSEQUENCES_TITLES = SETUP.consequences_titles
 CONSEQUENCES_SHIFTS = SETUP.consequence_shifts
 
 class CharacterCommand():
+    """
+    Handle 'character', 'char', 'c' commands and subcommands
+
+    Subcommands:
+        help - display a set of instructions on CharacterCommand usage
+        note - add a note to the character
+        say - add dialog to the scene from the character
+        story - display the character's story
+        stats - display statistics on Dreamcraft Bot usage
+        parent, p - return viewing and editing focus to the character's parent component
+        name, n - display and create new characters by name
+        select - display existing characters
+        image - add an image to embed in the character sheet
+        list, l - display a list of existing characters and NPCs
+        delete - remove a character (archive)
+        restore - restore a character from the archive
+        copy - duplicate a character from one server to another (must have access to both)
+        description, desc - add/edit the Description in the character sheet
+        high, hc - add/edit the High Concept in the character sheet
+        trouble, t - add/edit the Trouble in the character sheet
+        fate, f - add/remove/refresh fate points
+        aspect, a - add/delete aspects
+        boost, b - add aspects as a boost
+        approach, app - add/edit approaches in the character sheet
+        skill, sk - add/edit skills in the characater sheet
+        stunt, s - add/delete stunts
+        stress, st - add/edit stress tracks in the character sheet
+        consequence, con - add/edit consequences and conditions in the character sheet
+        custom - add/edit custom fields in the character sheet
+    """
+
     def __init__(self, parent, ctx, args, guild, user, channel, char=None):
+        """
+        Command handler for character command
+
+        Parameters
+        ----------
+        parent : DreamcraftHandler
+            The handler for Dreamcraft Bot commands and subcommands
+        ctx : object(Context)
+            The Discord.Context object used to retrieve and send information to Discord users
+        args : array(str)
+            The arguments sent to the bot to parse and evaluate
+        guild : Guild
+            The guild object containing information about the server issuing commands
+        user : User
+            The user database object containing information about the user's current setttings, and dialogs
+        channel : Channel
+            The channel from which commands were issued
+        char : Character, optional
+            The database character object 
+
+        Returns
+        -------
+        CharacterCommand - object for processing character commands and subcommands
+        """
+
         self.parent = parent
         self.ctx = ctx
         self.args = args[1:] if args[0] in ['character', 'char', 'c'] else args
@@ -122,7 +178,7 @@ class CharacterCommand():
 
     def note(self, args):
         if self.char:
-            Log().create_new(str(self.char.id), f'Character: {self.char.name}', str(self.user.id), self.guild.name, 'Character', {'by': self.user.name, 'note': f'{self.char.name} says, "' + ' '.join(args[1:])} + '"', 'created')
+            Log().create_new(str(self.char.id), f'Character: {self.char.name}', str(self.user.id), self.guild.name, 'Character', {'by': self.user.name, 'note': '"' + ' '.join(args[1:])} + '"', 'created')
             return ['Log created']
         else:
             return ['No active character to log']
@@ -201,7 +257,9 @@ class CharacterCommand():
         return messages
 
     def dialog(self, dialog_text, char=None):
-        char, name, get_string, get_short_string = char_svc.get_char_info(self.char, self.user)
+        char = char if char else self.char
+        char, name, get_string, get_short_string = char_svc.get_char_info(char, self.user)
+        can_edit = str(self.user.id) == str(char.user.id) or self.user.role == 'Game Master' if self.user and char else True
         category = char.category if char else 'Character'
         dialog = {
             'create_character': ''.join([
@@ -209,14 +267,14 @@ class CharacterCommand():
                 '.d character YOUR_CHARACTER\'S_NAME```'
             ]),
             'active_character': ''.join([
-                '***YOU ARE CURRENTLY EDITING...***\n' if self.can_edit else '',
+                '***YOU ARE CURRENTLY EDITING...***\n' if can_edit else '',
                 f':point_down:\n\n{get_string}'
             ]),
             'rename_delete': ''.join([
                 f'\n\n_Is ***{name}*** not the {category.lower()} name you wanted?_',
                 f'```css\n.d c rename NEW_NAME```_Want to remove ***{name}***?_',
                 '```css\n.d c delete```'
-            ]),
+            ]) if can_edit else '',
             'active_character_short': ''.join([
                 f'***THIS IS YOUR ACTIVE CHARACTER:***\n',
                 f':point_down:\n\n{get_short_string}'
@@ -225,7 +283,7 @@ class CharacterCommand():
                 f'Add more information about ***{name}***',
                 '```css\n.d c description CHARACTER_DESCRIPTION\n',
                 '.d c high concept HIGH_CONCEPT\n.d c trouble TROUBLE```'
-            ]),
+            ]) if can_edit else '',
             'add_skills': ''.join([
                 f'\nAdd approaches or skills for ***{name}***',
                 '```css\n.d c approach Fo +4 Cl +2 Qu +1 Sn +2 Ca +1 Fl 0...\n',
@@ -241,7 +299,7 @@ class CharacterCommand():
                 '.d c skill "Basket Weaving" +1 ...\n',
                 '/* GET LIST OF SKILLS or ADD YOUR OWN */\n',
                 '.d c skill help```'
-            ]),
+            ]) if can_edit else '',
             'add_aspects_and_stunts': ''.join([
                 f'\n\nAdd an aspect or two for ***{name}***',
                 '```css\n.d c aspect ASPECT_NAME\n',
@@ -249,7 +307,7 @@ class CharacterCommand():
                 f'Give  ***{name}*** some cool stunts',
                 '```css\n.d c stunt STUNT_NAME\n',
                 '.d c stunt delete STUNT_NAME```'
-            ]),
+            ]) if can_edit else '',
             'edit_active_aspect': ''.join([
                 f'\n***You can edit this aspect as if it were a character***',
                 '```css\n.d c aspect character\n',
@@ -257,7 +315,7 @@ class CharacterCommand():
                 '.d c\n',
                 '/* THIS WILL RETURN YOU TO EDITING THE CHARACTER */\n',
                 '.d c parent```'
-            ]),
+            ]) if can_edit else '',
             'edit_active_stunt': ''.join([
                 f'\n***You can edit this stunt as if it were a character***',
                 '```css\n.d c stunt character\n',
@@ -265,20 +323,20 @@ class CharacterCommand():
                 '.d c\n',
                 '/* THIS WILL RETURN YOU TO EDITING THE CHARACTER */\n',
                 '.d c parent```'
-            ]),
+            ]) if can_edit else '',
             'manage_stress': ''.join([
                 f'\n***Modify the stress tracks.\n',
                 'Here\'s an example to add and remove stress tracks***',
                 '```css\n.d c stress title 4 Ammo\n.d c stress title delete Ammo\n',
                 '.d c stress title FATE /* also use FAE or Core */```'
-            ]),
+            ]) if can_edit else '',
             'manage_conditions': ''.join([
                 f'\n***Modify the conditions tracks.\n',
                 'Here\'s an example to add and remove consequence tracks***',
                 '```css\n.d c consequences title 2 Injured\n',
                 '.d c consequences title delete Injured\n',
                 '.d c consequences title FATE /* also use FAE or Core */```'
-            ]),
+            ]) if can_edit else '',
             'go_back_to_parent': ''.join([
                 f'\n\n***You can GO BACK to the parent character, aspect, or stunt***',
                 '```css\n.d c parent\n.d c p```'
@@ -302,24 +360,24 @@ class CharacterCommand():
             else:
                 dialog_string += dialog.get('active_character', '')
                 if not char.high_concept or not char.trouble:
-                    dialog_string += dialog.get('rename_delete', '') if self.can_edit else ''
-                    dialog_string += dialog.get('add_more_info', '') if self.can_edit else ''
+                    dialog_string += dialog.get('rename_delete', '')
+                    dialog_string += dialog.get('add_more_info', '')
                 elif not char.skills:                    
-                    dialog_string += dialog.get('add_skills', '') if self.can_edit else ''
+                    dialog_string += dialog.get('add_skills', '')
                 elif char.skills:  
-                    dialog_string += dialog.get('add_aspects_and_stunts', '') if self.can_edit else ''
-                    dialog_string += dialog.get('manage_stress', '') if self.can_edit else ''
-                    dialog_string += dialog.get('manage_conditions', '') if self.can_edit else ''
+                    dialog_string += dialog.get('add_aspects_and_stunts', '')
+                    dialog_string += dialog.get('manage_stress', '')
+                    dialog_string += dialog.get('manage_conditions', '')
         else:
             if dialog_text:
                 dialog_string += dialog.get(dialog_text, '')
             else:
-                dialog_string += dialog.get('active_character', '') if self.can_edit else ''
-                dialog_string += dialog.get('rename_delete', '') if self.can_edit else ''
-                dialog_string += dialog.get('go_back_to_parent', '') if self.can_edit else ''
-                dialog_string += dialog.get('add_aspects_and_stunts', '') if self.can_edit else ''
-                dialog_string += dialog.get('manage_stress', '') if self.can_edit else ''
-                dialog_string += dialog.get('manage_conditions', '') if self.can_edit else ''
+                dialog_string += dialog.get('active_character', '')
+                dialog_string += dialog.get('rename_delete', '')
+                dialog_string += dialog.get('go_back_to_parent', '')
+                dialog_string += dialog.get('add_aspects_and_stunts', '')
+                dialog_string += dialog.get('manage_stress', '')
+                dialog_string += dialog.get('manage_conditions', '')
         return dialog_string
 
     def name(self, args):

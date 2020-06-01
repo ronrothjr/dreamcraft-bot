@@ -11,7 +11,47 @@ SETUP = Setup()
 SESSION_HELP = SETUP.session_help
 
 class SessionCommand():
+    """
+    Handle 'session' commands and subcommands
+
+    Subcommands:
+        help - display a set of instructions on SessionCommand usage
+        note - add a note to the session
+        say - add dialog to the scene from the session
+        story - display the session's story
+        name, n - display and create new sessions by name
+        description, desc - add/edit the Description in the engeagement
+        select, = - display existing engeagement
+        character, char, c - edit the session as a character
+        list, l - display a list of existing sessions
+        players, player, p - add players to the session
+        start - add a start time to the session
+        end - add an end time to the session
+        delete - remove an session (archive)
+    """
     def __init__(self, parent, ctx, args, guild, user, channel):
+        """
+        Command handler for SessionCommand
+
+        Parameters
+        ----------
+        parent : DreamcraftHandler
+            The handler for Dreamcraft Bot commands and subcommands
+        ctx : object(Context)
+            The Discord.Context object used to retrieve and send information to Discord users
+        args : array(str)
+            The arguments sent to the bot to parse and evaluate
+        guild : Guild
+            The guild object containing information about the server issuing commands
+        user : User
+            The user database object containing information about the user's current setttings, and dialogs
+        channel : Channel
+            The channel from which commands were issued
+
+        Returns
+        -------
+        SessionCommand - object for processing session commands and subcommands
+        """
         self.parent = parent
         self.ctx = ctx
         self.args = args[1:]

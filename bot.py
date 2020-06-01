@@ -38,7 +38,7 @@ async def command_handler(ctx: Context, *args) -> None:
     ----------
     ctx : object(Context)
         The Discord.Context object used to retrieve and send information to Discord users
-    args : tuple
+    args : array(str)
         The arguments sent to the bot to parse and evaluate
     """
 

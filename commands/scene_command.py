@@ -13,7 +13,51 @@ SETUP = Setup()
 SCENE_HELP = SETUP.scene_help
 
 class SceneCommand():
+    """
+    Handle 'scene' commands and subcommands
+
+    Subcommands:
+        help - display a set of instructions on SceneCommand usage
+        note - add a note to the scene
+        say - add dialog to the scene from the scene
+        story - display the scene's story
+        name, n - display and create new scenes by name
+        description, desc - add/edit the Description in the scene
+        select, = - display existing scene
+        character, char, c - edit the scene as a character
+        list, l - display a list of existing characters and NPCs
+        players, player, p - add players to the scene
+        start - add a start time to the scene
+        end - add an end time to the scene
+        enter - add a character to a scene with a stage note
+        move - add a character to the current zone
+        exit - remove a character from the scene
+        delete - remove an scene (archive)
+    """
     def __init__(self, parent, ctx, args, guild, user, channel):
+        """
+        Command handler for SceneCommand
+
+        Parameters
+        ----------
+        parent : DreamcraftHandler
+            The handler for Dreamcraft Bot commands and subcommands
+        ctx : object(Context)
+            The Discord.Context object used to retrieve and send information to Discord users
+        args : array(str)
+            The arguments sent to the bot to parse and evaluate
+        guild : Guild
+            The guild object containing information about the server issuing commands
+        user : User
+            The user database object containing information about the user's current setttings, and dialogs
+        channel : Channel
+            The channel from which commands were issued
+
+        Returns
+        -------
+        SceneCommand - object for processing scene commands and subcommands
+        """
+
         self.parent = parent
         self.ctx = ctx
         self.args = args[1:] if args[0] in ['scene', 's'] else args

@@ -257,8 +257,8 @@ class EngagementCommand():
         list(str) - the response messages string array
         """
 
-        engagement, name, get_string, get_short_string = engagement_svc.get_engagement_info(engagement if engagement else self.engagement, self.channel, self.user)
-        category = engagement.category if engagement else 'Engagement'
+        engagement, name, get_string, get_short_string = engagement_svc.get_info('engagement', engagement if engagement else self.engagement, self.channel, self.user)
+        category = 'Engagement'
         dialog = {
             'create_engagement': ''.join([
                 '**CREATE or ENGAGEMENT**```css\n',
@@ -287,7 +287,7 @@ class EngagementCommand():
             if not engagement:
                 dialog_string += dialog.get('create_engagement', '')
             dialog_string += dialog.get('rename_delete', '')
-        elif engagement.category == 'Engagement':
+        elif category == 'Engagement':
             if dialog_text:
                 dialog_string += dialog.get(dialog_text, '')
             else:
@@ -347,7 +347,7 @@ class EngagementCommand():
                         engagement_svc.save(self.engagement, self.user)
                         messages.append(self.dialog(''))
             else:
-                if engagement_type not in ['conflict','contest','challenge']:
+                if engagement_type.lower() not in ['conflict','contest','challenge']:
                     raise Exception('No engagement type (CONFLICT, CONTEST, CHALLENGE)')
                 if len(args) > 2:
                     engagement_name = ' '.join(args[2:])
@@ -587,7 +587,7 @@ class EngagementCommand():
         list(str) - the response messages string array
         """
 
-        return engagement_svc.delete_engagement(args, self.guild, self.channel, self.sc, self.engagement, self.user)
+        return engagement_svc.delete_item(args, self.guild, self.channel, self.user, self.engagement, Engagement.find, {"guild": self.guild.name, "channel_id": str(self.channel.id), "scene_id": str(self.sc.id)})
 
     def start(self, args):
         """Add a start time to the Engagement

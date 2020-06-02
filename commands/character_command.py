@@ -343,7 +343,7 @@ class CharacterCommand():
 
         messages = []
         if (self.user and self.char and self.char.parent_id):
-            messages.extend(char_svc.get_parent_by_id(self.char, self.user, self.char.parent_id))
+            messages.extend(char_svc.get_parent_by_id(Character.filter, self.user, self.char.parent_id))
         else:
             messages.append('No parent found')
         return messages
@@ -362,7 +362,7 @@ class CharacterCommand():
         """
 
         char = char if char else self.char
-        char, name, get_string, get_short_string = char_svc.get_char_info(char, self.user)
+        char, name, get_string, get_short_string = char_svc.get_info('character', char, self.user)
         can_edit = str(self.user.id) == str(char.user.id) or self.user.role == 'Game Master' if self.user and char else True
         category = char.category if char else 'Character'
         dialog = {
@@ -797,7 +797,7 @@ class CharacterCommand():
             char_svc.save_user(self.user)
             messages.extend([question])
         if parent_id:
-            messages.extend(char_svc.get_parent_by_id(self.char, self.user, parent_id))
+            messages.extend(char_svc.get_parent_by_id(Character.filter, self.user, parent_id))
         return messages
 
     def restore_character(self, args):

@@ -2,49 +2,12 @@
 __author__ = 'Ron Roth Jr'
 __contact__ = 'u/ensosati'
 
-import traceback
-import copy
 from bson.objectid import ObjectId
-from models import User, Channel,Character, Engagement
-from config.setup import Setup
+from models import User, Channel, Character, Engagement
 from utils import TextUtils, T
+from services.base_service import BaseService
 
-class EngagementService():
-    def search(self, args, method, params):
-        if len(args) == 0:
-            return None
-        item = method(**params).first()
-        if item:
-            return item
-        else:
-            return None
-
-    def save(self, item, user):
-        if item:
-            item.updated_by = str(user.id)
-            item.updated = T.now()
-            item.history_id = ''
-            item.save()
-
-    def save_user(self, user):
-        if user:
-            user.updated_by = str(user.id)
-            user.updated = T.now()
-            user.save()
-
-    def get_parent_by_id(self, char, user, parent_id):
-        parent = Engagement.filter(id=ObjectId(parent_id)).first()
-        if parent:
-            user.active_character = str(parent.id)
-            self.save_user(user)
-            return [parent.get_string(user)] if parent.get_string else f'***{parent.name}*** selected as Active Engagement'
-        return ['No parent found']
-
-    def get_engagement_info(self, engagement, channel, user):
-        name = engagement.name if engagement else 'your engagement'
-        get_string = engagement.get_string(channel, user) if engagement else ''
-        get_short_string = engagement.get_short_string(channel) if engagement else ''
-        return engagement.character if engagement else None, name, get_string, get_short_string
+class EngagementService(BaseService):
 
     def player(self, args, channel, engagement, user):
         messages = []

@@ -253,8 +253,8 @@ class SessionCommand():
         list(str) - the response messages string array
         """
 
-        session, name, get_string, get_short_string = session_svc.get_session_info(self.session, self.channel, self.user)
-        category = session.category if session else 'Session'
+        session, name, get_string, get_short_string = session_svc.get_info('session', self.session, self.channel, self.user)
+        category = 'Session'
         dialog = {
             'create_session': ''.join([
                 '**CREATE or SESSION**```css\n',
@@ -283,7 +283,7 @@ class SessionCommand():
             if not session:
                 dialog_string += dialog.get('create_session', '')
             dialog_string += dialog.get('rename_delete', '')
-        elif session.category == 'Session':
+        elif category == 'Session':
             if dialog_text:
                 dialog_string += dialog.get(dialog_text, '')
             else:
@@ -311,7 +311,6 @@ class SessionCommand():
         list(str) - the response messages string array
         """
 
-        self.check_session()
         messages = []
         if len(args) == 0:
             if not self.session:
@@ -491,10 +490,10 @@ class SessionCommand():
             raise Exception('No description provided')
         self.check_session()
         description = ' '.join(args[1:])
-        self.sc.description = description
-        self.sc.updated_by = str(self.user.id)
-        self.sc.updated = T.now()
-        self.sc.save()
+        self.session.description = description
+        self.session.updated_by = str(self.user.id)
+        self.session.updated = T.now()
+        self.session.save()
         return [
             f'Description updated to "{description}"',
             self.session.get_string(self.channel)

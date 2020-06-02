@@ -178,20 +178,21 @@ class RollCommand():
         messages = []
         if self.engagement:
             is_char_opposed = self.user.role == 'Game Master'
+            # If no engagement started for this engagement, start one now between the attacker and the defender
             if is_char_opposed:
-                if str(self.char.id) not in self.exchange.opposition:
-                    self.exchange.opposition.append(str(self.char.id))
-                    messages.append(f'Added ***{self.char.name}*** to _{self.exchange.name}_ exchange opposition')
-                if str(self.target.id) not in self.exchange.characters:
-                    self.exchange.characters.append(str(self.target.id))
-                    messages.append(f'Added ***{self.target.name}*** to _{self.exchange.name}_ exchange characters')
+                if str(self.char.id) not in self.engagement.opposition:
+                    self.engagement.opposition.append(str(self.char.id))
+                    messages.append(f'Added ***{self.char.name}*** to _{self.engagement.name}_ engagement opposition')
+                if str(self.target.id) not in self.engagement.characters:
+                    self.engagement.characters.append(str(self.target.id))
+                    messages.append(f'Added ***{self.target.name}*** to _{self.engagement.name}_ engagement characters')
             else:
-                if str(self.char.id) not in self.exchange.opposition:
-                    self.exchange.characters.append(str(self.char.id))
-                    messages.append(f'Added ***{self.char.name}*** to _{self.exchange.name}_ exchange characters')
-                if str(self.target.id) not in self.exchange.characters:
-                    self.exchange.opposition.append(str(self.target.id))
-                    messages.append(f'Added ***{self.char.target}*** to _{self.exchange.name}_ exchange opposition')
+                if str(self.char.id) not in self.engagement.opposition:
+                    self.engagement.characters.append(str(self.char.id))
+                    messages.append(f'Added ***{self.char.name}*** to _{self.engagement.name}_ engagement characters')
+                if str(self.target.id) not in self.engagement.characters:
+                    self.engagement.opposition.append(str(self.target.id))
+                    messages.append(f'Added ***{self.char.target}*** to _{self.engagement.name}_ engagement opposition')
             engagement_svc.save(self.engagement, self.user)
         return messages
 

@@ -246,8 +246,8 @@ class ZoneCommand():
         list(str) - the response messages string array
         """
 
-        zone, name, get_string, get_short_string = zone_svc.get_zone_info(zone if zone else self.zone, self.channel)
-        category = zone.category if zone else 'Zone'
+        zone, name, get_string, get_short_string = zone_svc.get_info('zone', zone if zone else self.zone, self.channel)
+        category = 'Zone'
         dialog = {
             'create_zone': ''.join([
                 '**CREATE or ZONE**```css\n',
@@ -276,7 +276,7 @@ class ZoneCommand():
             if not zone:
                 dialog_string += dialog.get('create_zone', '')
             dialog_string += dialog.get('rename_delete', '')
-        elif zone.category == 'Zone':
+        elif category == 'Zone':
             if dialog_text:
                 dialog_string += dialog.get(dialog_text, '')
             else:

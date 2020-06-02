@@ -13,10 +13,12 @@ if __name__ == '__main__':
     suite.addTest(tests.TestDreamcraftBotE2E('test_npc_character_creation'))
     suite.addTest(tests.TestDreamcraftBotE2E('test_character_creation'))
     suite.addTest(tests.TestDreamcraftBotE2E('test_character_permissions'))
+    suite.addTest(tests.TestDreamcraftBotE2E('test_session_creation'))
     suite.addTest(tests.TestDreamcraftBotE2E('test_scenario_creation'))
     suite.addTest(tests.TestDreamcraftBotE2E('test_scene_creation'))
     suite.addTest(tests.TestDreamcraftBotE2E('test_zone_creation'))
     suite.addTest(tests.TestDreamcraftBotE2E('test_scene_features'))
+    suite.addTest(tests.TestDreamcraftBotE2E('test_end_delete_components'))
 
     results = unittest.TestResult()
 

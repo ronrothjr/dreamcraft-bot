@@ -8,43 +8,9 @@ from bson.objectid import ObjectId
 from models import User, Channel, Session, Character
 from config.setup import Setup
 from utils import TextUtils, T
+from services.base_service import BaseService
 
-class SessionService():
-    def search(self, args, method, params):
-        if len(args) == 0:
-            return None
-        item = method(**params).first()
-        if item:
-            return item
-        else:
-            return None
-
-    def save(self, item, user):
-        if item:
-            item.updated_by = str(user.id)
-            item.updated = T.now()
-            item.history_id = ''
-            item.save()
-
-    def save_user(self, user):
-        if user:
-            user.updated_by = str(user.id)
-            user.updated = T.now()
-            user.save()
-
-    def get_parent_by_id(self, char, user, parent_id):
-        parent = Session.filter(id=ObjectId(parent_id)).first()
-        if parent:
-            user.active_character = str(parent.id)
-            self.save_user(user)
-            return [parent.get_string(user)] if parent.get_string else f'***{parent.name}*** selected as Active Session'
-        return ['No parent found']
-
-    def get_session_info(self, session, channel, user):
-        name = session.name if session else 'your session'
-        get_string = session.get_string(channel, user) if session else ''
-        get_short_string = session.get_short_string(channel) if session else ''
-        return session.character if session else None, name, get_string, get_short_string
+class SessionService(BaseService):
 
     def player(self, args, channel, sc, user):
         messages = []

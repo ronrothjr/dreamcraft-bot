@@ -145,7 +145,7 @@ class Session(Document):
         return f'\n\n            _Characters:_\n                {characters}'
 
     def get_string(self, channel=None, user=None):
-        if not user.time_zone:
+        if user and not user.time_zone:
             raise Exception('No time zone defined```css\n.d user timezone New_York```')
         name = f'***{self.name}***'
         active = ''

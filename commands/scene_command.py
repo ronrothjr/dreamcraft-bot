@@ -261,8 +261,8 @@ class SceneCommand():
         list(str) - the response messages string array
         """
 
-        sc, name, get_string, get_short_string = scene_svc.get_scene_info(self.sc, self.channel, self.user)
-        category = sc.category if sc else 'Scene'
+        sc, name, get_string, get_short_string = scene_svc.get_info('scene', self.sc, self.channel, self.user)
+        category = 'Scene'
         dialog = {
             'create_scene': ''.join([
                 '**CREATE or SCENE**```css\n',
@@ -291,7 +291,7 @@ class SceneCommand():
             if not sc:
                 dialog_string += dialog.get('create_scene', '')
             dialog_string += dialog.get('rename_delete', '')
-        elif sc.category == 'Scene':
+        elif category == 'Scene':
             if dialog_text:
                 dialog_string += dialog.get(dialog_text, '')
             else:

@@ -8,43 +8,9 @@ from bson.objectid import ObjectId
 from models import User, Channel, Scenario, Scene, Character
 from config.setup import Setup
 from utils import TextUtils, Dialog, T
+from services.base_service import BaseService
 
-class ScenarioService():
-    def search(self, args, method, params):
-        if len(args) == 0:
-            return None
-        item = method(**params).first()
-        if item:
-            return item
-        else:
-            return None
-
-    def save(self, item, user):
-        if item:
-            item.updated_by = str(user.id)
-            item.updated = T.now()
-            item.history_id = ''
-            item.save()
-
-    def save_user(self, user):
-        if user:
-            user.updated_by = str(user.id)
-            user.updated = T.now()
-            user.save()
-
-    def get_parent_by_id(self, method, user, parent_id):
-        parent = method(id=ObjectId(parent_id)).first()
-        if parent:
-            user.active_character = str(parent.id)
-            self.save_user(user)
-            return [parent.get_string(user)] if parent.get_string else f'***{parent.name}*** selected as Active Scenario'
-        return ['No parent found']
-
-    def get_scenario_info(self, scenario, channel, user=None):
-        name = scenario.name if scenario else 'your scenario'
-        get_string = self.get_string(scenario, channel) if scenario else ''
-        get_short_string = scenario.get_short_string(channel) if scenario else ''
-        return scenario.character if scenario else None, name, get_string, get_short_string
+class ScenarioService(BaseService):
 
     def get_string(self, item, channel=None, user=None):
         name = f'***{item.name}***'

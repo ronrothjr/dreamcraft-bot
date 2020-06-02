@@ -254,8 +254,8 @@ class ScenarioCommand():
         list(str) - the response messages string array
         """
 
-        char, name, get_string, get_short_string = scenario_svc.get_scenario_info(self.scenario, self.channel, self.user)
-        category = char.category if char else 'Scenario'
+        char, name, get_string, get_short_string = scenario_svc.get_info('scenario', self.scenario, self.channel)
+        category = 'Scenario'
         dialog = {
             'create_scenario': ''.join([
                 '**CREATE or SCENARIO**```css\n',
@@ -284,7 +284,7 @@ class ScenarioCommand():
             if not char:
                 dialog_string += dialog.get('create_scenario', '')
             dialog_string += dialog.get('rename_delete', '')
-        elif char.category == 'Scenario':
+        elif category == 'Scenario':
             if dialog_text:
                 dialog_string += dialog.get(dialog_text, '')
             else:

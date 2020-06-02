@@ -10,7 +10,25 @@ from config.setup import Setup
 from utils import TextUtils, Dialog, T
 
 class BaseService():
+    """Servcie class for handling common methods for view, save, and update of database models"""
+
     def search(self, args, method, params):
+        """Search for an item using a provided method and params
+
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+        method : function
+            The mongoengine Document method for filtering an item
+        params : dict
+            The dictionary of params to search for an item
+
+        Returns
+        -------
+        item - mongoengine Document
+        """
+
         if len(args) == 0:
             return None
         item = method(**params).first()
@@ -20,6 +38,16 @@ class BaseService():
             return None
 
     def save(self, item, user):
+        """Save an item
+
+        Parameters
+        ----------
+        item : mongoengine.Document
+            The item to save
+        user : User
+            The user to save as the updated_by
+        """
+
         if item:
             item.updated_by = str(user.id)
             item.updated = T.now()
@@ -27,12 +55,36 @@ class BaseService():
             item.save()
 
     def save_user(self, user):
+        """Save a User Document
+
+        Parameters
+        ----------
+        user : User
+            The User mongoengine Document for saving
+        """
+
         if user:
             user.updated_by = str(user.id)
             user.updated = T.now()
             user.save()
 
     def get_parent_by_id(self, method, user, parent_id):
+        """Set the parent as the active item
+
+        Parameters
+        ----------
+        method : function
+            The mongoengine Document method for filtering an item
+        user : User
+            The User mongoengine Document for saving
+        parent_id : str
+            The ObjectId string value for the parent of the item
+        
+        Returns
+        -------
+        list(str) - the array of response strings
+        """
+
         parent = method(id=ObjectId(parent_id)).first()
         if parent:
             user.active_character = str(parent.id)
@@ -41,6 +93,32 @@ class BaseService():
         return ['No parent found']
 
     def get_info(self, type_name, item, user, param=None):
+        """Get item string information for display
+
+        Parameters
+        ----------
+        type_name : str
+            The string name of the item
+        item : mongoengine.Document
+            The item used to get string information
+        user : User
+            The User mongoengine Document for displaying active records
+        param : object
+            The additaional param for dislaying item information
+
+        Returns
+        -------
+        tuple(mongoengine.Document, str, str, str)
+            item : mongoengine.Document
+                The item used to get string information
+            name : str
+                The name value of the item
+            get_string : str
+                The long display string of the item
+            get_short_string : str
+                The short display string of the item
+        """
+
         name = item.name if item else f'your {type_name}'
         if param:
             get_string = item.get_string(user, param) if item else ''
@@ -49,7 +127,27 @@ class BaseService():
         get_short_string = item.get_short_string(user) if item else ''
         return item if item else None, name, get_string, get_short_string
 
-    def delete_item(self, args, guild, channel, user, item, method, params):
+    def delete_item(self, args, user, item, method, params):
+        """Delete an item
+
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+        user : User
+            The User mongoengine Document for displaying active records
+        item : mongoengine.Document
+            The item used to get string information
+        method : function
+            The mongoengine Document method for filtering an item
+        params : dict
+            The dictionary of params to search for an item
+
+        Returns
+        -------
+        list(str) - the array of response strings
+        """
+
         messages = []
         search = ''
         if len(args) == 1:
@@ -64,7 +162,8 @@ class BaseService():
         else:
             search = str(item.name)
             channel_id = str(item.channel_id) if hasattr(item, 'channel_id') else ''
-            item.character.archive(user)
+            if hasattr(item, 'character'):
+                item.character.archive(user)
             item.archived = True
             self.save(item, user)
             messages.append(f'***{search}*** removed')

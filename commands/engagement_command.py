@@ -587,7 +587,7 @@ class EngagementCommand():
         list(str) - the response messages string array
         """
 
-        return engagement_svc.delete_item(args, self.guild, self.channel, self.user, self.engagement, Engagement.find, {"guild": self.guild.name, "channel_id": str(self.channel.id), "scene_id": str(self.sc.id)})
+        return engagement_svc.delete_item(args, self.user, self.engagement, Engagement.find, {"guild": self.guild.name, "channel_id": str(self.channel.id), "scene_id": str(self.sc.id)})
 
     def start(self, args):
         """Add a start time to the Engagement

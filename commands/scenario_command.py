@@ -536,36 +536,7 @@ class ScenarioCommand():
         list(str) - the response messages string array
         """
 
-        if len(args) == 1:
-            return ['No characters added']
-        if not self.scenario:
-            return ['You don\'t have an active scenario.\nTry this: ".d s name {name}"']
-        elif args[1].lower() == 'list' or args[1].lower() == 'l':
-            return [self.scenario.get_string_characters(self.channel)]
-        elif args[1].lower() == 'delete' or args[1].lower() == 'd':
-            char = ' '.join(args[2:])
-            [self.scenario.characters.remove(s) for s in self.scenario.characters if char.lower() in s.lower()]
-            self.scenario.updated_by = str(self.user.id)
-            self.scenario.updated = T.now()
-            self.scenario.save()
-            return [
-                f'{char} removed from scenario characters',
-                self.scenario.get_string_characters(self.channel)
-            ]
-        else:
-            search = ' '.join(args[1:])
-            char = Character().find(None, search, self.channel.guild)
-            if char:
-                self.scenario.characters.append(str(char.id))
-            else:
-                return [f'***{search}*** not found. No character added to _{self.scenario.name}_']
-            self.scenario.updated_by = str(self.user.id)
-            self.scenario.updated = T.now()
-            self.scenario.save()
-            return [
-                f'Added {char.name} to scenario characters',
-                self.scenario.get_string_characters(self.channel)
-            ]
+        return scenario_svc.player(args, self.channel, self.scenario, self.user)
 
     def delete_scenario(self, args):
         """Delete (archive) the current active Scenario
@@ -580,26 +551,4 @@ class ScenarioCommand():
         list(str) - the response messages string array
         """
 
-        messages = []
-        search = ''
-        if len(args) == 1:
-            if not self.scenario:
-                return ['No scenario provided for deletion']
-        else:
-            search = ' '.join(args[1:])
-            self.scenarioenario = Scenario().find(self.guild.name, str(self.channel.id), search)
-        if not self.scenario:
-            return [f'{search} was not found. No changes made.']
-        else:
-            search = str(self.scenario.name)
-            channel_id = str(self.scenario.channel_id) if self.scenario.channel_id else ''
-            self.scenario.character.archive(self.user)
-            self.scenario.archived = True
-            self.scenario.updated_by = str(self.user.id)
-            self.scenario.updated = T.now()
-            self.scenario.save()
-            messages.append(f'***{search}*** removed')
-            if channel_id:
-                channel = Channel().get_by_id(channel_id)
-                messages.append(channel.get_string())
-            return messages
+        return scenario_svc.delete_item(args, self.user, self.scenario, Scenario.find, {'guild': self.guild.name, 'channel_id': str(self.channel.id)})

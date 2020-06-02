@@ -559,7 +559,7 @@ class SceneCommand():
         list(str) - the response messages string array
         """
 
-        return scene_svc.delete_scene(args, self.guild, self.channel, self.scenario, self.sc, self.user)
+        return scene_svc.delete_item(args, self.user, self.sc, Scene.find, {'guild': self.guild.name, 'channel_id': str(self.channel.id), 'scenario_id': str(self.scenario.id)})
 
     def start(self, args):
         """Add a start time to the Scene

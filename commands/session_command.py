@@ -1,4 +1,7 @@
 # session_command
+__author__ = 'Ron Roth Jr'
+__contact__ = 'u/ensosati'
+
 import traceback
 from commands import CharacterCommand
 from models import Channel, Scenario, Scene, Session, Character, User, Log
@@ -11,7 +14,49 @@ SETUP = Setup()
 SESSION_HELP = SETUP.session_help
 
 class SessionCommand():
+    """
+    Handle 'session' commands and subcommands
+
+    Subcommands:
+        help - display a set of instructions on SessionCommand usage
+        note - add a note to the session
+        say - add dialog to the session from the session
+        story - display the session's story
+        name, n - display and create new sessions by name
+        description, desc - add/edit the Description in the engeagement
+        select, = - display existing engeagement
+        character, char, c - edit the session as a character
+        list, l - display a list of existing sessions
+        players, player, p - add players to the session
+        start - add a start time to the session
+        end - add an end time to the session
+        delete - remove an session (archive)
+    """
+
     def __init__(self, parent, ctx, args, guild, user, channel):
+        """
+        Command handler for SessionCommand
+
+        Parameters
+        ----------
+        parent : DreamcraftHandler
+            The handler for Dreamcraft Bot commands and subcommands
+        ctx : object(Context)
+            The Discord.Context object used to retrieve and send information to Discord users
+        args : array(str)
+            The arguments sent to the bot to parse and evaluate
+        guild : Guild
+            The guild object containing information about the server issuing commands
+        user : User
+            The user database object containing information about the user's current setttings, and dialogs
+        channel : Channel
+            The channel from which commands were issued
+
+        Returns
+        -------
+        SessionCommand - object for processing session commands and subcommands
+        """
+    
         self.parent = parent
         self.ctx = ctx
         self.args = args[1:]
@@ -27,7 +72,16 @@ class SessionCommand():
         self.char = Character().get_by_id(self.user.active_character) if self.user and self.user.active_character else None
 
     def run(self):
+        """
+        Execute the channel commands by validating and finding their respective methods
+
+        Returns
+        -------
+        list(str) - a list of messages in response the command validation and execution
+        """
+
         try:
+            # List of subcommands mapped the command methods
             switcher = {
                 'help': self.help,
                 'note': self.note,
@@ -74,6 +128,7 @@ class SessionCommand():
             return list(err.args)
 
     def help(self, args):
+        """Returns the help text for the command"""
         return [SESSION_HELP]
 
     def check_session(self):
@@ -81,10 +136,34 @@ class SessionCommand():
             raise Exception('You don\'t have an active session. Try this:```css\n.d session SESSION_NAME```')
 
     def search(self, args):
+        """Search for an existing Session using the command string
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         params = {'name__icontains': ' '.join(args[0:]), 'guild': self.guild.name, 'channel_id': str(self.channel.id), 'archived': False}
         return session_svc.search(args, Session.filter, params)
 
     def note(self, args):
+        """Add a note to the Session story
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         if self.session:
             Log().create_new(str(self.session.id), f'Session: {self.session.name}', str(self.user.id), self.guild.name, 'Session', {'by': self.user.name, 'note': ' '.join(args[1:])}, 'created')
             return ['Log created']
@@ -92,6 +171,18 @@ class SessionCommand():
             return ['No active session to log']
 
     def say(self, args):
+        """Add dialog to the Session story
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         if not self.session:
             return ['No active session to log']
         else:
@@ -100,6 +191,18 @@ class SessionCommand():
             return ['Log created']
 
     def story(self, args):
+        """Disaply the Session story
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         messages =[]
         command = 'session ' + (' '.join(args))
         def canceler(cancel_args):
@@ -138,8 +241,20 @@ class SessionCommand():
         return messages
 
     def dialog(self, dialog_text, session=None):
-        session, name, get_string, get_short_string = session_svc.get_session_info(self.session, self.channel, self.user)
-        category = session.category if session else 'Session'
+        """Display Session information and help text
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
+        session, name, get_string, get_short_string = session_svc.get_info('session', self.session, self.channel, self.user)
+        category = 'Session'
         dialog = {
             'create_session': ''.join([
                 '**CREATE or SESSION**```css\n',
@@ -168,7 +283,7 @@ class SessionCommand():
             if not session:
                 dialog_string += dialog.get('create_session', '')
             dialog_string += dialog.get('rename_delete', '')
-        elif session.category == 'Session':
+        elif category == 'Session':
             if dialog_text:
                 dialog_string += dialog.get(dialog_text, '')
             else:
@@ -184,7 +299,18 @@ class SessionCommand():
         return dialog_string
     
     def name(self, args):
-        self.check_session()
+        """Display and create a new Session by name
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         messages = []
         if len(args) == 0:
             if not self.session:
@@ -230,10 +356,6 @@ class SessionCommand():
 
                 def creator(**params):
                     item = Session().get_or_create(**params)
-                    sessions = sessionenario_svc.get_sessions(self.sessionenario)
-                    characters = sessionenario_svc.get_characters(sessions)
-                    item.characters = [str(c.id) for c in characters]
-                    session_svc.save(item, self.user)
                     return item
 
                 messages.extend(Dialog({
@@ -258,6 +380,18 @@ class SessionCommand():
         return messages
 
     def select(self, args):
+        """Select an existing Session by name
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         messages = []
         if len(args) == 0:
             if not self.session:
@@ -303,6 +437,18 @@ class SessionCommand():
         return messages
 
     def session_list(self, args):
+        """Display a dialog for viewing and selecting Sessions
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         messages = []
         def canceler(cancel_args):
             if cancel_args[0].lower() in ['session']:
@@ -328,20 +474,44 @@ class SessionCommand():
         return messages
 
     def description(self, args):
+        """Add/edit the description for a Session
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         if len(args) == 1:
             raise Exception('No description provided')
         self.check_session()
         description = ' '.join(args[1:])
-        self.sc.description = description
-        self.sc.updated_by = str(self.user.id)
-        self.sc.updated = T.now()
-        self.sc.save()
+        self.session.description = description
+        self.session.updated_by = str(self.user.id)
+        self.session.updated = T.now()
+        self.session.save()
         return [
             f'Description updated to "{description}"',
             self.session.get_string(self.channel)
         ]
 
     def character(self, args):
+        """Edit the Session as a character
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         self.check_session()
         if self.user:
             self.user.active_character = str(self.session.character.id)
@@ -352,12 +522,48 @@ class SessionCommand():
         return command.run()
 
     def player(self, args):
+        """Add/remove a player from the Session
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         return session_svc.player(args, self.channel, self.session, self.user)
 
     def delete_session(self, args):
+        """Delete (archive) the current active Session
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         return session_svc.delete_session(args, self.guild, self.channel, self.session, self.user)
 
     def start(self, args):
+        """Add a start time to the Session
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         self.check_session()
         if self.session.started_on:
             raise Exception(f'***{self.session.name}*** already began on {T.to(self.session.started_on, self.user)}')
@@ -367,6 +573,18 @@ class SessionCommand():
             return [self.dialog('')]
 
     def end(self, args):
+        """Add an end time to the Session
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         self.check_session()
         if len(args) > 1 and args[1] == 'delete':
             self.session.ended_on = None

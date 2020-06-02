@@ -1,47 +1,16 @@
 # scenario_service.py
+__author__ = 'Ron Roth Jr'
+__contact__ = 'u/ensosati'
+
 import traceback
 import copy
 from bson.objectid import ObjectId
 from models import User, Channel, Scenario, Scene, Character
 from config.setup import Setup
 from utils import TextUtils, Dialog, T
+from services.base_service import BaseService
 
-class ScenarioService():
-    def search(self, args, method, params):
-        if len(args) == 0:
-            return None
-        item = method(**params).first()
-        if item:
-            return item
-        else:
-            return None
-
-    def save(self, item, user):
-        if item:
-            item.updated_by = str(user.id)
-            item.updated = T.now()
-            item.history_id = ''
-            item.save()
-
-    def save_user(self, user):
-        if user:
-            user.updated_by = str(user.id)
-            user.updated = T.now()
-            user.save()
-
-    def get_parent_by_id(self, method, user, parent_id):
-        parent = method(id=ObjectId(parent_id)).first()
-        if parent:
-            user.active_character = str(parent.id)
-            self.save_user(user)
-            return [parent.get_string(user)] if parent.get_string else f'***{parent.name}*** selected as Active Scenario'
-        return ['No parent found']
-
-    def get_scenario_info(self, scenario, channel, user=None):
-        name = scenario.name if scenario else 'your scenario'
-        get_string = self.get_string(scenario, channel) if scenario else ''
-        get_short_string = scenario.get_short_string(channel) if scenario else ''
-        return scenario.character if scenario else None, name, get_string, get_short_string
+class ScenarioService(BaseService):
 
     def get_string(self, item, channel=None, user=None):
         name = f'***{item.name}***'
@@ -79,3 +48,31 @@ class ScenarioService():
         character_strings = [f'***{c.name}***' + (' _(Active Character)_' if user and user.active_character == str(c.id) else '') for c in scenario_characters if c]
         characters = '\n               '.join(character_strings)
         return f'\n\n            _Characters:_\n                {characters}' if scenes else ''
+
+    def player(self, args, channel, scenario, user):
+        if len(args) == 1:
+            return ['No characters added']
+        if not scenario:
+            return ['You don\'t have an active scenario.\nTry this: ".d scenario name {name}"']
+        elif args[1].lower() == 'list' or args[1].lower() == 'l':
+            return [scenario.get_string_characters(channel)]
+        elif args[1].lower() == 'delete' or args[1].lower() == 'd':
+            char = ' '.join(args[2:])
+            [scenario.characters.remove(s) for s in scenario.characters if char.lower() in s.lower()]
+            self.save(scenario, user)
+            return [
+                f'{char} removed from scenario characters',
+                scenario.get_string_characters(channel)
+            ]
+        else:
+            search = ' '.join(args[1:])
+            char = Character().find(None, search, channel.guild)
+            if char:
+                scenario.characters.append(str(char.id))
+            else:
+                return [f'***{search}*** not found. No character added to _{scenario.name}_']
+            self.save(scenario, user)
+            return [
+                f'Added {char.name} to scenario characters',
+                scenario.get_string_characters(channel)
+            ]

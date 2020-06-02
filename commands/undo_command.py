@@ -1,4 +1,7 @@
 # undo_command
+__author__ = 'Ron Roth Jr'
+__contact__ = 'u/ensosati'
+
 import traceback
 import math
 from commands import CharacterCommand
@@ -12,7 +15,42 @@ SETUP = Setup()
 UNDO_HELP = SETUP.undo_help
 
 class UndoCommand():
+    """
+    Handle 'undo', 'redo' commands and subcommands
+
+    Subcommands:
+        help - display a set of instructions on UndoCommand usage
+        note - add a note to the log
+        story - display the undo/redo story
+        list, l - display a list of existing changes
+        last - undo the last logged change
+        next - redo the next logged change (based on the current history_id)
+    """
+
     def __init__(self, parent, ctx, args, guild, user, channel):
+        """
+        Command handler for UndoCommand
+
+        Parameters
+        ----------
+        parent : DreamcraftHandler
+            The handler for Dreamcraft Bot commands and subcommands
+        ctx : object(Context)
+            The Discord.Context object used to retrieve and send information to Discord users
+        args : array(str)
+            The arguments sent to the bot to parse and evaluate
+        guild : Guild
+            The guild object containing information about the server issuing commands
+        user : User
+            The user database object containing information about the user's current setttings, and dialogs
+        channel : Channel
+            The channel from which commands were issued
+
+        Returns
+        -------
+        UndoCommand - object for processing undo/redo commands and subcommands
+        """
+
         self.parent = parent
         self.ctx = ctx
         self.args = args[1:]
@@ -26,7 +64,16 @@ class UndoCommand():
         self.char = Character().get_by_id(self.user.active_character) if self.user and self.user.active_character else None
 
     def run(self):
+        """
+        Execute the channel commands by validating and finding their respective methods
+
+        Returns
+        -------
+        list(str) - a list of messages in response the command validation and execution
+        """
+
         try:
+            # List of subcommands mapped the command methods
             switcher = {
                 'help': self.help,
                 'note': self.note,
@@ -54,13 +101,38 @@ class UndoCommand():
             return list(err.args)
 
     def help(self, args):
+        """Returns the help text for the command"""
         return [UNDO_HELP]
 
     def note(self, args):
+        """Add a note the change log
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         Log().create_new(str(self.user.id), 'Log', str(self.user.id), self.guild.name, 'Log', {'by': self.user.name, 'note': ' '.join(args[1:])}, 'created')
         return ['Log created']
 
     def story(self, args):
+        """Disaply the log story
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         messages =[]
         command = 'log ' + (' '.join(args))
         def canceler(cancel_args):
@@ -100,6 +172,18 @@ class UndoCommand():
         char_svc.save_user(self.user)
 
     def undo_list(self, args):
+        """Display a dialog for viewing and selecting Changes to undo
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         messages =[]
         command = 'undo ' + (' '.join(args))
         def canceler(cancel_args):
@@ -131,6 +215,18 @@ class UndoCommand():
         return messages
 
     def get_undo(self, undo):
+        """Get the change information to undo or redo it
+        
+        Parameters
+        ----------
+        undo : str
+            The id of the current change history to work forward from
+
+        Returns
+        -------
+        str - the response messages string array
+        """
+
         switcher = {
             'Character': Character,
             'Stunt': Character,
@@ -152,6 +248,18 @@ class UndoCommand():
         return changes, item, undo_changes_str
 
     def last(self, args):
+        """Display a dialog to verify the change to undo
+        
+        Parameters
+        ----------
+        redo : stre
+            The id of the current change history to work forward from
+
+        Returns
+        -------
+        str - the response messages string array
+        """
+
         messages = []
         undos = None
         if self.user.history_id:
@@ -192,6 +300,18 @@ class UndoCommand():
         return messages
 
     def undo_changes(self, undo):
+        """Apply the changes to undo a previous change
+        
+        Parameters
+        ----------
+        undo : str
+            The id of the change to undo
+
+        Returns
+        -------
+        str - the response messages string array
+        """
+
         changes, item, undo_changes_str = self.get_undo(undo)
         undos = list(Log.get_by_page(params={'parent_id': undo.parent_id, 'updated__lt': undo.updated, 'category__ne': 'Log'}, page_num=0))
         if undo.action == 'created':
@@ -229,6 +349,18 @@ class UndoCommand():
             return f'{undo.category} {TextUtils.clean(item.name)} has been undone:\n\n{item.get_string()}'
 
     def next(self, args):
+        """Display a dialog for viewing and selecting Changes to redo
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         messages = []
         redo = None
         if not self.user.history_id:
@@ -265,6 +397,18 @@ class UndoCommand():
         return messages
 
     def redo_changes(self, redo):
+        """Apply the changes to redo a previous undone change
+        
+        Parameters
+        ----------
+        redo : str
+            The id of the current change history to work forward from
+
+        Returns
+        -------
+        str - the response messages string array
+        """
+
         changes, item, undo_changes_str = self.get_undo(redo)
         history = Log.get_by_page(params={'updated__gt': redo.updated, 'category__ne': 'Log'}, page_num=0).first()
         item.history_id = str(history.id) if history else None

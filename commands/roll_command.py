@@ -1,4 +1,7 @@
 # roll_command.py
+__author__ = 'Ron Roth Jr'
+__contact__ = 'u/ensosati'
+
 import traceback
 import random
 import copy
@@ -21,7 +24,44 @@ FATE_DICE = SETUP.fate_dice
 LADDER = SETUP.fate_ladder
 
 class RollCommand():
-    def __init__(self, parent, ctx, args, guild=None, user=None, channel=None):
+    """
+    Handle 'roll', 'r' commands and subcommands
+
+    Subcommands:
+        help - display a set of instructions on RollCommand usage
+        roll, r - roll fate dice with approach/skill and invoke/compel options
+        reroll, re - reroll a previous roll with additional invoke/compel options
+        attack, att - attack another roll within a scene and roll
+        defend, def - defend from an attack by another roll within the scene and roll
+        available, avail, av - display a list of available aspects and stunts to invoke
+    """
+
+    def __init__(self, parent, ctx, args, guild, user=None, channel=None, char=None):
+        """
+        Command handler for roll command
+
+        Parameters
+        ----------
+        parent : DreamcraftHandler
+            The handler for Dreamcraft Bot commands and subcommands
+        ctx : object(Context)
+            The Discord.Context object used to retrieve and send information to Discord users
+        args : array(str)
+            The arguments sent to the bot to parse and evaluate
+        guild : Guild
+            The guild object containing information about the server issuing commands
+        user : User, optional
+            The user database object containing information about the user's current setttings, and dialogs
+        channel : Channel, optional
+            The channel from which commands were issued
+        char : Character, optional
+            The database roll object 
+
+        Returns
+        -------
+        RollCommand - object for processing roll commands and subcommands
+        """
+    
         self.parent = parent
         self.ctx = ctx
         self.command = args[0].lower()
@@ -47,7 +87,16 @@ class RollCommand():
         self.invokes_cost = 0
 
     def run(self):
+        """
+        Execute the channel commands by validating and finding their respective methods
+
+        Returns
+        -------
+        list(str) - a list of messages in response the command validation and execution
+        """
+
         try:
+            # List of subcommands mapped the command methods
             switcher = {
                 'help': self.help,
                 'roll': self.roll,
@@ -55,7 +104,9 @@ class RollCommand():
                 'reroll': self.roll,
                 're': self.roll,
                 'attack': self.attack,
+                'att': self.attack,
                 'defend': self.defend,
+                'def': self.defend,
                 'available': self.show_available,
                 'avail': self.show_available,
                 'av': self.show_available
@@ -74,10 +125,18 @@ class RollCommand():
             return list(err.args)
 
     def help(self):
+        """Returns the help text for the command"""
         return [ROLL_HELP]
 
     # Show available aspects and stunts to invoke
     def show_available(self):
+        """Display all available aspects and stunts for characters within the active scenario, scene, and zone
+        
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         self.get_available_invokes()
         self.available_invokes = []
         [self.available_invokes.extend(a['char'].get_available_aspects(a['parent'])) for a in self.available]
@@ -87,6 +146,13 @@ class RollCommand():
             return ['No available aspects to invoke']
 
     def conflict_check(self):
+        """Add messages indicating if a conflict or engagement has been started
+        
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         messages = []
         is_conflict = self.engagement and self.engagement.type_name != 'Conflict'
         if not self.engagement or not is_conflict:
@@ -97,27 +163,47 @@ class RollCommand():
         return messages
 
     def add_chars_to_engagement(self):
+        """If there is an engagement started, add characters being attacked or defending
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         messages = []
         if self.engagement:
             is_char_opposed = self.user.role == 'Game Master'
+            # If no engagement started for this engagement, start one now between the attacker and the defender
             if is_char_opposed:
-                if str(self.char.id) not in self.exchange.opposition:
-                    self.exchange.opposition.append(str(self.char.id))
-                    messages.append(f'Added ***{self.char.name}*** to _{self.exchange.name}_ exchange opposition')
-                if str(self.target.id) not in self.exchange.characters:
-                    self.exchange.characters.append(str(self.target.id))
-                    messages.append(f'Added ***{self.target.name}*** to _{self.exchange.name}_ exchange characters')
+                if str(self.char.id) not in self.engagement.opposition:
+                    self.engagement.opposition.append(str(self.char.id))
+                    messages.append(f'Added ***{self.char.name}*** to _{self.engagement.name}_ engagement opposition')
+                if str(self.target.id) not in self.engagement.characters:
+                    self.engagement.characters.append(str(self.target.id))
+                    messages.append(f'Added ***{self.target.name}*** to _{self.engagement.name}_ engagement characters')
             else:
-                if str(self.char.id) not in self.exchange.opposition:
-                    self.exchange.characters.append(str(self.char.id))
-                    messages.append(f'Added ***{self.char.name}*** to _{self.exchange.name}_ exchange characters')
-                if str(self.target.id) not in self.exchange.characters:
-                    self.exchange.opposition.append(str(self.target.id))
-                    messages.append(f'Added ***{self.char.target}*** to _{self.exchange.name}_ exchange opposition')
+                if str(self.char.id) not in self.engagement.opposition:
+                    self.engagement.characters.append(str(self.char.id))
+                    messages.append(f'Added ***{self.char.name}*** to _{self.engagement.name}_ engagement characters')
+                if str(self.target.id) not in self.engagement.characters:
+                    self.engagement.opposition.append(str(self.target.id))
+                    messages.append(f'Added ***{self.char.target}*** to _{self.engagement.name}_ engagement opposition')
             engagement_svc.save(self.engagement, self.user)
         return messages
 
     def attack(self):
+        """Execute the attack subcommand to target another character and roll for attack
+        
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         messages = self.conflict_check()
         if len(self.args) == 0:
             raise Exception('No target identified for your attack action')
@@ -147,6 +233,13 @@ class RollCommand():
         return messages
 
     def defend(self):
+        """Execute the defend subcommand in response to an attack and roll for defense
+        
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         if not self.targeted_by:
             raise Exception('You are not currently the target of any attacks.')
         messages = self.conflict_check()
@@ -160,6 +253,13 @@ class RollCommand():
         return messages
 
     def roll(self):
+        """Roll the Dreamcreaft Bot Fate dice and process all subcommands
+        
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         if len(self.args) > 0 and self.args[0].lower() in ['help','h']:
             return self.help()
         if not self.char:
@@ -215,18 +315,24 @@ class RollCommand():
         return self.messages
 
     def save_char(self, char):
+        """Save the Character database object"""
+
         char.updated_by = str(self.user.id)
         char.updated = T.now()
         char.save()
 
     # determine skill to validate
     def get_skill(self):
+        """Get the skill being rolled if one was included in the roll command"""
+
         if self.command in ['reroll', 're']:
             self.skill = self.char.last_roll['skill']
         elif not self.invoke_index or (self.invoke_index and self.invoke_index[0] > 1):
             self.skill = self.match_skill()
 
     def validate(self):
+        """Get validate invokes and compels, raise Exceptions where necessary"""
+
         self.get_invokes()
         self.errors.extend([i['error'] for i in self.invokes if i['aspect_name'] == 'error'])
         if self.errors:
@@ -239,6 +345,8 @@ class RollCommand():
             raise Exception('You cannot invoke and compel on the same roll')
 
     def resolve_invokes(self):
+        """Apply the fate point cost and stress absorbed from invokes"""
+
         char = self.get_parent_with_refresh(self.char)
         if char and self.invokes_cost >= char.fate_points + self.invokes_cost:
             raise Exception(f'***{char.name}*** does not have enough fate points')
@@ -253,6 +361,18 @@ class RollCommand():
             self.messages.append(self.char.get_string_fate())
 
     def absorb_invoke_stress(self, title, stress, target):
+        """Apply the stress from invoking stunts
+        
+        Parameters
+        ----------
+        title : str
+            The title of the stress being absorbed
+        stress : str
+            The number of shifts being absorbed
+        target : Character
+            Character database object to apply stress
+        """
+
         # Apply stress to the targets identified during stress validation
         command = CharacterCommand(**{
             'parent': self.parent,
@@ -269,6 +389,8 @@ class RollCommand():
         self.messages.extend(stress_messages)
 
     def resolve_attack(self):
+        """Apply the attack action results and add it to the roll message response"""
+
         if self.target:
             attack_roll = self.last_roll['final_roll']
             attack_roll_cleaned = str(attack_roll).replace('-','')
@@ -278,6 +400,8 @@ class RollCommand():
             self.messages.append(f'***{self.target.name}*** faces {p.an(ladder_text)} ({attack_roll_str}) attack from ***{self.char.name}***')
 
     def resolve_defend(self):
+        """Apply the defend action results and add it to the roll message response"""
+
         if self.targeted_by and self.targeted_by.last_roll:
             defense_roll = self.last_roll['final_roll']
             defense_roll_cleaned = str(defense_roll).replace('-','')
@@ -292,14 +416,18 @@ class RollCommand():
             self.messages.append(f'... offering {p.an(ladder_text)} ({defense_roll_str}) defense leaving {shifts} shifts to absorb.')
 
     def handle_compels(self):
-            if len(self.compels) + self.char.fate_points <= 5:
-                self.char.fate_points += len(self.compels)
-                self.messages.append(''.join([f'Compelled "{c}" and added 1 fate point' for c in self.compels]))
-                self.messages.append(self.char.get_string_fate())
-            else:
-                raise Exception(f'{self.char.name} already has the maximum fate points (5)')
+        """Apply the compels stored for processing"""
+
+        if len(self.compels) + self.char.fate_points <= 5:
+            self.char.fate_points += len(self.compels)
+            self.messages.append(''.join([f'Compelled "{c}" and added 1 fate point' for c in self.compels]))
+            self.messages.append(self.char.get_string_fate())
+        else:
+            raise Exception(f'{self.char.name} already has the maximum fate points (5)')
 
     def get_invokes(self):
+        """Store the list of invokes passed in as command arguments"""
+
         self.re = self.command in ['reroll', 're']
         stress_targets = []
         for i in self.invoke_index:
@@ -361,6 +489,28 @@ class RollCommand():
             self.invokes.append(invoke)
 
     def validate_stress(self, aspect, stress, stress_titles, stress_targets):
+        """Loop through stress to be applied and verify that stress targets are available to apply them
+
+        Parameters
+        ----------
+        aspect : Character
+            Character database object of category 'Aspect'
+        stress : list(list)
+            A list of stress lists for tracking stress
+        stress_titles : list(str)
+            A list of stress titles for tracking stress
+        stress_targets : list(Character)
+            list of targets for validated stress
+        
+        Returns
+        -------
+        tuple(list(str), list(Character))
+            stress_errors : list(str)
+                list of errors when attempting to validate stress
+            stress_targets : list(Character)
+                list of targets for validated stress
+        """
+
         aspect_name = aspect.name
         stress_errors = []
         possible_targets = self.char.get_invokable_objects()
@@ -391,6 +541,8 @@ class RollCommand():
         return stress_errors, stress_targets        
 
     def get_compels(self):
+        """Store the list of compels passed in as command arguments"""
+
         for i in self.compel_index:
             aspect = self.find_aspect(self.args[i+1])
             if len(self.args) < i+1:
@@ -405,6 +557,18 @@ class RollCommand():
             self.compels.append(aspect)
 
     def get_parent_with_refresh(self, char):
+        """Find a parent with avaiable fate refresh
+
+        Parameters
+        ----------
+        char : Character
+            Character database object used to find related parents
+        
+        Returns
+        -------
+        Character - parent with available refresh
+        """
+
         if char:
             if char.refresh:
                return char
@@ -414,6 +578,20 @@ class RollCommand():
         return None
 
     def get_parent_with_stress(self, char, stress):
+        """Find a parent character with a stress title matching the search text
+
+        Pareameters
+        -----------
+        char : Character
+            Character database object to check for parents
+        stress : list(list)
+            A list of stress lists for tracking stress
+        
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         if char:
             if char.stress_titles and stress in char.stress_titles:
                return char
@@ -425,6 +603,18 @@ class RollCommand():
             return None
 
     def get_available_invokes(self, char=None):
+        """Return a list of all available aspects and stunts available for invoking and compeling
+
+        Parameters
+        ----------
+        char : Character
+            Character database object for checking for aspects and stunts available to invoke
+        
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         char = char if char else self.char
         self.available = char.get_invokable_objects() if char else []
         scenario_aspects = self.scenario.character.get_invokable_objects() if self.scenario else []
@@ -446,6 +636,18 @@ class RollCommand():
         return self.available
 
     def find_aspect(self, aspect):
+        """Find an available aspect matching the aspect search text
+
+        Parameters
+        ----------
+        apsect : str
+            Aspect string to search in the list of available aspects
+        
+        Returns
+        -------
+        list(str) - list of aspects matching the search text
+        """
+
         aspect = aspect.replace('_', ' ')
         available = self.get_available_invokes()
         aspects = []
@@ -469,6 +671,13 @@ class RollCommand():
         return aspects
 
     def roll_next(self):
+        """Make a fate roll and return the roll information
+        
+        Returns
+        -------
+        dict - the attributes of a Dreamcraft Bot fate roll
+        """
+
         skill_str, bonus = self.get_skill_bonus()
         bonus_invokes, bonus_invokes_total, invokes_bonus_string, invoke_string = \
             self.get_invoke_bonus()
@@ -500,12 +709,26 @@ class RollCommand():
         }
 
     def reroll(self):
+        """Get the previous roll and apply the invoke options to it
+        
+        Returns
+        -------
+        dict - the attributes of a Dreamcraft Bot fate roll
+        """
+
         self.char.last_roll['invokes'].extend(copy.deepcopy(self.invokes))
         self.skill = self.char.last_roll['skill']
         self.roll_invokes = self.char.last_roll['invokes']
         return self.roll_next()
 
     def match_skill(self):
+        """Find the skill matching the skill search text
+        
+        Returns
+        -------
+        str - the skill matching the skill attribut search text
+        """
+
         if self.skill !='':
             if self.char.use_approaches:
                 skill_name = [s for s in APPROACHES if self.skill[0:2].lower() == s[0:2].lower()]
@@ -515,6 +738,17 @@ class RollCommand():
         return self.skill
 
     def get_skill_bonus(self):
+        """Get the skill and bonus to appply to the roll
+        
+        Returns
+        -------
+        tuple(str, int)
+            skill_str : str
+                The roll text string for the skill
+            bonus : int
+                The integer bonus to apply for the skill roll
+        """
+
         skill_str = ''
         bonus = 0
         if self.skill !='':
@@ -523,6 +757,21 @@ class RollCommand():
         return skill_str, bonus
 
     def get_invoke_bonus(self):
+        """Get the invoke bonus information to apply to a roll
+        
+        Returns
+        -------
+        tuple(list(str), int, str, str)
+            bonus_invokes : list(str)
+                The list of invokes with bonuses to apply to the total
+            bonus_invokes_total - int
+                The total amount to apply to a roll for invoke bonuses
+            invokes_bonus_string - str
+                The string representation of invoke bonuses
+            invoke_string - str
+                The description of all invoke actions including bonuses and costs
+        """
+
         bonus_invokes = []
         for invoke in self.roll_invokes:
             bonus_str = invoke['bonus_str']
@@ -538,6 +787,13 @@ class RollCommand():
         return bonus_invokes, bonus_invokes_total, invokes_bonus_string, invoke_string
 
     def get_invoke_string(self):
+        """Ge the completed string containing descriptions of all invokes
+        
+        Returns
+        -------
+        str - the description of all invoke actions including bonuses and costs
+        """
+
         invoke_strings = []
         for invoke in self.roll_invokes:
             name = invoke['aspect_name']
@@ -550,6 +806,13 @@ class RollCommand():
         return ''.join(invoke_strings)
 
     def roll_dice(self):
+        """Roll fate dice and return fate dice attributes
+        
+        Returns
+        -------
+        dict - the attributes of a Dreamcraft Bot fate roll
+        """
+
         dice = [random.choice(range(-1, 2)) for _ in range(4)]
         fate_dice_roll = [FATE_DICE[str(d)] for d in dice]
         return {

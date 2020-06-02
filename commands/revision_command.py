@@ -1,4 +1,7 @@
 # revision_command.py
+__author__ = 'Ron Roth Jr'
+__contact__ = 'u/ensosati'
+
 import traceback
 import pytz
 from config.setup import Setup
@@ -13,7 +16,40 @@ REVISION_HELP = SETUP.revision_help
 revision_svc = RevisionService()
 
 class RevisionCommand():
+    """
+    Handle 'revision', 'rev' commands and subcommands
+
+    Subcommands:
+        help - display a set of instructions on RevisionCommand usage
+        name, n - display and create new revisions by name
+        list, l - display a list of existing revisions
+        delete - remove an revision (archive)
+    """
+
     def __init__(self, parent, ctx, args, guild, user, channel):
+        """
+        Command handler for RevisionCommand
+
+        Parameters
+        ----------
+        parent : DreamcraftHandler
+            The handler for Dreamcraft Bot commands and subcommands
+        ctx : object(Context)
+            The Discord.Context object used to retrieve and send information to Discord users
+        args : array(str)
+            The arguments sent to the bot to parse and evaluate
+        guild : Guild
+            The guild object containing information about the server issuing commands
+        user : User
+            The user database object containing information about the user's current setttings, and dialogs
+        channel : Channel
+            The channel from which commands were issued
+
+        Returns
+        -------
+        RevisionCommand - object for processing revision commands and subcommands
+        """
+
         self.parent = parent
         self.ctx = ctx
         self.args = args[1:] if args[0] in ['revision', 'rev'] else args
@@ -24,7 +60,16 @@ class RevisionCommand():
         self.can_edit = self.user.role == 'Admin' if self.user else False
 
     def run(self):
+        """
+        Execute the channel commands by validating and finding their respective methods
+
+        Returns
+        -------
+        list(str) - a list of messages in response the command validation and execution
+        """
+
         try:
+            # List of subcommands mapped the command methods
             switcher = {
                 'help': self.help,
                 'list': self.revision_list,
@@ -50,9 +95,22 @@ class RevisionCommand():
             return list(err.args)
 
     def help(self):
+        """Returns the help text for the command"""
         return [REVISION_HELP]
 
     def name(self, args):
+        """Display and create a new Revision by name
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         if not self.can_edit:
             raise Exception('You do not have permission to add revision text')
         messages = []
@@ -84,6 +142,18 @@ class RevisionCommand():
         return messages
 
     def revision_list(self, args):
+        """Display a dialog for viewing revisions
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         messages = []
         def canceler(cancel_args):
             if cancel_args[0].lower() in ['revision','rev']:
@@ -114,4 +184,16 @@ class RevisionCommand():
         return messages
 
     def delete_revision(self, args):
+        """Delete a revision
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         return revision_svc.delete_revision(args, self.user)

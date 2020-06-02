@@ -1,3 +1,5 @@
+
+from services.base_service import BaseService
 from services.character_service import CharacterService
 from services.channel_service import ChannelService
 from services.scenario_service import ScenarioService

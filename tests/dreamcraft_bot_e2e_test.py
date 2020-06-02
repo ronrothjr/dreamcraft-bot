@@ -1,4 +1,7 @@
 # dreamcraft_bot_e2e_test.py
+__author__ = 'Ron Roth Jr'
+__contact__ = 'u/ensosati'
+
 import unittest
 import datetime
 import asyncio
@@ -244,6 +247,38 @@ class TestDreamcraftBotE2E(unittest.TestCase):
             }
         ])
 
+    def test_session_creation(self):
+        self.send_and_validate_commands(ctx1, [
+            {
+                'args': ('session',),
+                'assertions': [
+                    ['No active session or name provided', 'should return no active session if empty sessions'],
+                    ['**CREATE or SESSION**```css\n.d session YOUR_SESSION\'S_NAME```', 'Should include instructions to create session']
+                ]
+            },
+            {
+                'args': ('session', 'Test', 'Session')
+            },
+            {
+                'args': ('y'),
+                'assertions': [
+                    ['***Test Session*** _(Active Session)_', 'should create sesion named Test Session']
+                ]
+            },
+            {
+                'args': ('session', 'desc', 'Test', 'description'),
+                'assertions': [
+                    ['***Test Session*** _(Active Session)_  - "Test description"', 'should add a \'Test description\' session named Test Session']
+                ]
+            },
+            {
+                'args': ('session', 'start'),
+                'assertions': [
+                    ['_Started On:_', 'should start session named Test Session']
+                ]
+            }
+        ])
+
     def test_scenario_creation(self):
         self.send_and_validate_commands(ctx1, [
             {
@@ -363,6 +398,28 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                 ]
             },
             {
+                'args': ('engagement', 'Conflict', 'Test Conflict')
+            },
+            {
+                'args': ('y',),
+                'assertions': [
+                    ['***YOU ARE CURRENTLY EDITING...***\n:point_down:\n\n        ***Test Conflict***', 'should add a new Conflict engagement']
+                ]
+            },
+            {
+                'args': ('e', 'start'),
+                'assertions': [
+                    ['_Started On:_', 'should start \'Test Conflict\' engagement']
+                ]
+            },
+            {
+                'ctx': ctx2,
+                'args': ('e', 'oppose', 'NPC'),
+                'assertions': [
+                    ['Added ***Test NPC*** to the opposition in the _Test Conflict_ engagement', 'should add \'Test NPC\' to the conflict']
+                ]
+            },
+            {
                 'args': ('c', 'Test Character')
             },
             {
@@ -401,11 +458,100 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                 'assertions': [
                     [' left to absorb.', 'should display remaining shifts to absorb']
                 ]
+            }
+        ])
+
+    def test_end_delete_components(self):
+        self.send_and_validate_commands(ctx1, [
+            {
+                'args': ('c', 'Test Character')
+            },
+            {
+                'args': ('scene', 'exit',),
+                'assertions': [
+                    ['***Test Character*** removed from _Test Scene_', 'should remove \'Test Character\' from \'Test Scene\'']
+                ]
+            },
+            {
+                'ctx': ctx2,
+                'args': ('c', 'npc', 'Test NPC')
+            },
+            {
+                'ctx': ctx2,
+                'args': ('scene', 'exit',),
+                'assertions': [
+                    ['***Test NPC*** removed from _Test Scene_', 'should remove \'Test NPC\' from \'Test Scene\'']
+                ]
+            },
+            {
+                'args': ('engagement', 'end',),
+                'assertions': [
+                    ['_Ended On:_', 'should end the engagement named Test Conflict']
+                ]
             },
             {
                 'args': ('scene', 'end',),
                 'assertions': [
                     ['_Ended On:_', 'should end the scene named Test Scene']
+                ]
+            },
+            {
+                'args': ('session', 'end',),
+                'assertions': [
+                    ['_Ended On:_', 'should end the session named Test Session']
+                ]
+            },
+            {
+                'args': ('engagement', 'delete',),
+                'assertions': [
+                    ['***Test Conflict*** removed', 'should remove \'Test Conflict\'']
+                ]
+            },
+            {
+                'args': ('zone', 'delete',),
+                'assertions': [
+                    ['***Test Zone*** removed', 'should remove \'Test Zone\'']
+                ]
+            },
+            {
+                'args': ('scene', 'delete',),
+                'assertions': [
+                    ['***Test Scene*** removed', 'should remove \'Test Scene\'']
+                ]
+            },
+            {
+                'args': ('scenario', 'delete',),
+                'assertions': [
+                    ['***Test Scenario*** removed', 'should remove \'Test Scenario\'']
+                ]
+            },
+            {
+                'args': ('session', 'delete',),
+                'assertions': [
+                    ['***Test Session*** removed', 'should remove \'Test Session\'']
+                ]
+            },
+            {
+                'ctx': ctx2,
+                'args': ('c', 'delete',)
+            },
+            {
+                'ctx': ctx2,
+                'args': ('y',),
+                'assertions': [
+                    ['***Test NPC*** removed', 'should archive \'Text NPC\'']
+                ]
+            },
+            {
+                'args': ('c', 'Test Character')
+            },
+            {
+                'args': ('c', 'delete',)
+            },
+            {
+                'args': ('y',),
+                'assertions': [
+                    ['***Test Character*** removed', 'should remove \'Test Character\'']
                 ]
             }
         ])

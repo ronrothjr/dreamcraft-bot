@@ -1,4 +1,7 @@
 # dreamcraft.py
+__author__ = 'Ron Roth Jr'
+__contact__ = 'u/ensosati'
+
 import os
 import re
 from dotenv import load_dotenv
@@ -21,13 +24,30 @@ class DreamcraftHandler():
     """
     DreamcraftHandler class for parsing commands and assigning execution
     """
+
     def __init__(self, ctx, args):
+        """
+        Command handler for .d, the Dreamcraft Bot command
+
+        Parameters
+        ----------
+        ctx : object(Context)
+            The Discord.Context object used to retrieve and send information to Discord users
+        args : array(str)
+            The arguments sent to the bot to parse and evaluate
+
+        Returns
+        -------
+        DreamcraftHandler - object for processing Context object and args (list of strings in a command)
+        """
         self.ctx = ctx
         self.args = args
         self.guild = ctx.guild if ctx.guild else ctx.author
         self.user = User().get_or_create(ctx.author.name, self.guild.name)
+        # The 'channel' variable can either be the name of the channel on a server or 'private' if Direct Message
         channel = 'private' if ctx.channel.type.name == 'private' else ctx.channel.name
         self.channel = Channel().get_or_create(channel, self.guild.name, self.user)
+        # Add the user to the list of channel users
         if str(self.user.name) not in self.channel.users:
             self.channel.users.append(str(self.user.name))
             self.channel.updated_by = str(self.user.id)
@@ -40,6 +60,18 @@ class DreamcraftHandler():
         self.messages = []
 
     def get_messages(self):
+        """
+        Processes Context and args through command string parsing
+
+        Returns
+        -------
+        tuple(title: str, message: str)
+            title : str
+                The title of the response message
+            message : str
+                The string for the response message content
+        """
+
         modules = {
             'Channel': ChannelCommand,
             'Scenario': ScenarioCommand,
@@ -81,7 +113,9 @@ class DreamcraftHandler():
             'engage': EngagementCommand,
             'e': EngagementCommand,
             'attack': RollCommand,
+            'attk': RollCommand,
             'defend': RollCommand,
+            'def': RollCommand,
             'roll': RollCommand,
             'r': RollCommand,
             'reroll': RollCommand,
@@ -137,6 +171,15 @@ class DreamcraftHandler():
             return self.module, '\n'.join(self.messages)
 
     def get_answer(self):
+        """
+        Check for an answer if a dialog has been recorded in the user's record
+
+        A dialog records the original command, the question string, and the answer.
+        The command will track the previous command that started the dialog.
+        The question will store the current state of the dialog.
+        The answer is stored for processing by the command handler.
+        """
+
         guild = self.ctx.guild if self.ctx.guild else self.ctx.author
         self.user = User().find(self.ctx.author.name, guild.name)
         if self.user and self.user.command:
@@ -149,6 +192,11 @@ class DreamcraftHandler():
             self.user.save()
 
     def shortcuts(self):
+        """
+        Check for standard approach names and skill names to update the active character
+
+        Approach and skill names must be completely spelled out in order to trigger the shortcut feature.
+        """
         # shortcut for updating approaches on a character (must enter full name)
         approach = [s for s in APPROACHES if self.search.lower() == s.split(' - ')[0].lower()] if len(self.args) > 0 else None
         if approach:

@@ -1,4 +1,7 @@
 # character_command.py
+__author__ = 'Ron Roth Jr'
+__contact__ = 'u/ensosati'
+
 import traceback
 import datetime
 from datetime import timezone
@@ -29,7 +32,63 @@ CONSEQUENCES_TITLES = SETUP.consequences_titles
 CONSEQUENCES_SHIFTS = SETUP.consequence_shifts
 
 class CharacterCommand():
+    """
+    Handle 'character', 'char', 'c' commands and subcommands
+
+    Subcommands:
+        help - display a set of instructions on CharacterCommand usage
+        note - add a note to the character
+        say - add dialog to the scene from the character
+        story - display the character's story
+        stats - display statistics on Dreamcraft Bot usage
+        parent, p - return viewing and editing focus to the character's parent component
+        name, n - display and create new characters by name
+        select - display existing characters
+        image - add an image to embed in the character sheet
+        list, l - display a list of existing characters and NPCs
+        delete - remove a character (archive)
+        restore - restore a character from the archive
+        copy - duplicate a character from one server to another (must have access to both)
+        description, desc - add/edit the Description in the character sheet
+        high, hc - add/edit the High Concept in the character sheet
+        trouble, t - add/edit the Trouble in the character sheet
+        fate, f - add/remove/refresh fate points
+        aspect, a - add/delete aspects
+        boost, b - add aspects as a boost
+        approach, app - add/edit approaches in the character sheet
+        skill, sk - add/edit skills in the characater sheet
+        stunt, s - add/delete stunts
+        stress, st - add/edit stress tracks in the character sheet
+        consequence, con - add/edit consequences and conditions in the character sheet
+        custom - add/edit custom fields in the character sheet
+    """
+
     def __init__(self, parent, ctx, args, guild, user, channel, char=None):
+        """
+        Command handler for character command
+
+        Parameters
+        ----------
+        parent : DreamcraftHandler
+            The handler for Dreamcraft Bot commands and subcommands
+        ctx : object(Context)
+            The Discord.Context object used to retrieve and send information to Discord users
+        args : array(str)
+            The arguments sent to the bot to parse and evaluate
+        guild : Guild
+            The guild object containing information about the server issuing commands
+        user : User
+            The user database object containing information about the user's current setttings, and dialogs
+        channel : Channel
+            The channel from which commands were issued
+        char : Character, optional
+            The database character object 
+
+        Returns
+        -------
+        CharacterCommand - object for processing character commands and subcommands
+        """
+
         self.parent = parent
         self.ctx = ctx
         self.args = args[1:] if args[0] in ['character', 'char', 'c'] else args
@@ -49,7 +108,16 @@ class CharacterCommand():
         self.stu = Character().get_by_id(self.char.active_stunt) if self.char and self.char.active_stunt else None
 
     def run(self):
+        """
+        Execute the channel commands by validating and finding their respective methods
+
+        Returns
+        -------
+        list(str) - a list of messages in response the command validation and execution
+        """
+
         try:
+            # List of subcommands mapped the command methods
             switcher = {
                 'help': self.help,
                 'note': self.note,
@@ -114,20 +182,64 @@ class CharacterCommand():
             return list(err.args)
 
     def help(self, args):
+        """Returns the help text for the command
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+        """
+
         return [self.dialog('all')]
 
     def search(self, args):
+        """Search for an existing Character using the command string
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         params = {'name__icontains': ' '.join(args[0:]), 'guild': self.guild.name, 'category': 'Character', 'archived': False, 'npc': self.npc}
         return char_svc.search(args, Character.filter, params)
 
     def note(self, args):
+        """Add a note the Character story
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         if self.char:
-            Log().create_new(str(self.char.id), f'Character: {self.char.name}', str(self.user.id), self.guild.name, 'Character', {'by': self.user.name, 'note': f'{self.char.name} says, "' + ' '.join(args[1:])} + '"', 'created')
+            Log().create_new(str(self.char.id), f'Character: {self.char.name}', str(self.user.id), self.guild.name, 'Character', {'by': self.user.name, 'note': '"' + ' '.join(args[1:])} + '"', 'created')
             return ['Log created']
         else:
             return ['No active character to log']
 
     def say(self, args):
+        """Add dialog to the Character story
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         if not self.char:
             return ['No active character to log']
         if not self.sc:
@@ -138,6 +250,18 @@ class CharacterCommand():
             return ['Log created']
 
     def story(self, args):
+        """Disaply the Character story
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         messages =[]
         command = 'c ' + (' '.join(args))
         def canceler(cancel_args):
@@ -176,6 +300,18 @@ class CharacterCommand():
         return messages
 
     def stats(self, args):
+        """Disaply stats for the current server
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         search = ' '.join(args[1:]) if len(args) > 1 else self.guild.name
         guilds = [g['guild'] for g in Character().get_guilds() if g['guild']]
         guild_list = f'***Guilds:***\n' + '\n'.join([f'    ***{g}***' for g in guilds])
@@ -193,15 +329,41 @@ class CharacterCommand():
         return [stats_str]
 
     def get_parent(self, args):
+        """Get the Character's parent display string
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         messages = []
         if (self.user and self.char and self.char.parent_id):
-            messages.extend(char_svc.get_parent_by_id(self.char, self.user, self.char.parent_id))
+            messages.extend(char_svc.get_parent_by_id(Character.filter, self.user, self.char.parent_id))
         else:
             messages.append('No parent found')
         return messages
 
     def dialog(self, dialog_text, char=None):
-        char, name, get_string, get_short_string = char_svc.get_char_info(self.char, self.user)
+        """Display Character information and help text
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
+        char = char if char else self.char
+        char, name, get_string, get_short_string = char_svc.get_info('character', char, self.user)
+        can_edit = str(self.user.id) == str(char.user.id) or self.user.role == 'Game Master' if self.user and char else True
         category = char.category if char else 'Character'
         dialog = {
             'create_character': ''.join([
@@ -209,14 +371,14 @@ class CharacterCommand():
                 '.d character YOUR_CHARACTER\'S_NAME```'
             ]),
             'active_character': ''.join([
-                '***YOU ARE CURRENTLY EDITING...***\n' if self.can_edit else '',
+                '***YOU ARE CURRENTLY EDITING...***\n' if can_edit else '',
                 f':point_down:\n\n{get_string}'
             ]),
             'rename_delete': ''.join([
                 f'\n\n_Is ***{name}*** not the {category.lower()} name you wanted?_',
                 f'```css\n.d c rename NEW_NAME```_Want to remove ***{name}***?_',
                 '```css\n.d c delete```'
-            ]),
+            ]) if can_edit else '',
             'active_character_short': ''.join([
                 f'***THIS IS YOUR ACTIVE CHARACTER:***\n',
                 f':point_down:\n\n{get_short_string}'
@@ -225,7 +387,7 @@ class CharacterCommand():
                 f'Add more information about ***{name}***',
                 '```css\n.d c description CHARACTER_DESCRIPTION\n',
                 '.d c high concept HIGH_CONCEPT\n.d c trouble TROUBLE```'
-            ]),
+            ]) if can_edit else '',
             'add_skills': ''.join([
                 f'\nAdd approaches or skills for ***{name}***',
                 '```css\n.d c approach Fo +4 Cl +2 Qu +1 Sn +2 Ca +1 Fl 0...\n',
@@ -241,7 +403,7 @@ class CharacterCommand():
                 '.d c skill "Basket Weaving" +1 ...\n',
                 '/* GET LIST OF SKILLS or ADD YOUR OWN */\n',
                 '.d c skill help```'
-            ]),
+            ]) if can_edit else '',
             'add_aspects_and_stunts': ''.join([
                 f'\n\nAdd an aspect or two for ***{name}***',
                 '```css\n.d c aspect ASPECT_NAME\n',
@@ -249,7 +411,7 @@ class CharacterCommand():
                 f'Give  ***{name}*** some cool stunts',
                 '```css\n.d c stunt STUNT_NAME\n',
                 '.d c stunt delete STUNT_NAME```'
-            ]),
+            ]) if can_edit else '',
             'edit_active_aspect': ''.join([
                 f'\n***You can edit this aspect as if it were a character***',
                 '```css\n.d c aspect character\n',
@@ -257,7 +419,7 @@ class CharacterCommand():
                 '.d c\n',
                 '/* THIS WILL RETURN YOU TO EDITING THE CHARACTER */\n',
                 '.d c parent```'
-            ]),
+            ]) if can_edit else '',
             'edit_active_stunt': ''.join([
                 f'\n***You can edit this stunt as if it were a character***',
                 '```css\n.d c stunt character\n',
@@ -265,20 +427,20 @@ class CharacterCommand():
                 '.d c\n',
                 '/* THIS WILL RETURN YOU TO EDITING THE CHARACTER */\n',
                 '.d c parent```'
-            ]),
+            ]) if can_edit else '',
             'manage_stress': ''.join([
                 f'\n***Modify the stress tracks.\n',
                 'Here\'s an example to add and remove stress tracks***',
                 '```css\n.d c stress title 4 Ammo\n.d c stress title delete Ammo\n',
                 '.d c stress title FATE /* also use FAE or Core */```'
-            ]),
+            ]) if can_edit else '',
             'manage_conditions': ''.join([
                 f'\n***Modify the conditions tracks.\n',
                 'Here\'s an example to add and remove consequence tracks***',
                 '```css\n.d c consequences title 2 Injured\n',
                 '.d c consequences title delete Injured\n',
                 '.d c consequences title FATE /* also use FAE or Core */```'
-            ]),
+            ]) if can_edit else '',
             'go_back_to_parent': ''.join([
                 f'\n\n***You can GO BACK to the parent character, aspect, or stunt***',
                 '```css\n.d c parent\n.d c p```'
@@ -302,27 +464,39 @@ class CharacterCommand():
             else:
                 dialog_string += dialog.get('active_character', '')
                 if not char.high_concept or not char.trouble:
-                    dialog_string += dialog.get('rename_delete', '') if self.can_edit else ''
-                    dialog_string += dialog.get('add_more_info', '') if self.can_edit else ''
+                    dialog_string += dialog.get('rename_delete', '')
+                    dialog_string += dialog.get('add_more_info', '')
                 elif not char.skills:                    
-                    dialog_string += dialog.get('add_skills', '') if self.can_edit else ''
+                    dialog_string += dialog.get('add_skills', '')
                 elif char.skills:  
-                    dialog_string += dialog.get('add_aspects_and_stunts', '') if self.can_edit else ''
-                    dialog_string += dialog.get('manage_stress', '') if self.can_edit else ''
-                    dialog_string += dialog.get('manage_conditions', '') if self.can_edit else ''
+                    dialog_string += dialog.get('add_aspects_and_stunts', '')
+                    dialog_string += dialog.get('manage_stress', '')
+                    dialog_string += dialog.get('manage_conditions', '')
         else:
             if dialog_text:
                 dialog_string += dialog.get(dialog_text, '')
             else:
-                dialog_string += dialog.get('active_character', '') if self.can_edit else ''
-                dialog_string += dialog.get('rename_delete', '') if self.can_edit else ''
-                dialog_string += dialog.get('go_back_to_parent', '') if self.can_edit else ''
-                dialog_string += dialog.get('add_aspects_and_stunts', '') if self.can_edit else ''
-                dialog_string += dialog.get('manage_stress', '') if self.can_edit else ''
-                dialog_string += dialog.get('manage_conditions', '') if self.can_edit else ''
+                dialog_string += dialog.get('active_character', '')
+                dialog_string += dialog.get('rename_delete', '')
+                dialog_string += dialog.get('go_back_to_parent', '')
+                dialog_string += dialog.get('add_aspects_and_stunts', '')
+                dialog_string += dialog.get('manage_stress', '')
+                dialog_string += dialog.get('manage_conditions', '')
         return dialog_string
 
     def name(self, args):
+        """Display and create a new Character by name
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         messages = []
         if len(args) == 0:
             if not self.char:
@@ -398,6 +572,18 @@ class CharacterCommand():
         return messages
     
     def select(self, args):
+        """Select an existing Character by name
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         messages = []
         if len(args) == 0:
             if not self.char:
@@ -447,6 +633,18 @@ class CharacterCommand():
         return messages
 
     def character_list(self, args):
+        """Display a dialog for viewing and selecting Characters
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         messages = []
         def canceler(cancel_args):
             if cancel_args[0].lower() in ['character','char','c']:
@@ -482,6 +680,18 @@ class CharacterCommand():
         return messages
 
     def copy_character(self, args):
+        """Copy a character from one guild to another (must have membershihp to both guilds)
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         messages = []
         search = ''
         if not self.char:
@@ -529,6 +739,18 @@ class CharacterCommand():
         return messages
 
     def delete_character(self, args):
+        """Delete (archive) the current active Character
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         messages = []
         search = ''
         if not self.char:
@@ -575,10 +797,22 @@ class CharacterCommand():
             char_svc.save_user(self.user)
             messages.extend([question])
         if parent_id:
-            messages.extend(char_svc.get_parent_by_id(self.char, self.user, parent_id))
+            messages.extend(char_svc.get_parent_by_id(Character.filter, self.user, parent_id))
         return messages
 
     def restore_character(self, args):
+        """Restore a Character by name
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         messages = []
         char_name = ' '.join(args[1:])
         chars = []
@@ -656,6 +890,18 @@ class CharacterCommand():
         return messages
 
     def description(self, args):
+        """Add/edit the description for a Character
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         messages = []
         if len(args) == 1:
             messages.append('No description provided')
@@ -672,6 +918,18 @@ class CharacterCommand():
         return messages
 
     def high_concept(self, args):
+        """Add/edit the High Concept for in the character sheet
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         messages = []
         if len(args) == 2 or (len(args) == 1 and args[1].lower() != 'concept'):
             messages.append('No high concept provided')
@@ -692,6 +950,18 @@ class CharacterCommand():
         return messages
 
     def trouble(self, args):
+        """Add/edit the Trouble in the character sheet
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         messages = []
         if not self.can_edit:
             raise Exception('You do not have permission to edit this character')
@@ -708,6 +978,18 @@ class CharacterCommand():
         return messages
 
     def fate(self, args):
+        """Add, remove, or refresh Fate Points and Refresh
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         if not self.char:
             return ['You don\'t have an active character.\nTry this: ```css\n.d c CHARACTER_NAME```']
         elif not self.can_edit:
@@ -735,6 +1017,18 @@ class CharacterCommand():
         return [f'Fate Points: {self.char.get_string_fate()}'] if self.char.get_string_fate() else ['Fate points not used by this character']
 
     def custom(self, args):
+        """Add/edit custom fields in the character sheet
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         if not self.char:
             raise Exception('You don\'t have an active character.\nTry this: ```css\n.d c CHARACTER_NAME```')
         if not self.can_edit:
@@ -766,6 +1060,18 @@ class CharacterCommand():
         return messages
 
     def image(self, args):
+        """Add/edit an embedded image for the character
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         if not self.char:
             raise Exception('You don\'t have an active character.\nTry this: ```css\n.d c CHARACTER_NAME```')
         if not self.can_edit:
@@ -792,6 +1098,18 @@ class CharacterCommand():
         return messages
 
     def approach(self, args):
+        """Add/edit approaches or custom approaches in the character sheet
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         messages = []
         if args[1].lower() == 'help':
             app_str = '\n        '.join(APPROACHES)
@@ -829,6 +1147,18 @@ class CharacterCommand():
         return messages
 
     def skill(self, args):
+        """Add/edit skills or custom skills in the character sheet
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         messages = []
         if args[1].lower() == 'help':
             sk_str = '\n        '.join(SKILLS)
@@ -866,6 +1196,18 @@ class CharacterCommand():
         return messages
 
     def aspect(self, args):
+        """Add/edit an aspect in the character sheet or edit it as a character
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         messages = []
         if len(args) == 1:
             if not self.asp:
@@ -906,6 +1248,18 @@ class CharacterCommand():
         return messages
 
     def stunt(self, args):
+        """Add/edit a stunt in the character sheet or edit it as a character
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         messages = []
         if len(args) == 1:
             if not self.stu:
@@ -945,9 +1299,33 @@ class CharacterCommand():
         return messages
 
     def get_available_stress(self, stress_type):
+        """Calculate the availble stress for a given type
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        int - the number of available stress track marks available
+        """
+
         return sum([1 for s in self.char.stress[stress_type] if s[1] == O]) if self.char.stress else 0
 
     def stress(self, args, check_user=None):
+        """Add/edit stress or customize a stress track
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         messages = []
         if len(args) == 1:
             messages.append(STRESS_HELP)
@@ -1117,6 +1495,18 @@ class CharacterCommand():
         return messages
 
     def consequence(self, args):
+        """Add/edit consequences and conditions or customize a consequences or conditions track
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         messages = []
         if args[1].lower() == 'help':
             messages.append(CONSEQUENCES_HELP)
@@ -1250,6 +1640,18 @@ class CharacterCommand():
         return messages
 
     def absorb_shifts(self, shift_int):
+        """Absorb shifts from an attack
+        
+        Parameters
+        ----------
+        shift_int : int
+            Number of shifts to absorb
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         messages = []
         targeted_by = Character.filter(active_target=str(self.char.id)).first()
         if targeted_by and targeted_by.last_roll and targeted_by.last_roll.get('shifts_remaining', 0) > 0:

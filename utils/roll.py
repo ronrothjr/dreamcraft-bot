@@ -1,4 +1,7 @@
 # roll.py
+__author__ = 'Ron Roth Jr'
+__contact__ = 'u/ensosati'
+
 import random
 
 from config.setup import Setup

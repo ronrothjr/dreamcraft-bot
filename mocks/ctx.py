@@ -1,4 +1,7 @@
 # ctx.py
+__author__ = 'Ron Roth Jr'
+__contact__ = 'u/ensosati'
+
 
 class Guild(object):
     def __init__(self, guild_name):

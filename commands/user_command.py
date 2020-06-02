@@ -1,5 +1,8 @@
 # user_command.py
+__author__ = 'Ron Roth Jr'
+__contact__ = 'u/ensosati'
 
+import traceback
 import pytz
 from config.setup import Setup
 from models.user import User
@@ -9,7 +12,39 @@ SETUP = Setup()
 USER_HELP = SETUP.user_help
 
 class UserCommand():
+    """
+    Handle 'user', 'u' commands and subcommands
+
+    Subcommands:
+        help - display a set of instructions on UserCommand usage
+        user, u - display and create new users by name
+        timezone, tz - set or display a list of existing timezones
+    """
+
     def __init__(self, parent, ctx, args, guild, user, channel):
+        """
+        Command handler for UserCommand
+
+        Parameters
+        ----------
+        parent : DreamcraftHandler
+            The handler for Dreamcraft Bot commands and subcommands
+        ctx : object(Context)
+            The Discord.Context object used to retrieve and send information to Discord users
+        args : array(str)
+            The arguments sent to the bot to parse and evaluate
+        guild : Guild
+            The guild object containing information about the server issuing commands
+        user : User
+            The user database object containing information about the user's current setttings, and dialogs
+        channel : Channel
+            The channel from which commands were issued
+
+        Returns
+        -------
+        UserCommand - object for processing user commands and subcommands
+        """
+
         self.parent = parent
         self.ctx = ctx
         self.args = args[1:]
@@ -19,30 +54,46 @@ class UserCommand():
         self.command = self.args[0].lower() if len(self.args) > 0 else 'u'
 
     def run(self):
-        switcher = {
-            'help': self.help,
-            'user': self.get_user,
-            'u': self.get_user,
-            'timezone': self.time_zone,
-            'tz': self.time_zone
-        }
-        # Get the function from switcher dictionary
-        if self.command in switcher:
-            func = switcher.get(self.command, lambda: self.time_zone)
-            # Execute the function
-            messages = func()
-        else:
-            messages = [f'Unknown command: {self.command}']
-        # Send messages
-        return messages
+        """
+        Execute the channel commands by validating and finding their respective methods
+
+        Returns
+        -------
+        list(str) - a list of messages in response the command validation and execution
+        """
+        
+        try:
+            # List of subcommands mapped the command methods
+            switcher = {
+                'help': self.help,
+                'user': self.get_user,
+                'u': self.get_user,
+                'timezone': self.time_zone,
+                'tz': self.time_zone
+            }
+            # Get the function from switcher dictionary
+            if self.command in switcher:
+                func = switcher.get(self.command, lambda: self.time_zone)
+                # Execute the function
+                messages = func()
+            else:
+                messages = [f'Unknown command: {self.command}']
+            # Send messages
+            return messages
+        except Exception as err:
+            traceback.print_exc()
+            return list(err.args)
 
     def help(self):
+        """Returns the help text for the command"""
         return [USER_HELP]
 
     def get_user(self):
+        """Diplsay the current user information"""
         return [self.user.get_string()]
     
     def time_zone(self):
+        """Set/edit the user's timezone information"""
         tz_help = 'Try this:```css\n.d u timezone ZONE_SEARCH\n/* ZONE_SEARCH must be at least 3 characters */```'
         if len(self.args) == 0:
             if not self.user:

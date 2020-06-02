@@ -1,29 +1,12 @@
 # revision_service.py
+__author__ = 'Ron Roth Jr'
+__contact__ = 'u/ensosati'
+
 from models import Revision
 from utils import T
+from services.base_service import BaseService
 
-class RevisionService():
-    def search(self, args, method, params):
-        if len(args) == 0:
-            return None
-        item = method(**params).first()
-        if item:
-            return item
-        else:
-            return None
-
-    def save(self, item, user):
-        if item:
-            item.updated_by = str(user.id)
-            item.updated = T.now()
-            item.history_id = ''
-            item.save()
-
-    def save_user(self, user):
-        if user:
-            user.updated_by = str(user.id)
-            user.updated = T.now()
-            user.save()
+class RevisionService(BaseService):
 
     def delete_revision(self, args, user):
         messages = []

@@ -1,4 +1,7 @@
 # revision.py
+__author__ = 'Ron Roth Jr'
+__contact__ = 'u/ensosati'
+
 from mongoengine import Document, StringField, BooleanField, DateTimeField
 from bson.objectid import ObjectId
 from utils import T

@@ -1,4 +1,8 @@
 # channel_command
+__author__ = 'Ron Roth Jr'
+__contact__ = 'u/ensosati'
+
+import traceback
 from models import Channel, User, Character, Scene
 from services import ChannelService, ScenarioService
 from utils import Dialog, T
@@ -7,7 +11,39 @@ channel_svc = ChannelService()
 scenario_svc = ScenarioService()
 
 class ChannelCommand():
+    """
+    Handle 'channel' and 'chan' commands and subcommands
+
+    Subcommands:
+        channel, chan - display channel information
+        list - dipslay a list of channels within the current guild
+        users, u - display a list of users interacting wtih the channel
+    """
+
     def __init__(self, parent, ctx, args, guild, user, channel):
+        """
+        Command handler for channel command
+
+        Parameters
+        ----------
+        parent : DreamcraftHandler
+            The handler for Dreamcraft Bot commands and subcommands
+        ctx : object(Context)
+            The Discord.Context object used to retrieve and send information to Discord users
+        args : array(str)
+            The arguments sent to the bot to parse and evaluate
+        guild : Guild
+            The guild object containing information about the server issuing commands
+        user : User
+            The user database object containing information about the user's current setttings, and dialogs
+        channel : Channel
+            The channel from which commands were issued        
+
+        Returns
+        -------
+        ChannelCommand - object for processing channel subcommands
+        """
+
         self.parent = parent
         self.ctx = ctx
         self.args = args[1:]
@@ -23,26 +59,56 @@ class ChannelCommand():
         self.char = Character().get_by_id(self.user.active_character) if self.user and self.user.active_character else None
 
     def run(self):
-        switcher = {
-            'chan': self.chan,
-            'list': self.channel_list,
-            'users': self.users,
-            'u': self.users
-        }
-        # Get the function from switcher dictionary
-        if self.command in switcher:
-            func = switcher.get(self.command, lambda: self.chan)
-            # Execute the function
-            messages = func(self.args)
-        else:
-            messages = [f'Unknown command: {self.command}']
-        # Send messages
-        return messages
+        """
+        Execute the channel commands by validating and finding their respective methods
+
+        Returns
+        -------
+        list(str) - a list of messages in response the command validation and execution
+        """
+
+        try:
+            # List of subcommands mapped the command methods
+            switcher = {
+                'channel': self.chan,
+                'chan': self.chan,
+                'list': self.channel_list,
+                'users': self.users,
+                'u': self.users
+            }
+            # Get the function from switcher dictionary
+            if self.command in switcher:
+                func = switcher.get(self.command, lambda: self.chan)
+                # Execute the function
+                messages = func(self.args)
+            else:
+                messages = [f'Unknown command: {self.command}']
+            # Send messages
+            return messages
+        except Exception as err:
+            traceback.print_exc()
+            return list(err.args)
 
     def chan(self, args):
+        """Returns the list of strings with channel info
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+        """
+
         return [self.channel.get_string(self.user)]
 
     def channel_list(self, args):
+        """
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+        """
+
         messages = []
         def canceler(cancel_args):
             if cancel_args[0].lower() in ['chan']:
@@ -77,5 +143,13 @@ class ChannelCommand():
         return messages
 
     def users(self, args):
+        """
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+        """
+
         return [self.channel.get_users_string()]
 

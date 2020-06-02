@@ -1,4 +1,7 @@
 # character.py
+__author__ = 'Ron Roth Jr'
+__contact__ = 'u/ensosati'
+
 from mongoengine import Document, StringField, LazyReferenceField, ListField, BooleanField, DateTimeField, DynamicField, DictField, IntField, signals
 from bson.objectid import ObjectId
 

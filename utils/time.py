@@ -1,4 +1,7 @@
 # t.py
+__author__ = 'Ron Roth Jr'
+__contact__ = 'u/ensosati'
+
 import datetime
 import pytz
 from config.setup import Setup

@@ -1,4 +1,7 @@
 # log.py
+__author__ = 'Ron Roth Jr'
+__contact__ = 'u/ensosati'
+
 import datetime
 from mongoengine import Document, StringField, ReferenceField, DynamicField, BooleanField, DateTimeField
 from bson.objectid import ObjectId

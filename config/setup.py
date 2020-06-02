@@ -1,4 +1,7 @@
 # config.py
+__author__ = 'Ron Roth Jr'
+__contact__ = 'u/ensosati'
+
 
 class Setup():
     start = '**CREATE A CHARACTER**```css\n.d character YOUR_CHARACTER\'S_NAME```\

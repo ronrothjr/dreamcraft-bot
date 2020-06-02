@@ -1,4 +1,7 @@
 # channel.py
+__author__ = 'Ron Roth Jr'
+__contact__ = 'u/ensosati'
+
 from bson import ObjectId
 from mongoengine import Document, StringField,  ListField, BooleanField, DateTimeField, signals
 

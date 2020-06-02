@@ -1,4 +1,7 @@
 # zone_command
+__author__ = 'Ron Roth Jr'
+__contact__ = 'u/ensosati'
+
 import traceback
 from commands import CharacterCommand
 from models import Channel, Scenario, Scene, Zone, Character, User, Log
@@ -11,7 +14,47 @@ SETUP = Setup()
 ZONE_HELP = SETUP.zone_help
 
 class ZoneCommand():
+    """
+    Handle 'zone', 'z' commands and subcommands
+
+    Subcommands:
+        help - display a set of instructions on ZoneCommand usage
+        note - add a note to the zone
+        say - add dialog to the zone from the zone
+        story - display the zone's story
+        name, n - display and create new zones by name
+        description, desc - add/edit the Description in the zone
+        select - display existing zone
+        character, char, c - edit the zone as a character
+        list, l - display a list of existing characters and NPCs
+        players, player, p - add players to the zone
+        delete - remove an zone (archive)
+    """
+
     def __init__(self, parent, ctx, args, guild, user, channel):
+        """
+        Command handler for ZoneCommand
+
+        Parameters
+        ----------
+        parent : DreamcraftHandler
+            The handler for Dreamcraft Bot commands and subcommands
+        ctx : object(Context)
+            The Discord.Context object used to retrieve and send information to Discord users
+        args : array(str)
+            The arguments sent to the bot to parse and evaluate
+        guild : Guild
+            The guild object containing information about the server issuing commands
+        user : User
+            The user database object containing information about the user's current setttings, and dialogs
+        channel : Channel
+            The channel from which commands were issued
+
+        Returns
+        -------
+        ZoneCommand - object for processing zone commands and subcommands
+        """
+    
         self.parent = parent
         self.ctx = ctx
         self.args = args[1:] if args[0] in ['zone', 'z'] else args
@@ -27,7 +70,16 @@ class ZoneCommand():
         self.char = Character().get_by_id(self.user.active_character) if self.user and self.user.active_character else None
 
     def run(self):
+        """
+        Execute the channel commands by validating and finding their respective methods
+
+        Returns
+        -------
+        list(str) - a list of messages in response the command validation and execution
+        """
+
         try:
+            # List of subcommands mapped the command methods
             switcher = {
                 'help': self.help,
                 'name': self.name,
@@ -73,13 +125,38 @@ class ZoneCommand():
             return list(err.args)
 
     def help(self, args):
+        """Returns the help text for the command"""
         return [ZONE_HELP]
 
     def search(self, args):
+        """Search for an existing Zone using the command string
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         params = {'name__icontains': ' '.join(args[0:]), 'guild': self.guild.name, 'channel_id': str(self.channel.id), 'archived': False}
         return zone_svc.search(args, Zone.filter, params)
 
     def note(self, args):
+        """Add a note to the Zone story
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         if self.zone:
             Log().create_new(str(self.zone.id), f'Zone: {self.zone.name}', str(self.user.id), self.guild.name, 'Zone', {'by': self.user.name, 'note': ' '.join(args[1:])}, 'created')
             return ['Log created']
@@ -87,6 +164,18 @@ class ZoneCommand():
             return ['No active zone to log']
 
     def say(self, args):
+        """Add dialog to the Zone story
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         if not self.zone:
             return ['No active zone to log']
         else:
@@ -95,6 +184,18 @@ class ZoneCommand():
             return ['Log created']
 
     def story(self, args):
+        """Disaply the Zone story
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         messages =[]
         command = 'zone ' + (' '.join(args))
         def canceler(cancel_args):
@@ -133,8 +234,20 @@ class ZoneCommand():
         return messages
 
     def dialog(self, dialog_text, zone=None):
-        zone, name, get_string, get_short_string = zone_svc.get_zone_info(zone if zone else self.zone, self.channel)
-        category = zone.category if zone else 'Zone'
+        """Display Zone information and help text
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
+        zone, name, get_string, get_short_string = zone_svc.get_info('zone', zone if zone else self.zone, self.channel)
+        category = 'Zone'
         dialog = {
             'create_zone': ''.join([
                 '**CREATE or ZONE**```css\n',
@@ -163,7 +276,7 @@ class ZoneCommand():
             if not zone:
                 dialog_string += dialog.get('create_zone', '')
             dialog_string += dialog.get('rename_delete', '')
-        elif zone.category == 'Zone':
+        elif category == 'Zone':
             if dialog_text:
                 dialog_string += dialog.get(dialog_text, '')
             else:
@@ -179,6 +292,18 @@ class ZoneCommand():
         return dialog_string
     
     def name(self, args):
+        """Display and create a new Zone by name
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         if not self.sc:
             raise Exception('No active scene or name provided. Try this:```css\n.d scene SCENE_NAME```')
         messages = []
@@ -248,6 +373,18 @@ class ZoneCommand():
         return messages
     
     def select(self, args):
+        """Select an existing Zone by name
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         messages = []
         if len(args) == 0:
             if not self.zone:
@@ -295,6 +432,18 @@ class ZoneCommand():
         return messages
 
     def zone_list(self, args):
+        """Display a dialog for viewing and selecting Zones
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         messages = []
         def canceler(cancel_args):
             if cancel_args[0].lower() in ['zone']:
@@ -321,6 +470,18 @@ class ZoneCommand():
         return messages
 
     def description(self, args):
+        """Add/edit the description for a Zone
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         if len(args) == 1:
             return ['No description provided']
         if not self.zone:
@@ -337,6 +498,18 @@ class ZoneCommand():
             ]
 
     def character(self, args):
+        """Edit the Zone as a character
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         if self.user:
             self.user.active_character = str(self.zone.character.id)
             self.user.updated_by = str(self.user.id)
@@ -346,7 +519,31 @@ class ZoneCommand():
         return command.run()
 
     def player(self, args):
+        """Add/remove a player from the Zone
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         return zone_svc.player(args, self.channel, self.zone, self.user)
 
     def delete_zone(self, args):
+        """Delete (archive) the current active Zone
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
         return zone_svc.delete_zone(args, self.guild, self.channel, self.sc, self.zone, self.user)

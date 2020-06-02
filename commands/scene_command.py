@@ -73,7 +73,7 @@ class SceneCommand():
         self.scenario = Scenario().get_by_id(self.channel.active_scenario) if self.channel and self.channel.active_scenario else None
         self.sc = Scene().get_by_id(self.channel.active_scene) if self.channel and self.channel.active_scene else None
         self.can_edit = self.user.role == 'Game Master' if self.user and self.sc else True
-        self.zone = Scene().get_by_id(self.channel.active_scene) if self.channel and self.channel.active_scene else None
+        self.zone = Zone().get_by_id(self.channel.active_zone) if self.channel and self.channel.active_zone else None
         self.char = Character().get_by_id(self.user.active_character) if self.user and self.user.active_character else None
 
     def run(self):
@@ -632,6 +632,8 @@ class SceneCommand():
             raise Exception(f'***{self.sc.name}*** has already ended. You missed it.')
         messages = self.player(('p', self.char.name))
         self.note(('note', f'***{self.char.name}*** enters the _({self.sc.name})_ scene'))
+        if self.zone:
+            messages.extend(self.move(('move', 'to', self.zone.name)))
         return messages
 
     def move(self, args):

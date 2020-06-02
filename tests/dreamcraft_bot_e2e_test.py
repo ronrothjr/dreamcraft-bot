@@ -394,7 +394,7 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                 'ctx': ctx2,
                 'args': ('scene', 'move', 'Test Zone'),
                 'assertions': [
-                    ['Added ***Test NPC*** to _Test Zone_ zone', 'should move \'Test NPC\' to \'Test Zone\'']
+                    ['***Test NPC*** is already in the _Test Zone_ zone', 'should show \'Test NPC\' is already in \'Test Zone\'']
                 ]
             },
             {
@@ -431,7 +431,7 @@ class TestDreamcraftBotE2E(unittest.TestCase):
             {
                 'args': ('scene', 'move', 'Test Zone'),
                 'assertions': [
-                    ['Added ***Test Character*** to _Test Zone_ zone', 'should move \'Test Character\' to \'Test Zone\'']
+                    ['***Test Character*** is already in the _Test Zone_ zone', 'should show \'Test Character\' is already in \'Test Zone\'']
                 ]
             },
             {

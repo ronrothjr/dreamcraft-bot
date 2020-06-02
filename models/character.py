@@ -219,10 +219,10 @@ class Character(Document):
         return f'***{self.name}***{active}{category}'
 
     def nl(self):
-        return '\n' if self.category == 'Character' else '    '
+        return '\n' if self.category == 'Character' else '\n... '
 
     def sep(self):
-        return '\n        ' if self.category == 'Character' else '    '
+        return '\n        ' if self.category == 'Character' else '\n... ... '
 
     def get_string_fate(self):
         refresh = f' (_Refresh:_ {self.refresh})' if self.refresh else ''
@@ -306,7 +306,7 @@ class Character(Document):
         for key in keys:
             skills_arr.append([key.replace('a','+').replace('b','-'), skills[key]])
         skills_string = self.sep().join([f'{skill[0]} - {skill[1]}' for skill in skills_arr])
-        return f'{self.sep()}{self.sep()}**{title}:**{self.sep()}{skills_string}' if skills_string else ''
+        return f'{self.nl()}{self.nl()}**{title}:**{self.sep()}{skills_string}' if skills_string else ''
 
     def get_string_stress(self):
         stress_name = '**_Stress:_** '

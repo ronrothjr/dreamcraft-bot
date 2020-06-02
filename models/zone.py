@@ -164,14 +164,16 @@ class Zone(Document):
         if channel:
             active = ' _(Active Zone)_ ' if str(self.id) == channel.active_zone else ''
         description = f' - "{self.description}"' if self.description else ''
-        characters = f'\n\n{self.get_string_characters(channel)}' if self.characters else ''
+        characters = f'\n{self.get_string_characters(channel)}' if self.characters else ''
         aspects = ''
         stress = ''
         if self.character:
             name = f'***{self.character.name}***' if self.character.name else name
             description = f' - "{self.character.description}"' if self.character.description else description
             aspects = self.character.get_string_aspects()
+            aspects = f'{aspects}' if aspects else ''
             stress = self.character.get_string_stress() if self.character.has_stress else ''
+            stress = f'{stress}' if stress else ''
         return f'        {name}{active}{description}{characters}{aspects}{stress}'
 
     def get_short_string(self, channel=None):

@@ -118,7 +118,8 @@ class Setup():
             Add/remove aspect for active zone```css\n.d z (a)spect [(d)elete] \{aspect}```\n\
             Set the current aspect as the active character```css\n.d z (a)spect (c)character```\n\
             Add/remove character for active zone```css\n.d z (c)haracter [(d)elete] \{character}```\n\
-            Remove a zone```css\n.d z (d)delete \{name}```'
+            Remove a zone```css\n.d z (d)delete \{name}```\n\
+            Connet two zones within a scene```css\n.d z connect "Zone 1" to "Zone 2"```'
 
     session_help = '.d session help - display these instructions\nSession Help:\n\
             Display active session```css\n.d session```\n\

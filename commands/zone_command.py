@@ -365,7 +365,7 @@ class ZoneCommand():
                     'formatter': lambda item, item_num, page_num, page_size: f'_ZONE #{item_num+1}_\n{item.get_short_string()}',
                     'cancel': canceler,
                     'select': selector,
-                    'empty': {
+                    'confirm': {
                         'method': Zone().get_or_create,
                         'params': {'user': self.user, 'name': zone_name, 'scene': self.sc, 'channel': self.channel, 'guild': self.guild.name}
                     }

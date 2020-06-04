@@ -30,6 +30,7 @@ class SceneCommand():
         character, char, c - edit the scene as a character
         list, l - display a list of existing characters and NPCs
         players, player, p - add players to the scene
+        connect, adjoin, ajoin, join, j - connect zones to each other
         start - add a start time to the scene
         end - add an end time to the scene
         enter - add a character to a scene with a staging note
@@ -73,7 +74,7 @@ class SceneCommand():
         self.scenario = Scenario().get_by_id(self.channel.active_scenario) if self.channel and self.channel.active_scenario else None
         self.sc = Scene().get_by_id(self.channel.active_scene) if self.channel and self.channel.active_scene else None
         self.can_edit = self.user.role == 'Game Master' if self.user and self.sc else True
-        self.zone = Scene().get_by_id(self.channel.active_scene) if self.channel and self.channel.active_scene else None
+        self.zone = Zone().get_by_id(self.channel.active_zone) if self.channel and self.channel.active_zone else None
         self.char = Character().get_by_id(self.user.active_character) if self.user and self.user.active_character else None
 
     def run(self):
@@ -103,6 +104,11 @@ class SceneCommand():
                 'players': self.player,
                 'player': self.player,
                 'p': self.player,
+                'connect': self.adjoin,
+                'adjoin': self.adjoin,
+                'ajoin': self.adjoin,
+                'join': self.adjoin,
+                'j': self.adjoin,
                 'list': self.scene_list,
                 'l': self.scene_list,
                 'delete': self.delete_scene,
@@ -384,7 +390,7 @@ class SceneCommand():
                     'formatter': lambda item, item_num, page_num, page_size: f'_SCENE #{item_num+1}_\n{item.get_short_string()}',
                     'cancel': canceler,
                     'select': selector,
-                    'empty': {
+                    'confirm': {
                         'method': creator,
                         'params': {'user': self.user, 'name': scene_name, 'scenario': self.scenario, 'channel': self.channel, 'guild': self.guild.name}
                     }
@@ -546,6 +552,21 @@ class SceneCommand():
 
         return scene_svc.player(args, self.channel, self.sc, self.user)
 
+    def adjoin(self, args):
+        """Connect/disconned zones from each other
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
+        return scene_svc.adjoin(args, self.guild.name, self.channel, self.sc, self.user)
+
     def delete_scene(self, args):
         """Delete (archive) the current active Scene
         
@@ -632,6 +653,8 @@ class SceneCommand():
             raise Exception(f'***{self.sc.name}*** has already ended. You missed it.')
         messages = self.player(('p', self.char.name))
         self.note(('note', f'***{self.char.name}*** enters the _({self.sc.name})_ scene'))
+        if self.zone:
+            messages.extend(self.move(('move', 'to', self.zone.name)))
         return messages
 
     def move(self, args):

@@ -3,7 +3,7 @@ __author__ = 'Ron Roth Jr'
 __contact__ = 'u/ensosati'
 
 from bson import ObjectId
-from mongoengine import Document, StringField, ReferenceField, ListField, BooleanField, DateTimeField, signals
+from mongoengine import Document, StringField, ReferenceField, ListField, DynamicField, BooleanField, DateTimeField, signals
 from models.character import User
 from models.character import Character
 from models.zone import Zone
@@ -20,6 +20,7 @@ class Scene(Document):
     scenario_id = StringField()
     character = ReferenceField(Character)
     characters = ListField(StringField())
+    adjoined_zones = DynamicField()
     archived = BooleanField(default=False)
     history_id = StringField()
     started_on = DateTimeField()

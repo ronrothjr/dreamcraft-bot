@@ -371,7 +371,7 @@ class ScenarioCommand():
                     'formatter': lambda item, item_num, page_num, page_size: f'_SCENARIO #{item_num+1}_\n{scenario_svc.get_string(item, self.channel)}',
                     'cancel': canceler,
                     'select': selector,
-                    'empty': {
+                    'confirm': {
                         'method': Scenario().get_or_create,
                         'params': {'user': self.user, 'name': scenario_name, 'channel': self.channel, 'guild': self.guild.name}
                     }

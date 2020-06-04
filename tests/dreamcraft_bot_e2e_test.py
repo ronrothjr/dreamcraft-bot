@@ -8,30 +8,44 @@ import asyncio
 from handlers import DreamcraftHandler
 from mocks import CTX
 
-ctx1 = CTX('Test Guild', 'Test User 1', 'bot_testing')
-ctx2 = CTX('Test Guild', 'Test User 2', 'bot_testing')
+ctx1 = CTX('Test Guild 1', 'Test User 1', 'bot_testing')
+ctx2 = CTX('Test Guild 1', 'Test User 2', 'bot_testing')
+ctx3 = CTX('Test Guild 2', 'Test User 1', 'bot_spamming')
 
 class TestDreamcraftBotE2E(unittest.TestCase):
 
     def send_and_validate_commands(self, ctx, commands):
         for command in commands:
-            print('\nCommand: ' + ' '.join(command['args']) + '\n')
-            handler = DreamcraftHandler(command['ctx'] if 'ctx' in command else ctx, command['args'])
-            messages = handler.get_messages()
-            [print(message) for message in messages]
+            complete_messages = []
+            for arg  in command['args']:
+                messages = []
+                self.print_command('Command: ' + ' '.join(arg), '-')
+                handler = DreamcraftHandler(command['ctx'] if 'ctx' in command else ctx, arg)
+                messages.extend(handler.get_messages())
+                [print(message) for message in messages]
+                complete_messages.extend(messages)
             if 'assertions' in command:
-                [self.assert_command(messages, a[0], a[1]) for a in command['assertions']]
+                [self.assert_command(complete_messages, a[0], a[1]) for a in command['assertions']]
 
     def assert_command(self, messages, assert_str, err_str):
         assert_test = assert_str in ''.join(messages)
-        assert_result = (f'Passed ' if assert_test else 'Failed ') + err_str
-        print(f'\n{assert_result}\n')
+        assert_result = (f'Passed: ' if assert_test else 'Failed ') + err_str
+        self.print_command(assert_result)
         self.assertTrue(assert_test, err_str)
+
+    def print_command(self, result, sep='*'):
+        seps = sep * 84
+        result = result + (' ' * (84 - len(result)))
+        print(''.join([
+            f'\n{sep*3}{seps}{sep*3}',
+            f'\n{sep}  {result}  {sep}',
+            f'\n{sep*3}{seps}{sep*3}\n'
+        ]))
 
     def test_user_setup(self):
         self.send_and_validate_commands(ctx1, [
             {
-                'args': ('user', 'timezone', 'America/New_York'),
+                'args': [('user', 'timezone', 'America/New_York')],
                 'assertions': [
                     ['Saved time zone as ***America/New_York***', 'should save user time_zone as New York']
                 ]
@@ -41,7 +55,7 @@ class TestDreamcraftBotE2E(unittest.TestCase):
     def test_user_2_setup(self):
         self.send_and_validate_commands(ctx2, [
             {
-                'args': ('user', 'timezone', 'America/New_York'),
+                'args': [('user', 'timezone', 'America/New_York')],
                 'assertions': [
                     ['Saved time zone as ***America/New_York***', 'should save user time_zone as New York']
                 ]
@@ -51,33 +65,33 @@ class TestDreamcraftBotE2E(unittest.TestCase):
     def test_npc_character_creation(self):
         self.send_and_validate_commands(ctx2, [  
             {
-                'args': ('c',),
+                'args': [('c',)],
                 'assertions': [
                     ['No active character or name provided', 'should return no active character if empty characters'],
                     ['CREATE or SELECT A CHARACTER', 'Should include instructions to create character']
                 ]
             },
             {
-                'args': ('npc', 'Test', 'NPC'),
+                'args': [('npc', 'Test', 'NPC')],
                 'assertions': [
                     ['Create a new CHARACTER named ***Test NPC***', 'Should ask Create Test NPC question']
                 ]
             },
             {
-                'args': ('y',),
+                'args': [('y',)],
                 'assertions': [
                     ['YOU ARE CURRENTLY EDITING', 'Should be editing a character'],
                     ['***Test NPC*** _(Active)_  _(Nonplayer Character)_', 'Test NPC should be the active character']
                 ]
             },
             {
-                'args': ('approach', 'Fo', '-2'),
+                'args': [('approach', 'Fo', '-2')],
                 'assertions': [
                     ['**Approaches:**\n        -2 - Forceful', 'Should add approaches']
                 ]
             },
             {
-                'args': ('st', 't', '2', 'Physical'),
+                'args': [('st', 't', '2', 'Physical')],
                 'assertions': [
                     ['**_Physical_**  [   ]', 'Should add custom Physical stress track']
                 ]
@@ -87,16 +101,16 @@ class TestDreamcraftBotE2E(unittest.TestCase):
     def test_character_creation(self):
         self.send_and_validate_commands(ctx1, [
             {
-                'args': ('c', 'Test Character'),
+                'args': [('c', 'Test Character 1')],
                 'assertions': [
-                    ['Create a new CHARACTER named ***Test Character***', 'Should ask Create Test Character question']
+                    ['Create a new CHARACTER named ***Test Character 1***', 'Should ask Create Test Character 1 question']
                 ]
             },
             {
-                'args': ('y',),
+                'args': [('y',)],
                 'assertions': [
                     ['YOU ARE CURRENTLY EDITING', 'Should be editing a character'],
-                    ['***Test Character*** _(Active)_  _(Character)_', 'Test Character should be the active character'],
+                    ['***Test Character 1*** _(Active)_  _(Character)_', 'Test Character 1 should be the active character'],
                     ['**Fate Points:** 3 (_Refresh:_ 3)', 'Should have defaulted 3 Fate Points'],
                     ['_Physical:_  [   ] [   ] [   ]', 'Physical stress should be added'],
                     ['_Mental:_  [   ] [   ] [   ]', 'Mental stress should be added'],
@@ -106,122 +120,122 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                 ]
             },
             {
-                'args': ('hc', 'High Concept'),
+                'args': [('hc', 'High', 'Concept')],
                 'assertions': [
                     ['**High Concept:** High Concept', 'Should add and display High Concept']
                 ]
             },
             {
-                'args': ('t', 'Trouble'),
+                'args': [('t', 'Trouble')],
                 'assertions': [
                     ['**Trouble:** Trouble', 'Should add and display Trouble']
                 ]
             },
             {
-                'args': ('custom', 'Location', 'Earth'),
+                'args': [('custom', 'Location', 'Earth')],
                 'assertions': [
                     ['**Location:** Earth', 'Should add custom Location Earth']
                 ]
             },
             {
-                'args': ('skill', 'Will', '+4', 'Rapport', '+2', 'Lore', '+1'),
+                'args': [('skill', 'Will', '+4', 'Rapport', '+2', 'Lore', '+1')],
                 'assertions': [
                     ['**Skills:**\n        +4 - Will', 'Should add skills']
                 ]
             },
             {
-                'args': ('skill', 'delete', 'Will'),
+                'args': [('skill', 'delete', 'Will')],
                 'assertions': [
                     ['Removed Will skill', 'Should remove Will skill']
                 ]
             },
             {
-                'args': ('skill', 'delete', 'Rapport'),
+                'args': [('skill', 'delete', 'Rapport')],
                 'assertions': [
                     ['Removed Rapport skill', 'Should remove Rapport skill']
                 ]
             },
             {
-                'args': ('skill', 'delete', 'Lore'),
+                'args': [('skill', 'delete', 'Lore')],
                 'assertions': [
                     ['Removed Lore skill', 'Should remove Lore skill']
                 ]
             },
             {
-                'args': ('approach', 'Fo', '+4', 'Cl', '+2', 'Qu', '+1', 'Sn', '+2', 'Ca', '+1', 'Fl', '0', 'Empathic', '+1'),
+                'args': [('approach', 'Fo', '+4', 'Cl', '+2', 'Qu', '+1', 'Sn', '+2', 'Ca', '+1', 'Fl', '0', 'Empathic', '+1')],
                 'assertions': [
                     ['**Approaches:**\n        +4 - Forceful', 'Should add approaches']
                 ]
             },
             {
-                'args': ('aspect', 'Test Aspect'),
+                'args': [('aspect', 'Test Aspect')],
                 'assertions': [
                     ['***Test Aspect*** _(Aspect)_', 'Should add Test Aspect']
                 ]
             },
             {
-                'args': ('stunt', 'Test Stunt'),
+                'args': [('stunt', 'Test Stunt')],
                 'assertions': [
                     ['***Test Stunt*** _(Active)_  _(Stunt)_', 'Should add Test Stunt']
                 ]
             },
             {
-                'args': ('c', 'stunt', 'character'),
+                'args': [('c', 'stunt', 'character')],
                 'assertions': [
                     ['Test Stunt', 'Should ecit Test Stunt']
                 ]
             },
             {
-                'args': ('st', 't', '1', 'Energy'),
+                'args': [('st', 't', '1', 'Energy')],
                 'assertions': [
                     ['**_Energy_**  [   ]', 'Should add custom Energy stress track']
                 ]
             },
             {
-                'args': ('st', 'Energy'),
+                'args': [('st', 'Energy')],
                 'assertions': [
                     ['**_Energy_**  [X]', 'Should absorb 1 Energy stress']
                 ]
             },
             {
-                'args': ('fate', '+'),
+                'args': [('fate', '+')],
                 'assertions': [
                     ['**Fate Points:** 1', 'Should add 1 fate point']
                 ]
             },
             {
-                'args': ('c', 'p'),
+                'args': [('c', 'p')],
                 'assertions': [
-                    ['Test Character', 'Should edit Test Character']
+                    ['Test Character 1', 'Should edit Test Character 1']
                 ]
             },
             {
-                'args': ('st', 't', '4', 'Energy'),
-                'assertions': [
-                    ['_Energy:_  [   ] [   ] [   ] [   ]', 'Should add custom Energy stress track']
-                ]
-            },
-            {
-                'args': ('st', 't', '4', 'Energy'),
+                'args': [('st', 't', '4', 'Energy')],
                 'assertions': [
                     ['_Energy:_  [   ] [   ] [   ] [   ]', 'Should add custom Energy stress track']
                 ]
             },
             {
-                'args': ('r', 'i', 'Test Stunt'),
+                'args': [('st', 't', '4', 'Energy')],
+                'assertions': [
+                    ['_Energy:_  [   ] [   ] [   ] [   ]', 'Should add custom Energy stress track']
+                ]
+            },
+            {
+                'args': [('r', 'i', 'Test Stunt')],
                 'assertions': [
                     ['_Energy:_  [X] [   ] [   ] [   ]', 'Should absorb 1 custom Energy'],
                     ['**Fate Points:** 2', 'Should spend 1 Fate Point']
                 ]
             },
             {
-                'args': ('st', 'refresh', 'Energy'),
+                'args': [('st', 'refresh', 'Energy')],
                 'assertions': [
                     ['_Energy:_  [   ] [   ] [   ] [   ]', 'Should refresh Energy']
                 ]
             },
             {
-                'args': ('fate', 'refresh'),
+                'args': [('fate', 'refresh')],
                 'assertions': [
                     ['**Fate Points:** 3', 'Should refresh Fate Points']
                 ]
@@ -231,18 +245,55 @@ class TestDreamcraftBotE2E(unittest.TestCase):
     def test_character_permissions(self):
         self.send_and_validate_commands(ctx2, [
             {
-                'args': ('c','list')
-            },
-            {
-                'args': ('=1',),
+                'args': [
+                    ('c','list'),
+                    ('=1',)
+                ],
                 'assertions': [
-                    ['***Test Character*** _(Active)_  _(Character)_', 'Test Character should be the active character']
+                    ['***Test Character 1*** _(Active)_  _(Character)_', 'Test Character 1 should be the active character']
                 ]
             },
             {
-                'args': ('t','Trouble 2'),
+                'args': [('t','Trouble 2')],
                 'assertions': [
-                    ['You do not have permission', 'should not allow Test User 2 to edit Test Character']
+                    ['You do not have permission', 'should not allow Test User 2 to edit Test Character 1']
+                ]
+            }
+        ])
+
+    def test_copy_character(self):
+        self.send_and_validate_commands(ctx1, [
+            {
+                'args': [('c', 'copy', 'to', 'Guild 2')],
+                'assertions': [
+                    ['You may not copy until you have created a character on another server', 'should warn user to create a character on another server']
+                ]
+            },
+            {
+                'ctx': ctx3,
+                'args': [
+                    ('c', 'Test Character 2'),
+                    ('y',)
+                ],
+                'assertions': [
+                    ['***Test Character 2*** _(Active)_  _(Character)_', 'Test Character 2 should be the active character']
+                ]
+            },
+            {
+                'args': [('c', 'copy', 'to', 'Guild 2')],
+                'assertions': [
+                    ['***Test Character 1*** copied to ***Test Guild 2***', 'should copy character to another server']
+                ]
+            },
+            {
+                'ctx': ctx3,
+                'args': [
+                    ('c', 'Test Character 1')
+                ],
+                'assertions': [
+                    ['***Test Character 1*** _(Active)_  _(Character)_', 'Test Character 1 should be the active character'],
+                    ['***Test Aspect*** _(Aspect)_', 'Should have Test Aspect'],
+                    ['***Test Stunt*** _(Stunt)_', 'Should have Test Stunt']
                 ]
             }
         ])
@@ -250,29 +301,29 @@ class TestDreamcraftBotE2E(unittest.TestCase):
     def test_session_creation(self):
         self.send_and_validate_commands(ctx1, [
             {
-                'args': ('session',),
+                'args': [('session',)],
                 'assertions': [
                     ['No active session or name provided', 'should return no active session if empty sessions'],
                     ['**CREATE or SESSION**```css\n.d session YOUR_SESSION\'S_NAME```', 'Should include instructions to create session']
                 ]
             },
             {
-                'args': ('session', 'Test', 'Session')
-            },
-            {
-                'args': ('y'),
+                'args': [
+                    ('session', 'Test', 'Session'),
+                    ('y')
+                ],
                 'assertions': [
                     ['***Test Session*** _(Active Session)_', 'should create sesion named Test Session']
                 ]
             },
             {
-                'args': ('session', 'desc', 'Test', 'description'),
+                'args': [('session', 'desc', 'Test', 'description')],
                 'assertions': [
                     ['***Test Session*** _(Active Session)_  - "Test description"', 'should add a \'Test description\' session named Test Session']
                 ]
             },
             {
-                'args': ('session', 'start'),
+                'args': [('session', 'start')],
                 'assertions': [
                     ['_Started On:_', 'should start session named Test Session']
                 ]
@@ -282,26 +333,26 @@ class TestDreamcraftBotE2E(unittest.TestCase):
     def test_scenario_creation(self):
         self.send_and_validate_commands(ctx1, [
             {
-                'args': ('scenario',),
+                'args': [('scenario',)],
                 'assertions': [
                     ['No active scenario or name provided', 'should return no active scenario if empty scenarios'],
                     ['**CREATE or SCENARIO**```css\n.d scenario YOUR_SCENARIOR\'S_NAME```', 'Should include instructions to create scenario']
                 ]
             },
             {
-                'args': ('scenario', 'Test', 'Scenario'),
+                'args': [('scenario', 'Test', 'Scenario')],
                 'assertions': [
                     ['Create a new SCENARIO named ***Test Scenario***?', 'should ask question to create scenario named Test Scenario']
                 ]
             },
             {
-                'args': ('y'),
+                'args': [('y',)],
                 'assertions': [
                     ['***Test Scenario*** _(Active Scenario)_', 'should create scenario named Test Scenario']
                 ]
             },
             {
-                'args': ('scenario', 'desc', 'Test', 'description'),
+                'args': [('scenario', 'desc', 'Test', 'description')],
                 'assertions': [
                     ['***Test Scenario*** _(Active Scenario)_  - "Test description"', 'should add a \'Test description\' scenario named Test Scenario']
                 ]
@@ -311,38 +362,38 @@ class TestDreamcraftBotE2E(unittest.TestCase):
     def test_scene_creation(self):
         self.send_and_validate_commands(ctx1, [
             {
-                'args': ('scene',),
+                'args': [('scene',)],
                 'assertions': [
                     ['No active scene or name provided', 'should return no active scene if empty scenes'],
                     ['**CREATE or SCENE**```css\n.d scene YOUR_SCENE\'S_NAME```', 'Should include instructions to create scene']
                 ]
             },
             {
-                'args': ('Test', 'Scene'),
+                'args': [('Test', 'Scene')],
                 'assertions': [
                     ['Create a new SCENE named ***Test Scene***?', 'should ask question to create scene named Test Scene']
                 ]
             },
             {
-                'args': ('y',),
+                'args': [('y',)],
                 'assertions': [
                     ['***Test Scene*** _(Active Scene)_', 'should create scene named Test Scene']
                 ]
             },
             {
-                'args': ('desc', 'Test', 'description'),
+                'args': [('desc', 'Test', 'description')],
                 'assertions': [
                     ['***Test Scene*** _(Active Scene)_  - "Test description"', 'should add a \'Test description\' scene named Test Scene']
                 ]
             },
             {
-                'args': ('player', 'Test Character'),
+                'args': [('player', 'Test Character 1')],
                 'assertions': [
-                    ['Added ***Test Character*** to _Test Scene_ scene', 'should add \'Test Character\' to \'Test Scene\'']
+                    ['Added ***Test Character 1*** to _Test Scene_ scene', 'should add \'Test Character 1\' to \'Test Scene\'']
                 ]
             },
             {
-                'args': ('start',),
+                'args': [('start',)],
                 'assertions': [
                     ['_Started On:_', 'should start the scene named Test Scene']
                 ]
@@ -352,25 +403,25 @@ class TestDreamcraftBotE2E(unittest.TestCase):
     def test_zone_creation(self):
         self.send_and_validate_commands(ctx1, [
             {
-                'args': ('zone',),
+                'args': [('zone',)],
                 'assertions': [
                     ['No active zone or name provided\n\n\n**CREATE or ZONE**```css\n.d zone YOUR_ZONE\'S_NAME```', 'should return no active scene if empty scenes and  include instructions to create scene']
                 ]
             },
             {
-                'args': ('Test', 'Zone'),
+                'args': [('Test', 'Zone')],
                 'assertions': [
                     ['Create a new ZONE named ***Test Zone***?', 'should ask question to create zone named Test Zone']
                 ]
             },
             {
-                'args': ('y',),
+                'args': [('y',)],
                 'assertions': [
                     ['***Test Zone*** _(Active Zone)_', 'should create scene named Test Zone']
                 ]
             },
             {
-                'args': ('desc', 'Test', 'description'),
+                'args': [('desc', 'Test', 'description')],
                 'assertions': [
                     ['***Test Zone*** _(Active Zone)_  - "Test description"', 'should add a \'Test description\' scene named Test Zone']
                 ]
@@ -381,80 +432,78 @@ class TestDreamcraftBotE2E(unittest.TestCase):
         self.send_and_validate_commands(ctx1, [
             {
                 'ctx': ctx2,
-                'args': ('c', 'npc', 'Test NPC')
-            },
-            {
-                'ctx': ctx2,
-                'args': ('scene', 'enter'),
+                'args': [
+                    ('c', 'npc', 'Test NPC'),
+                    ('scene', 'enter')
+                ],
                 'assertions': [
                     ['Added ***Test NPC*** to _Test Scene_ scene', 'should add \'Test NPC\' to \'Test Scene\'']
                 ]
             },
             {
                 'ctx': ctx2,
-                'args': ('scene', 'move', 'Test Zone'),
+                'args': [('scene', 'move', 'Test Zone')],
                 'assertions': [
                     ['***Test NPC*** is already in the _Test Zone_ zone', 'should show \'Test NPC\' is already in \'Test Zone\'']
                 ]
             },
             {
-                'args': ('engagement', 'Conflict', 'Test Conflict')
-            },
-            {
-                'args': ('y',),
+                'args': [
+                    ('engagement', 'Conflict', 'Test Conflict'),
+                    ('y',)
+                ],
                 'assertions': [
                     ['***YOU ARE CURRENTLY EDITING...***\n:point_down:\n\n        ***Test Conflict***', 'should add a new Conflict engagement']
                 ]
             },
             {
-                'args': ('e', 'start'),
+                'args': [('e', 'start')],
                 'assertions': [
                     ['_Started On:_', 'should start \'Test Conflict\' engagement']
                 ]
             },
             {
                 'ctx': ctx2,
-                'args': ('e', 'oppose', 'NPC'),
+                'args': [('e', 'oppose', 'NPC')],
                 'assertions': [
                     ['Added ***Test NPC*** to the opposition in the _Test Conflict_ engagement', 'should add \'Test NPC\' to the conflict']
                 ]
             },
             {
-                'args': ('c', 'Test Character')
-            },
-            {
-                'args': ('scene', 'enter'),
+                'args': [
+                    ('c', 'Test Character 1'),
+                    ('scene', 'enter')
+                ],
                 'assertions': [
-                    ['***Test Character*** is already in _Test Scene_', 'should report that  \'Test Character\' is already in \'Test Scene\'']
+                    ['***Test Character 1*** is already in _Test Scene_', 'should report that  \'Test Character 1\' is already in \'Test Scene\'']
                 ]
             },
             {
-                'args': ('scene', 'move', 'Test Zone'),
+                'args': [('scene', 'move', 'Test Zone')],
                 'assertions': [
-                    ['***Test Character*** is already in the _Test Zone_ zone', 'should show \'Test Character\' is already in \'Test Zone\'']
+                    ['***Test Character 1*** is already in the _Test Zone_ zone', 'should show \'Test Character 1\' is already in \'Test Zone\'']
                 ]
             },
             {
-                'args': ('attack', 'NPC', 'Forceful'),
+                'args': [('attack', 'NPC', 'Forceful')],
                 'assertions': [
                     ['***Test NPC*** faces', 'should display \'Test NPC\' facing an attack'],
-                    ['attack from ***Test Character***', 'should display an attack from \'Test Character\'']
+                    ['attack from ***Test Character 1***', 'should display an attack from \'Test Character 1\'']
                 ]
             },
             {
                 'ctx': ctx2,
-                'args': ('c', 'npc', 'Test NPC')
-            },
-            {
-                'ctx': ctx2,
-                'args': ('defend', 'Forceful'),
+                'args': [
+                    ('c', 'npc', 'Test NPC'),
+                    ('defend', 'Forceful')
+                ],
                 'assertions': [
                     [' shifts to absorb', 'should display \'Test NPC\' rolling with shifts to absorb']
                 ]
             },
             {
                 'ctx': ctx2,
-                'args': ('c', 'st', 'Physical'),
+                'args': [('c', 'st', 'Physical')],
                 'assertions': [
                     [' left to absorb.', 'should display remaining shifts to absorb']
                 ]
@@ -464,94 +513,160 @@ class TestDreamcraftBotE2E(unittest.TestCase):
     def test_end_delete_components(self):
         self.send_and_validate_commands(ctx1, [
             {
-                'args': ('c', 'Test Character')
-            },
-            {
-                'args': ('scene', 'exit',),
+                'args': [
+                    ('c', 'Test Character 1'),
+                    ('scene', 'exit')
+                ],
                 'assertions': [
-                    ['***Test Character*** removed from _Test Scene_', 'should remove \'Test Character\' from \'Test Scene\'']
+                    ['***Test Character 1*** removed from _Test Scene_', 'should remove \'Test Character 1\' from \'Test Scene\'']
                 ]
             },
             {
                 'ctx': ctx2,
-                'args': ('c', 'npc', 'Test NPC')
-            },
-            {
-                'ctx': ctx2,
-                'args': ('scene', 'exit',),
+                'args': [
+                    ('c', 'npc', 'Test NPC'),
+                    ('scene', 'exit')
+                ],
                 'assertions': [
                     ['***Test NPC*** removed from _Test Scene_', 'should remove \'Test NPC\' from \'Test Scene\'']
                 ]
             },
             {
-                'args': ('engagement', 'end',),
+                'args': [('engagement', 'end')],
                 'assertions': [
                     ['_Ended On:_', 'should end the engagement named Test Conflict']
                 ]
             },
             {
-                'args': ('scene', 'end',),
+                'args': [('scene', 'end')],
                 'assertions': [
                     ['_Ended On:_', 'should end the scene named Test Scene']
                 ]
             },
             {
-                'args': ('session', 'end',),
+                'args': [('session', 'end')],
                 'assertions': [
                     ['_Ended On:_', 'should end the session named Test Session']
                 ]
             },
             {
-                'args': ('engagement', 'delete',),
+                'args': [('engagement', 'delete')],
                 'assertions': [
                     ['***Test Conflict*** removed', 'should remove \'Test Conflict\'']
                 ]
             },
             {
-                'args': ('zone', 'delete',),
+                'args': [('zone', 'delete')],
                 'assertions': [
                     ['***Test Zone*** removed', 'should remove \'Test Zone\'']
                 ]
             },
             {
-                'args': ('scene', 'delete',),
+                'args': [('scene', 'delete')],
                 'assertions': [
                     ['***Test Scene*** removed', 'should remove \'Test Scene\'']
                 ]
             },
             {
-                'args': ('scenario', 'delete',),
+                'args': [('scenario', 'delete')],
                 'assertions': [
                     ['***Test Scenario*** removed', 'should remove \'Test Scenario\'']
                 ]
             },
             {
-                'args': ('session', 'delete',),
+                'args': [('session', 'delete')],
                 'assertions': [
                     ['***Test Session*** removed', 'should remove \'Test Session\'']
+                ]
+            }
+        ])
+
+    def test_delete_restore_characters(self):
+        self.send_and_validate_commands(ctx1, [
+            {
+                'args': [
+                    ('c', 'Test Character 1'),
+                    ('c', 'delete'),
+                    ('y',)
+                ],
+                'assertions': [
+                    ['***Test Character 1*** removed', 'should remove \'Test Character 1\'']
                 ]
             },
             {
                 'ctx': ctx2,
-                'args': ('c', 'delete',)
-            },
-            {
-                'ctx': ctx2,
-                'args': ('y',),
+                'args': [
+                    ('c', 'npc', 'Test NPC'),
+                    ('c', 'delete'),
+                    ('y',)
+                ],
                 'assertions': [
                     ['***Test NPC*** removed', 'should archive \'Text NPC\'']
                 ]
             },
             {
-                'args': ('c', 'Test Character')
-            },
-            {
-                'args': ('c', 'delete',)
-            },
-            {
-                'args': ('y',),
+                'ctx': ctx3,
+                'args': [
+                    ('c', 'Test Character 1'),
+                    ('c', 'delete'),
+                    ('y',),
+                    ('c', 'Test Character 2'),
+                    ('c', 'delete'),
+                    ('y',)
+                ],
                 'assertions': [
-                    ['***Test Character*** removed', 'should remove \'Test Character\'']
+                    ['***Test Character 2*** removed', 'should remove \'Test Character 2\''],
+                    ['***Test Character 1*** removed', 'should remove \'Test Character 1\'']
                 ]
-            }
+            },
+            {
+                'args': [
+                    ('c', 'restore', 'Test Character 1')
+                ],
+                'assertions': [
+                    ['***Test Character 1*** restored', 'should restore \'Test Character 1\''],
+                    ['***Test Aspect*** _(Aspect)_', 'Should have Test Aspect'],
+                    ['***Test Stunt*** _(Active)_  _(Stunt)_', 'Should have Test Stunt']
+                ]
+            },
+            {
+                'args': [
+                    ('c', 'Test Character 1'),
+                    ('c', 'delete'),
+                    ('y',)
+                ],
+                'assertions': [
+                    ['***Test Character 1*** removed', 'should remove \'Test Character 1\'']
+                ]
+            },
+            {
+                'args': [
+                    ('c', 'Test Character 1'),
+                    ('y',)
+                ],
+                'assertions': [
+                    ['***Test Character 1*** _(Active)_  _(Character)_', 'Test Character 1 should be the active character']
+                ]
+            },
+            {
+                'args': [
+                    ('c', 'Test Character 1'),
+                    ('c', 'delete'),
+                    ('y',)
+                ],
+                'assertions': [
+                    ['***Test Character 1*** removed', 'should remove \'Test Character 1\'']
+                ]
+            },
+            {
+                'args': [
+                    ('c', 'restore', 'Test Character 1'),
+                    ('c', '=1')
+                ],
+                'assertions': [
+                    ['***Test Character 1*** restored', 'should restore \'Test Character 1\''],
+                    ['***Test Aspect*** _(Aspect)_', 'should have Test Aspect'],
+                    ['***Test Stunt*** _(Active)_  _(Stunt)_', 'should have Test Stunt']
+                ]
+            },
         ])

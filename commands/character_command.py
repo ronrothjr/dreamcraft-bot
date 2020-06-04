@@ -208,6 +208,23 @@ class CharacterCommand():
         params = {'name__icontains': ' '.join(args[0:]), 'guild': self.guild.name, 'category': 'Character', 'archived': False, 'npc': self.npc}
         return char_svc.search(args, Character.filter, params)
 
+    def canceler(self, args):
+        """Handle a command that cancels a dialog
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
+        self.parent.args = args
+        self.parent.command = self.parent.args[0]
+        return self.parent.get_messages()
+
     def note(self, args):
         """Add a note the Character story
         
@@ -264,15 +281,6 @@ class CharacterCommand():
 
         messages =[]
         command = 'c ' + (' '.join(args))
-        def canceler(cancel_args):
-            if cancel_args[0].lower() in ['scenario']:
-                self.args = cancel_args
-                self.command = self.args[0]
-                return self.run()
-            else:
-                self.parent.args = cancel_args
-                self.parent.command = self.parent.args[0]
-                return self.parent.get_messages()
         response = Dialog({
             'svc': char_svc,
             'user': self.user,
@@ -293,7 +301,7 @@ class CharacterCommand():
                 }
             },
             'formatter': lambda log, num, page_num, page_size: log.get_string(self.user), # if log.category == 'Log' else log.get_string()
-            'cancel': canceler,
+            'cancel': self.canceler,
             'page_size': 10
         }).open()
         messages.extend(response)
@@ -505,70 +513,62 @@ class CharacterCommand():
                     self.dialog('all')
                 ]
             messages.append(self.dialog('active_character') + '\n')
-        else:
-            if len(args) == 1 and args[0].lower() == 'short':
-                return [self.dialog('active_character_short')]
-            if len(args) == 1 and self.char:
-                return [self.dialog('')]
-            char_name = ' '.join(args[1:])
-            if len(args) > 1 and args[1] == 'rename':
-                char_name = ' '.join(args[2:])
-                if not self.char:
-                    return [
-                        'No active character or name provided\n\n',
-                        self.dialog('all')
-                    ]
-                else:
-                    char = Character().find(self.user, char_name, self.guild.name)
-                    if char:
-                        return [f'Cannot rename to _{char_name}_. Character already exists']
-                    else:
-                        self.char.name = char_name
-                        char_svc.save(self.char, self.user)
-                        messages.append(self.dialog(''))
+            return messages
+        if len(args) == 1 and args[0].lower() == 'short':
+            return [self.dialog('active_character_short')]
+        if len(args) == 1 and self.char:
+            return [self.dialog('')]
+        char_name = ' '.join(args[1:])
+        if len(args) > 1 and args[1] == 'rename':
+            char_name = ' '.join(args[2:])
+            if not self.char:
+                return [
+                    'No active character or name provided\n\n',
+                    self.dialog('all')
+                ]
             else:
-                def canceler(cancel_args):
-                    if cancel_args[0].lower() in ['character','char','c']:
-                        return CharacterCommand(parent=self.parent, ctx=self.ctx, args=cancel_args, guild=self.guild, user=self.user, channel=self.channel).run()
-                    else:
-                        self.parent.args = cancel_args
-                        self.parent.command = self.parent.args[0]
-                        return self.parent.get_messages()
+                char = Character().find(self.user, char_name, self.guild.name)
+                if char:
+                    return [f'Cannot rename to _{char_name}_. Character already exists']
+                else:
+                    self.char.name = char_name
+                    char_svc.save(self.char, self.user)
+                    messages.append(self.dialog(''))
+        else:
+            def selector(selection):
+                self.char = selection
+                self.user.set_active_character(self.char)
+                char_svc.save_user(self.user)
+                return [self.dialog('')]
 
-                def selector(selection):
-                    self.char = selection
-                    self.user.set_active_character(self.char)
-                    char_svc.save_user(self.user)
-                    return [self.dialog('')]
+            def formatter(item, item_num, page_num, page_size):
+                return f'_CHARACTER #{((page_num-1)*page_size)+item_num+1}_\n{item.get_short_string()}'
 
-                def formatter(item, item_num, page_num, page_size):
-                    return f'_CHARACTER #{((page_num-1)*page_size)+item_num+1}_\n{item.get_short_string()}'
+            def creator(**params):
+                char = Character().get_or_create(**params)
+                if self.sc:
+                    scene_svc.player(('p', char.name), self.channel, self.sc, self.user)
+                return char
 
-                def creator(**params):
-                    char = Character().get_or_create(**params)
-                    if self.sc:
-                        scene_svc.player(('p', char.name), self.channel, self.sc, self.user)
-                    return char
-
-                messages.extend(Dialog({
-                    'svc': char_svc,
-                    'user': self.user,
-                    'title': 'Character List',
-                    'command': 'c ' + ('npc ' if self.npc else '' ) + ' '.join(args),
-                    'type': 'select',
-                    'type_name': 'CHARACTER',
-                    'getter': {
-                        'method': Character.get_by_page,
-                        'params': {'params': {'name__icontains': char_name, 'guild': self.guild.name, 'category': 'Character', 'archived': False, 'npc': self.npc}}
-                    },
-                    'formatter': formatter,
-                    'cancel': canceler,
-                    'select': selector,
-                    'empty': {
-                        'method': creator,
-                        'params': {'user': self.user, 'name': char_name, 'guild': self.guild.name, 'npc': self.npc}
-                    }
-                }).open())
+            messages.extend(Dialog({
+                'svc': char_svc,
+                'user': self.user,
+                'title': 'Character List',
+                'command': 'c ' + ('npc ' if self.npc else '' ) + ' '.join(args),
+                'type': 'select',
+                'type_name': 'CHARACTER',
+                'getter': {
+                    'method': Character.get_by_page,
+                    'params': {'params': {'name__icontains': char_name, 'guild': self.guild.name, 'category': 'Character', 'archived': False, 'npc': self.npc}}
+                },
+                'formatter': formatter,
+                'cancel': self.canceler,
+                'select': selector,
+                'confirm': {
+                    'method': creator,
+                    'params': {'user': self.user, 'name': char_name, 'guild': self.guild.name, 'npc': self.npc}
+                }
+            }).open())
         return messages
     
     def select(self, args):
@@ -592,44 +592,36 @@ class CharacterCommand():
                     self.dialog('all')
                 ]
             messages.append(self.char.get_string())
-        else:
-            if len(args) == 1 and args[0].lower() == 'short':
-                return [self.dialog('active_character_short')]
-            if len(args) == 1 and self.char:
-                return [self.dialog('')]
-            char_name = ' '.join(args[1:])
-            def canceler(cancel_args):
-                if cancel_args[0].lower() in ['character','char','c']:
-                    return CharacterCommand(parent=self.parent, ctx=self.ctx, args=cancel_args, guild=self.guild, user=self.user, channel=self.channel).run()
-                else:
-                    self.parent.args = cancel_args
-                    self.parent.command = self.parent.args[0]
-                    return self.parent.get_messages()
+            return messages
+        if len(args) == 1 and args[0].lower() == 'short':
+            return [self.dialog('active_character_short')]
+        if len(args) == 1 and self.char:
+            return [self.dialog('')]
+        char_name = ' '.join(args[1:])
+        def selector(selection):
+            self.char = selection
+            self.user.set_active_character(self.char)
+            char_svc.save_user(self.user)
+            return [self.dialog('active_character')]
 
-            def selector(selection):
-                self.char = selection
-                self.user.set_active_character(self.char)
-                char_svc.save_user(self.user)
-                return [self.dialog('active_character')]
+        def formatter(item, item_num, page_num, page_size):
+            return f'_CHARACTER #{((page_num-1)*page_size)+item_num+1}_\n{item.get_short_string(self.user)}'
 
-            def formatter(item, item_num, page_num, page_size):
-                return f'_CHARACTER #{((page_num-1)*page_size)+item_num+1}_\n{item.get_short_string(self.user)}'
-
-            messages.extend(Dialog({
-                'svc': char_svc,
-                'user': self.user,
-                'title': 'Character List',
-                'command': 'c ' + ' '.join(args),
-                'type': 'select',
-                'type_name': 'CHARACTER',
-                'getter': {
-                    'method': Character.get_by_page,
-                    'params': {'params': {'user': self.user, 'name__icontains': char_name, 'guild': self.guild.name, 'npc': self.npc, 'archived': False}}
-                },
-                'formatter': formatter,
-                'cancel': canceler,
-                'select': selector
-            }).open())
+        messages.extend(Dialog({
+            'svc': char_svc,
+            'user': self.user,
+            'title': 'Character List',
+            'command': 'c ' + ' '.join(args),
+            'type': 'select',
+            'type_name': 'CHARACTER',
+            'getter': {
+                'method': Character.get_by_page,
+                'params': {'params': {'user': self.user, 'name__icontains': char_name, 'guild': self.guild.name, 'npc': self.npc, 'archived': False}}
+            },
+            'formatter': formatter,
+            'cancel': self.canceler,
+            'select': selector
+        }).open())
         return messages
 
     def character_list(self, args):
@@ -646,14 +638,6 @@ class CharacterCommand():
         """
 
         messages = []
-        def canceler(cancel_args):
-            if cancel_args[0].lower() in ['character','char','c']:
-                return CharacterCommand(parent=self.parent, ctx=self.ctx, args=cancel_args, guild=self.guild, user=self.user, channel=self.channel).run()
-            else:
-                self.parent.args = cancel_args
-                self.parent.command = self.parent.args[0]
-                return self.parent.get_messages()
-
         def selector(selection):
             self.char = selection
             self.user.set_active_character(self.char)
@@ -674,8 +658,8 @@ class CharacterCommand():
                 'params': {'params': {'guild': self.guild.name, 'category': 'Character', 'archived': False}}
             },
             'formatter': formatter,
-            'cancel': canceler,
-                'select': selector
+            'cancel': self.canceler,
+            'select': selector
         }).open())
         return messages
 
@@ -695,18 +679,17 @@ class CharacterCommand():
         messages = []
         search = ''
         if not self.char:
-            raise Exception('No active character for deletion')
+            raise Exception('No active character to copy')
         if not self.can_edit:
             raise Exception('You do not have permission to edit this character')
         if self.char.category != 'Character':
-            category = ('an ' if self.char.category[0:1].lower() in ['a','e','i','o','u'] else 'a ') + self.char.category
-            raise Exception(f'You may only copy characters. ***{self.char.name}*** is {category}.')
+            raise Exception(f'You may only copy characters. ***{self.char.name}*** is {p.an(self.char.category)}.')
         guilds = [g['guild'] for g in Character().get_guilds() if g['guild'] and g['guild'].lower() not in self.guild.name.lower()]
         if not guilds:
             raise Exception('You may not copy until you have created a character on another server')
         guild_list = f'***Guilds:***\n' + '\n'.join([f'    ***{g}***' for g in guilds])
         guild_commands = '\n'.join([f'.d c copy to {g}' for g in guilds[0:5]])
-        guild_commands_str = f'\nTry one of these:```css\n{guild_commands}```'
+        guild_commands_str = f'\n\nTry one of these:```css\n{guild_commands}```'
         incorrect_syntax = f'Copy character syntax inccorect{guild_commands_str}'
         if len(args) == 1:
             raise Exception(incorrect_syntax)
@@ -752,52 +735,49 @@ class CharacterCommand():
         """
 
         messages = []
-        search = ''
         if not self.char:
             return ['No active character for deletion']
         if not self.can_edit:
             raise Exception('You do not have permission to delete this character')
-        search = self.char.name
-        parent_id = str(self.char.parent_id) if self.char.parent_id else ''
-        command = 'c ' + ('npc ' if self.npc else '' ) + ' '.join(args)
-        question = ''.join([
-            f'Are you sure you want to delete this {self.char.category}?\n\n{self.char.get_string()}',
-            f'\n\nREPEAT THE COMMAND\n\n***OR***\n\nREPLY TO CONFIRM:',
-            '```css\n.d YES /* to confirm the command */\n.d NO /* to reject the command */\n.d CANCEL /* to cancel the command */```'
-        ])
-        if self.user.command == command:
-            answer = self.user.answer
-            if answer:
-                if answer.lower() in ['yes', 'y']:
-                    search = self.char.name
-                    self.char.reverse_archive(self.user)
-                    self.char.archived = True
-                    char_svc.save(self.char, self.user)
-                    self.user.active_character = None
-                    char_svc.save_user(self.user)
-                    messages.append(''.join([
-                        f'***{search}*** removed\n\n',
-                        'You can restore this character at any time:',
-                        f'```css\n.d c restore {search}```'
-                    ]))
-                elif answer.lower() in ['no', 'n', 'cancel', 'c']:
-                    messages.append(f'Command ***"{command}"*** canceled')
-                else:
-                    raise Exception(f'Please answer the question regarding ***"{command}"***:\n\n{question}')
-                self.user.command = ''
-                self.user.question = ''
-                self.user.answer = ''
-                char_svc.save_user(self.user)
-            else:
-                Exception(f'No answer was received to command ***"{command}"***')
-        else:
-            self.user.command = command
-            self.user.question = question
-            self.user.answer = ''
+        def getter(item, page_num=0, page_size=5):
+            return [item]
+
+        def formatter(item, item_num=None, page_num=None, page_size=None):
+            return f'Are you sure you want to delete this CHARACTER?\n\n{(item[0] if isinstance(item, list) else item).get_short_string()}' 
+
+        def deleter(item):
+            search = item.name
+            item.archive(self.user)
+            self.user.active_character = None
             char_svc.save_user(self.user)
-            messages.extend([question])
-        if parent_id:
-            messages.extend(char_svc.get_parent_by_id(Character.filter, self.user, parent_id))
+            messages.append(''.join([
+                f'***{search}*** removed\n\n',
+                'You can restore this character at any time:',
+                f'```css\n.d c restore {search}```'
+            ]))
+            parent_id = str(item.parent_id) if hasattr(item, 'parent_id') and item.parent_id else ''
+            if parent_id:
+                return char_svc.get_parent_by_id(Character.filter, self.user, parent_id)
+            return None
+
+        messages.extend(Dialog({
+            'svc': char_svc,
+            'user': self.user,
+            'title': 'Remove Character',
+            'command': 'c ' + ('npc ' if self.npc else '' ) + (' '.join(args)),
+            'type': 'confirm',
+            'type_name': 'Character',
+            'getter': {
+                'method': getter,
+                'params': {'item': self.char}
+            },
+            'formatter': formatter,
+            'cancel': self.canceler,
+            'confirm': {
+                'method': deleter,
+                'params': {'item': self.char}
+            }
+        }).open())
         return messages
 
     def restore_character(self, args):
@@ -815,78 +795,44 @@ class CharacterCommand():
 
         messages = []
         char_name = ' '.join(args[1:])
-        chars = []
-        chars.extend(Character.filter(name=char_name, guild=self.guild.name, archived=True).all())
-        if not chars:
-            self.user.command = ''
-            self.user.question = ''
-            self.user.answer = ''
-            char_svc.save_user(self.user)
-            return [f'{char_name} was not found. No changes made.\nTry this: ```css\n.d c CHARACTER_NAME```']
-        else:
-            if chars and len(chars) > 1:
-                prompt = ''. join ([
-                    '\n\nSELECT A CHARACTER USING:```css\n',
-                    '.d CHARACTER_NUMBER\n',
-                    '/* EXAMPLE .d 2 */```\n',
-                    'OR\n\n',
-                    'YOU CAN CANCEL THE COMAND:',
-                    '```css\n.d CANCEL```'
-                ])
-                selections = '\n\n'.join([f'CHARACTER {i + 1}\n{chars[i].get_short_string()}' for i in range(0, len(chars))])
-                command = 'c ' + ('npc ' if self.npc else '' ) + ' '.join(args)
-                if self.user.command != command:
-                    question = f'{selections}{prompt}'
-                    messages.append(question)
-                    self.user.command = command
-                    self.user.question = question
-                    self.user.answer = ''
-                    char_svc.save_user(self.user)
-                else:
-                    answer = self.user.answer
-                    if answer.lower() in ['cancel','c']:
-                        self.user.command = ''
-                        self.user.question = ''
-                        self.user.answer = ''
-                        self.user.set_active_character(self.char)
-                        char_svc.save_user(self.user)
-                        messages.append('Comand canceled')
-                    elif answer.isdigit():
-                        char_num = int(answer)
-                        if char_num > len(chars) or char_num < 1:
-                            Exception(f'Character number {char_num} does not exist')
-                        self.char = chars[int(answer)-1]
-                        self.user.command = ''
-                        self.user.question = ''
-                        self.user.answer = ''
-                        self.user.set_active_character(self.char)
-                        char_svc.save_user(self.user)
-                        current_chars = []
-                        current_chars.extend(Character.filter(name=char_name, guild=self.guild.name, archived=False).all())
-                        if current_chars:
-                            Exception(''.join([
-                                f'Cannot restore {char_name} while characters with that name already exist.\n\n',
-                                f'Try deleting and retoring one of them.```css\n.d c delete {char_name}\n',
-                                f'\n.d c restore {char_name}```'
-                            ]))
-                        if self.user.role in ['Admin', 'Game Master'] or str(self.user.id) == str(self.user.char.id):
-                            self.char.archived = False
-                            char_svc.save(self.char, self.user)
-                        else:
-                            raise Exception('You do not have permission to edit this character')
-                        messages.append(self.dialog(''))
-                    else:
-                        raise Exception(prompt)
-            else:
-                self.char = chars[0]
-                self.user.set_active_character(self.char)
-                char_svc.save_user(self.user)
-                if self.user.role in ['Admin', 'Game Master'] or str(self.user.id) == str(self.user.char.id):
-                    self.char.archived = False
-                    char_svc.save(self.char, self.user)
-                else:
-                    raise Exception('You do not have permission to edit this character')
-                messages.append(self.dialog(''))
+        params = {'name': char_name, 'guild': self.guild.name, 'archived': True}
+        if not self.user.role or self.user.role and self.user.role not in ['Admin', 'Game Master']:
+            params['user'] = self.user.id
+
+        def formatter(item, item_num=None, page_num=None, page_size=None):
+            return f'{item.get_short_string()}'
+
+        def selector(item):
+            current_chars = []
+            current_chars.extend(Character.filter(name=item.name, guild=self.guild.name, archived=False).all())
+            if current_chars:
+                Exception(''.join([
+                    f'Cannot restore {char_name} while characters with that name already exist.\n\n',
+                    f'Try deleting and retoring one of them.',
+                    f'```css\n.d c delete {char_name}\n',
+                    f'.d c restore {char_name}```'
+                ]))
+            self.char = item
+            self.char.restore(self.user)
+            self.user.set_active_character(self.char)
+            messages.append(f'***{self.char.name}*** restored.\n')
+            return [self.dialog('active_character')]
+
+        messages.extend(Dialog({
+            'svc': char_svc,
+            'user': self.user,
+            'title': 'Restore Character',
+            'command': 'c ' + ('npc ' if self.npc else '' ) + (' '.join(args)),
+            'type': 'select',
+            'type_name': 'Character',
+            'getter': {
+                'method': Character.get_by_page,
+                'params': {'params': params}
+            },
+            'formatter': formatter,
+            'cancel': self.canceler,
+            'select': selector
+        }).open())
         return messages
 
     def description(self, args):
@@ -1122,7 +1068,7 @@ class CharacterCommand():
             elif not self.can_edit:
                 raise Exception('You do not have permission to edit this character')
             else:
-                if args[1].lower() == 'delete' or args[1].lower() == 'd':
+                if args[1].lower() in ['delete','d']:
                     skill = [s for s in APPROACHES if args[2][0:2].lower() == s[0:2].lower()]
                     skill = skill[0].split(' - ')[0] if skill else args[2]
                     if skill in self.char.skills:
@@ -1171,7 +1117,7 @@ class CharacterCommand():
             elif not self.can_edit:
                 raise Exception('You do not have permission to edit this character')
             else:
-                if args[1].lower() == 'delete' or args[1].lower() == 'd':
+                if args[1].lower() in ['delete','d']:
                     skill = [s for s in SKILLS if args[2][0:2].lower() == s[0:2].lower()]
                     skill = skill[0].split(' - ')[0] if skill else args[2]
                     if skill in self.char.skills:
@@ -1219,7 +1165,7 @@ class CharacterCommand():
             raise Exception('You do not have permission to edit this character')
         elif args[1].lower() == 'list':
             return [self.char.get_string_aspects(self.user)]
-        elif args[1].lower() == 'delete' or args[1].lower() == 'd':
+        elif args[1].lower() in ['delete','d']:
             aspect = ' '.join(args[2:])
             for a in Character().get_by_parent(self.char, aspect, 'Aspect'):
                 aspect = str(a.name)
@@ -1271,7 +1217,7 @@ class CharacterCommand():
             raise Exception('You do not have permission to edit this character')
         elif args[1].lower() == 'list':
             return [self.char.get_string_stunts(self.user)]
-        elif args[1].lower() == 'delete' or args[1].lower() == 'd':
+        elif args[1].lower() in ['delete','d']:
             stunt = ' '.join(args[2:])
             for s in Character().get_by_parent(self.char, stunt, 'Stunt'):
                 stunt = str(s.name)

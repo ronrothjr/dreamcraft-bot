@@ -384,7 +384,7 @@ class SceneCommand():
                     'formatter': lambda item, item_num, page_num, page_size: f'_SCENE #{item_num+1}_\n{item.get_short_string()}',
                     'cancel': canceler,
                     'select': selector,
-                    'empty': {
+                    'confirm': {
                         'method': creator,
                         'params': {'user': self.user, 'name': scene_name, 'scenario': self.scenario, 'channel': self.channel, 'guild': self.guild.name}
                     }

@@ -203,7 +203,7 @@ class Character(Document):
             self.save()
 
     def reverse_restore(self, user):
-        for c in Character().get_by_parent(self):
+        for c in Character().get_by_parent(parent=self, archived=True):
             c.reverse_restore(self.user)
             c.archived = False
             c.updated_by = str(user.id)

@@ -5,7 +5,7 @@ __contact__ = 'u/ensosati'
 import traceback
 import copy
 from bson.objectid import ObjectId
-from models import User, Scenario, Scene, Character, Channel
+from models import User, Scenario, Scene, Zone, Character, Channel
 from config.setup import Setup
 from utils import TextUtils, T
 from services.base_service import BaseService
@@ -42,6 +42,36 @@ class SceneService(BaseService):
             self.save(sc, user)
             messages.append(sc.get_string_characters(user))
             return messages
+
+    def adjoin(self, args, guild, channel, sc, user):
+        messages = []
+        incorrect_sytax = f'Incorrect syntax:```css\n.d scene {args[0]} "ZONE NAME 1" to "Zone Name 2"```'
+        if len(args) < 4 or ' to ' not in ' '.join(args):
+            raise Exception('\n'.join([
+                'No zones adjoined',
+                incorrect_sytax
+            ]))
+        if not sc:
+            raise Exception('You don\'t have an active scene. Try this:```css\n.d scene SCENE_NAME```')
+        zones = ' '.join(args).replace(f'{args[0]} ', '').split(' to ')
+        zone_list = []
+        for z in zones:
+            zone = Zone().find(name=z, guild=guild, channel_id=str(channel.id), scene_id=str(sc.id))
+            if zone:
+                zone_list.append(zone)
+        if len(zone_list) < 2:
+            raise Exception(f'***{zones[0]}*** or ***{zones[1]}*** not found')
+        adjoined = []
+        if sc.adjoined_zones:
+            adjoined = copy.deepcopy(sc.adjoined_zones)
+        for adjoin in adjoined:
+            if str(zone_list[0].id) in adjoin and str(zone_list[1].id) in adjoin:
+                raise Exception(f'***{zone_list[0].name}*** and ***{zone_list[1].name}*** are already adjoined in ***{sc.name}***')
+        adjoined.append([str(z.id) for z in zone_list])
+        sc.adjoined_zones = adjoined
+        self.save(sc, user)
+        messages.append(f'***{zone_list[0].name}*** and ***{zone_list[1].name}*** are now adjoined in ***{sc.name}***')
+        return messages
 
     def delete_scene(self, args, guild, channel, scenario, sc, user):
         messages = []

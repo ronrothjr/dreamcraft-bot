@@ -3,8 +3,6 @@ __author__ = 'Ron Roth Jr'
 __contact__ = 'u/ensosati'
 
 import unittest
-import datetime
-import asyncio
 from handlers import DreamcraftHandler
 from mocks import CTX
 
@@ -29,7 +27,7 @@ class TestDreamcraftBotE2E(unittest.TestCase):
 
     def assert_command(self, messages, assert_str, err_str):
         assert_test = assert_str in ''.join(messages)
-        assert_result = (f'Passed: ' if assert_test else 'Failed ') + err_str
+        assert_result = (f'Passed: ' if assert_test else 'Failed: ') + err_str
         self.print_command(assert_result)
         self.assertTrue(assert_test, err_str)
 
@@ -409,27 +407,51 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                 ]
             },
             {
-                'args': [('Test', 'Zone')],
+                'args': [('Test', 'Zone', '1')],
                 'assertions': [
-                    ['Create a new ZONE named ***Test Zone***?', 'should ask question to create zone named Test Zone']
+                    ['Create a new ZONE named ***Test Zone 1***?', 'should ask question to create zone named Test Zone 1']
                 ]
             },
             {
                 'args': [('y',)],
                 'assertions': [
-                    ['***Test Zone*** _(Active Zone)_', 'should create scene named Test Zone']
+                    ['***Test Zone 1*** _(Active Zone)_', 'should create scene named Test Zone 1']
                 ]
             },
             {
                 'args': [('desc', 'Test', 'description')],
                 'assertions': [
-                    ['***Test Zone*** _(Active Zone)_  - "Test description"', 'should add a \'Test description\' scene named Test Zone']
+                    ['***Test Zone 1*** _(Active Zone)_  - "Test description"', 'should add a \'Test description\' scene named Test Zone 1']
+                ]
+            },
+            {
+                'args': [
+                    ('z', 'Test', 'Zone', '2'),
+                    ('y',),
+                    ('desc', 'Test', 'description', '2')],
+                'assertions': [
+                    ['***Test Zone 2*** _(Active Zone)_', 'should create scene named Test Zone 2'],
+                    ['***Test Zone 2*** _(Active Zone)_  - "Test description 2"', 'should add a \'Test description 2\' scene named Test Zone 2']
                 ]
             }
         ])
 
     def test_scene_features(self):
         self.send_and_validate_commands(ctx1, [
+            {
+                'args': [
+                    ('scene', 'connect', 'Zone 1', 'Zone 2'),
+                    ('scene', 'connect', 'Zone 1', 'to', 'Zone 3'),
+                    ('scene', 'connect', 'Zone 1', 'to', 'Zone 2'),
+                    ('scene', 'connect', 'Zone 1', 'to', 'Zone 2'),
+                    ('zone', 'Test Zone 1')
+                ],
+                'assertions': [
+                    ['Incorrect syntax:', 'should warn of incorrect syntax'],
+                    ['***Test Zone 1*** and ***Test Zone 2*** are now adjoined in ***Test Scene***', 'should adjoin \'Test Zone 1\' and \'Test Zone 2\''],
+                    ['***Test Zone 1*** and ***Test Zone 2*** are already adjoined in ***Test Scene***', 'should warn that \'Test Zone 1\' and \'Test Zone 2\' are already adjoined']
+                ]
+            },
             {
                 'ctx': ctx2,
                 'args': [
@@ -442,9 +464,9 @@ class TestDreamcraftBotE2E(unittest.TestCase):
             },
             {
                 'ctx': ctx2,
-                'args': [('scene', 'move', 'Test Zone')],
+                'args': [('scene', 'move', 'Test Zone 1')],
                 'assertions': [
-                    ['***Test NPC*** is already in the _Test Zone_ zone', 'should show \'Test NPC\' is already in \'Test Zone\'']
+                    ['***Test NPC*** is already in the _Test Zone 1_ zone', 'should show \'Test NPC\' is already in \'Test Zone 1\'']
                 ]
             },
             {
@@ -479,9 +501,9 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                 ]
             },
             {
-                'args': [('scene', 'move', 'Test Zone')],
+                'args': [('scene', 'move', 'Test Zone 1')],
                 'assertions': [
-                    ['***Test Character 1*** is already in the _Test Zone_ zone', 'should show \'Test Character 1\' is already in \'Test Zone\'']
+                    ['***Test Character 1*** is already in the _Test Zone 1_ zone', 'should show \'Test Character 1\' is already in \'Test Zone 1\'']
                 ]
             },
             {
@@ -558,7 +580,7 @@ class TestDreamcraftBotE2E(unittest.TestCase):
             {
                 'args': [('zone', 'delete')],
                 'assertions': [
-                    ['***Test Zone*** removed', 'should remove \'Test Zone\'']
+                    ['***Test Zone 1*** removed', 'should remove \'Test Zone 1\'']
                 ]
             },
             {
@@ -668,5 +690,5 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                     ['***Test Aspect*** _(Aspect)_', 'should have Test Aspect'],
                     ['***Test Stunt*** _(Active)_  _(Stunt)_', 'should have Test Stunt']
                 ]
-            },
+            }
         ])

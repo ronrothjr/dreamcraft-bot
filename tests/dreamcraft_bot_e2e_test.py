@@ -9,6 +9,7 @@ from mocks import CTX
 ctx1 = CTX('Test Guild 1', 'Test User 1', 'bot_testing')
 ctx2 = CTX('Test Guild 1', 'Test User 2', 'bot_testing')
 ctx3 = CTX('Test Guild 2', 'Test User 1', 'bot_spamming')
+ctx4 = CTX('Test Guild 3', 'Test User 3', 'bot_spamming')
 
 class TestDreamcraftBotE2E(unittest.TestCase):
 
@@ -46,6 +47,12 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                 'args': [('user', 'timezone', 'America/New_York')],
                 'assertions': [
                     ['Saved time zone as ***America/New_York***', 'should save user time_zone as New York']
+                ]
+            },
+            {
+                'args': [('user', 'contact', 'Reddit - u/ensosati')],
+                'assertions': [
+                    ['***Contact:*** _Reddit - u/ensosati_', 'should save user contact info']
                 ]
             }
         ])
@@ -603,6 +610,62 @@ class TestDreamcraftBotE2E(unittest.TestCase):
             }
         ])
 
+    def test_character_sharing(self):
+        self.send_and_validate_commands(ctx1, [
+            {
+                'args': [
+                    ('c', 'Test Character 1'),
+                    ('share',)
+                ],
+                'assertions': [
+                    ['No share settings specified.', 'should warn that no share settings were specified']
+                ]
+            },
+            {
+                'args': [('share', 'anyone')],
+                'assertions': [
+                    ['Sharing enabled for ***Test Character 1***', 'should share character']
+                ]
+            },
+            {
+                'args': [('share', 'copy')],
+                'assertions': [
+                    ['Copying enabled for ***Test Character 1**', 'should enable copying']
+                ]
+            },
+            {
+                'args': [('share', 'revoke')],
+                'assertions': [
+                    ['Sharing revoked for ***Test Character 1***', 'should revoke sharing']
+                ]
+            },
+            {
+                'args': [
+                    ('share', 'anyone'),
+                    ('share', 'copy'),
+                    ('c', 'shared'),
+                    ('copy',)
+                ],
+                'assertions': [
+                    ['You cannot copy your own shared character', 'should warn that you cannot copy your own shared character']
+                ]
+            },
+            {
+                'ctx': ctx4,
+                'args': [('c', 'shared')],
+                'assertions': [
+                    ['**_Sharing Enabled_""\nAnyone can find this _Character_', 'should select shared character']
+                ]
+            },
+            {
+                'ctx': ctx4,
+                'args': [('copy',)],
+                'assertions': [
+                    ['***Test Character 1*** copied', 'should copy shared \'Test Character 1\'']
+                ]
+            }
+        ])
+
     def test_delete_restore_characters(self):
         self.send_and_validate_commands(ctx1, [
             {
@@ -663,7 +726,7 @@ class TestDreamcraftBotE2E(unittest.TestCase):
             },
             {
                 'args': [
-                    ('c', 'Test Character 1'),
+                    ('c', 'name', 'Test Character 1'),
                     ('y',)
                 ],
                 'assertions': [

@@ -52,6 +52,7 @@ class Character(Document):
     custom_properties = DynamicField()
     archived = BooleanField(default=False)
     history_id = StringField()
+    shared = DynamicField()
     created_by = StringField()
     created = DateTimeField(required=True)
     updated_by = StringField()
@@ -338,6 +339,23 @@ class Character(Document):
             consequences_string = self.sep().join([c for c in consequences_strings])
         return f'{self.nl()}{self.nl()}{consequences_name}{self.sep()}{consequences_string}' if consequences_string else ''
 
+    def get_sharing_string(self, user=None):
+        sharing_string = ''
+        if self.shared:
+            sharing = [f'{self.nl()}{self.nl()}**_Sharing Enabled_**']
+            if 'anyone' in self.shared:
+                sharing.append(f'- _Anyone can find this {self.category}_')
+            if 'copy' in self.shared:
+                sharing.append(f'- _Copying is enabled for this {self.category}_')
+            if self.created_by:
+                user = User().get_by_id(str(self.created_by))
+                if user:
+                    sharing.append(f'**Created by:** ***{user.name}***')
+                    if user.url:
+                        sharing.append(f'**Contact:** _{user.url}_')
+            sharing_string = self.nl().join(sharing)
+        return sharing_string
+
     def get_string(self, user=None):
         archived = '```css\nARCHIVED```' if self.archived else ''
         name = self.get_string_name(user)
@@ -352,7 +370,8 @@ class Character(Document):
         stress = self.get_string_stress()
         consequenses = self.get_string_consequences()
         image = f'!image{self.image_url}!image' if self.image_url else ''
-        return f'{archived}{name}{description}{high_concept}{trouble}{fate_points}{custom}{skills}{stress}{aspects}{stunts}{consequenses}{image}'
+        sharing = self.get_sharing_string(user)
+        return f'{archived}{name}{description}{high_concept}{trouble}{fate_points}{custom}{skills}{stress}{aspects}{stunts}{consequenses}{sharing}{image}'
 
     def get_short_string(self, user=None):
         archived = '```css\nARCHIVED```' if self.archived else ''
@@ -362,6 +381,11 @@ class Character(Document):
         high_concept = f'{self.nl()}**High Concept:** {self.high_concept}' if self.high_concept else ''
         trouble = f'{self.nl()}**Trouble:** {self.trouble}' if self.trouble else ''
         return f'{archived}{name}{description}{high_concept}{trouble}{fate_points}'
+
+    def get_short_sharing_string(self, user=None):
+        short_string = self.get_short_string(user)
+        sharing = self.get_sharing_string(user)
+        return f'{short_string}{sharing}'
 
     def get_guilds(self, options={}):
         pipeline = []

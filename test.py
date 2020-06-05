@@ -20,6 +20,7 @@ if __name__ == '__main__':
     suite.addTest(tests.TestDreamcraftBotE2E('test_zone_creation'))
     suite.addTest(tests.TestDreamcraftBotE2E('test_scene_features'))
     suite.addTest(tests.TestDreamcraftBotE2E('test_end_delete_components'))
+    suite.addTest(tests.TestDreamcraftBotE2E('test_character_sharing'))
     suite.addTest(tests.TestDreamcraftBotE2E('test_delete_restore_characters'))
 
     results = unittest.TestResult()

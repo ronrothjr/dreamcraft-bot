@@ -19,6 +19,7 @@ class UserCommand():
         help - display a set of instructions on UserCommand usage
         user, u - display and create new users by name
         timezone, tz - set or display a list of existing timezones
+        url, website, contact - set the contact url for the user
     """
 
     def __init__(self, parent, ctx, args, guild, user, channel):
@@ -69,7 +70,10 @@ class UserCommand():
                 'user': self.get_user,
                 'u': self.get_user,
                 'timezone': self.time_zone,
-                'tz': self.time_zone
+                'tz': self.time_zone,
+                'url': self.url,
+                'website': self.url,
+                'contact': self.url
             }
             # Get the function from switcher dictionary
             if self.command in switcher:
@@ -86,14 +90,17 @@ class UserCommand():
 
     def help(self):
         """Returns the help text for the command"""
+
         return [USER_HELP]
 
     def get_user(self):
         """Diplsay the current user information"""
+
         return [self.user.get_string()]
     
     def time_zone(self):
         """Set/edit the user's timezone information"""
+
         tz_help = 'Try this:```css\n.d u timezone ZONE_SEARCH\n/* ZONE_SEARCH must be at least 3 characters */```'
         if len(self.args) == 0:
             if not self.user:
@@ -127,3 +134,14 @@ class UserCommand():
             self.user.updated = T.now()
             self.user.save()
         return [f'Saved time zone as ***{tz[0]}***\n\n{self.user.get_string()}']
+
+    def url(self):
+        """Set/edit the user's contact information"""
+
+        if len(self.args) < 2:
+            return [f'No contact info provided.```css\n.d u contact "CONTACT_INFO"```']
+        self.user.url = ' '.join(self.args[1:])
+        self.user.updated_by = str(self.user.id)
+        self.user.updated = T.now()
+        self.user.save()
+        return [self.user.get_string()]

@@ -61,6 +61,8 @@ class CharacterCommand():
         stress, st - add/edit stress tracks in the character sheet
         consequence, con - add/edit consequences and conditions in the character sheet
         custom - add/edit custom fields in the character sheet
+        share - allow other users to view and copy your characters and npcs
+        shared - view and copy characters and npcs shared by others
     """
 
     def __init__(self, parent, ctx, args, guild, user, channel, char=None):
@@ -104,6 +106,7 @@ class CharacterCommand():
         self.sc = Scene().get_by_id(self.channel.active_scene) if self.channel and self.channel.active_scene else None
         self.char = char if char else (Character().get_by_id(self.user.active_character) if self.user and self.user.active_character else None)
         self.can_edit = str(self.user.id) == str(self.char.user.id) or self.user.role == 'Game Master' if self.user and self.char else True
+        self.can_copy = self.char.shared and self.char.shared.copy or self.user.role in ['Admin','Game Master'] if self.char else False
         self.asp = Character().get_by_id(self.char.active_aspect) if self.char and self.char.active_aspect else None
         self.stu = Character().get_by_id(self.char.active_stunt) if self.char and self.char.active_stunt else None
 
@@ -157,7 +160,9 @@ class CharacterCommand():
                 'st': self.stress,
                 'consequence': self.consequence,
                 'con': self.consequence,
-                'custom': self.custom
+                'custom': self.custom,
+                'share': self.share,
+                'shared': self.shared
             }
             # Get the function from switcher dictionary
             if self.command in switcher:
@@ -680,31 +685,39 @@ class CharacterCommand():
         search = ''
         if not self.char:
             raise Exception('No active character to copy')
-        if not self.can_edit:
+        if not self.can_edit and not self.can_copy:
             raise Exception('You do not have permission to edit this character')
         if self.char.category != 'Character':
             raise Exception(f'You may only copy characters. ***{self.char.name}*** is {p.an(self.char.category)}.')
         guilds = [g['guild'] for g in Character().get_guilds() if g['guild'] and g['guild'].lower() not in self.guild.name.lower()]
-        if not guilds:
-            raise Exception('You may not copy until you have created a character on another server')
-        guild_list = f'***Guilds:***\n' + '\n'.join([f'    ***{g}***' for g in guilds])
-        guild_commands = '\n'.join([f'.d c copy to {g}' for g in guilds[0:5]])
-        guild_commands_str = f'\n\nTry one of these:```css\n{guild_commands}```'
-        incorrect_syntax = f'Copy character syntax inccorect{guild_commands_str}'
-        if len(args) == 1:
-            raise Exception(incorrect_syntax)
-        if len(args) == 2 or (len(args) == 3 and args[1].lower() != 'to'):
-            raise Exception(incorrect_syntax)
-        search = ' '.join(args[2:])
-        guild = next((g for g in guilds if search.lower() in g.lower()), None)
-        if not guild:
-            raise Exception(f'_{search}_ not found in guilds\n\n{guild_list}')
-        user = User().find(self.user.name, guild)
-        if not user:
-            raise Exception(f'You may not copy until you have created a character in ***{guild}***')
-        existing = Character().find(user, self.char.name, guild, None, 'Character')
-        if existing:
-            raise Exception(f'***{self.char.name}*** is already a character in ***{guild}***')
+        if self.can_copy and len(args) == 1:
+            if str(self.char.user.id) == str(self.user.id):
+                raise Exception(f'You cannot copy your own shared character')
+            user = self.user
+            guild = self.guild.name
+            messages.append(f'***{self.char.name}*** copied\n')
+        else:
+            if not guilds:
+                raise Exception('You may not copy until you have created a character on another server')
+            guild_list = f'***Guilds:***\n' + '\n'.join([f'    ***{g}***' for g in guilds])
+            guild_commands = '\n'.join([f'.d c copy to {g}' for g in guilds[0:5]])
+            guild_commands_str = f'\n\nTry one of these:```css\n{guild_commands}```'
+            incorrect_syntax = f'Copy character syntax inccorect{guild_commands_str}'
+            if len(args) == 1:
+                raise Exception(incorrect_syntax)
+            if len(args) == 2 or (len(args) == 3 and args[1].lower() != 'to'):
+                raise Exception(incorrect_syntax)
+            search = ' '.join(args[2:])
+            guild = next((g for g in guilds if search.lower() in g.lower()), None)
+            if not guild:
+                raise Exception(f'_{search}_ not found in guilds\n\n{guild_list}')
+            user = User().find(self.user.name, guild)
+            if not user:
+                raise Exception(f'You may not copy until you have created a character in ***{guild}***')
+            existing = Character().find(user, self.char.name, guild, None, 'Character')
+            if existing:
+                raise Exception(f'***{self.char.name}*** is already a character in ***{guild}***')
+            messages.append(f'***{self.char.name}*** copied to ***{guild}***\n')
         children = Character().get_by_parent(self.char)
         char = copy.deepcopy(self.char)
         char.id = None
@@ -718,7 +731,6 @@ class CharacterCommand():
             new_child.parent_id = str(char.id)
             new_child.guild = guild
             char_svc.save(new_child, user)
-        messages.append(f'***{self.char.name}*** copied to ***{guild}***')
         return messages
 
     def delete_character(self, args):
@@ -1003,6 +1015,86 @@ class CharacterCommand():
         self.char.custom_properties = custom_properties
         char_svc.save(self.char, self.user)
         messages.append(self.dialog(''))
+        return messages
+
+    def share(self, args):
+        """Allow other users to view and copy your characters and npcs
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
+        if not self.char:
+            raise Exception('You don\'t have an active character.\nTry this: ```css\n.d c CHARACTER_NAME```')
+        if not self.can_edit:
+            raise Exception('You do not have permission to edit this character')
+        messages = []
+        shared = copy.deepcopy(self.char.shared) if self.char.shared else {}
+        if len(args) == 1:
+            raise Exception('No share settings specified. Try this: ```css\n.d c share anyone\n.d c share copy\n.d c share revoke```')
+        if 'anyone' in ' '.join(args[1:]):
+            messages.append(f'Sharing enabled for ***{self.char.name}***\n')
+            shared['anyone'] = True
+        if 'copy' in ' '.join(args[1:]):
+            messages.append(f'Copying enabled for ***{self.char.name}***\n')
+            shared['copy'] = True
+        if args[1] in ['revoke', 'r']:
+            messages.append(f'Sharing revoked for ***{self.char.name}***\n')
+            shared = None
+        self.char.shared = shared
+        char_svc.save(self.char, self.user)
+        messages.append(self.dialog(''))
+        return messages
+
+    def shared(self, args):
+        """View and copy characters and npcs shared by others
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
+        messages = []
+        params = {'shared__exists': True, 'archived': False}
+        char_name = ' '.join(args[1:])
+        if char_name:
+            params['name__icontains'] = char_name
+
+        def selector(selection):
+            self.char = selection
+            self.user.set_active_character(self.char)
+            char_svc.save_user(self.user)
+            return [self.dialog('active_character')]
+
+        def formatter(item, item_num, page_num, page_size):
+            return f'_CHARACTER #{((page_num-1)*page_size)+item_num+1}_\n{item.get_short_sharing_string(self.user)}'
+
+        messages.extend(Dialog({
+            'svc': char_svc,
+            'user': self.user,
+            'title': 'Shared Characters',
+            'command': 'c ' + ' '.join(args),
+            'type': 'select',
+            'type_name': 'CHARACTER',
+            'getter': {
+                'method': Character.get_by_page,
+                'params': {'params': params}
+            },
+            'formatter': formatter,
+            'cancel': self.canceler,
+            'select': selector
+        }).open())
         return messages
 
     def image(self, args):

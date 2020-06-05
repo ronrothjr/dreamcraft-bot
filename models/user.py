@@ -12,6 +12,7 @@ class User(Document):
     role = StringField()
     active_character = StringField()
     time_zone = StringField()
+    url = StringField()
     module = StringField()
     command =  StringField()
     question = StringField()
@@ -58,5 +59,6 @@ class User(Document):
 
     def get_string(self):
         tz = self.time_zone if self.time_zone else '_None_'
-        return f'_Player:_ ***{self.name}***\n_Timezone:_ ***{tz}***'
+        url = self.url if self.url else '_None_'
+        return f'_Player:_ ***{self.name}***\n_Timezone:_ ***{tz}***\n***Contact:*** _{url}_'
         

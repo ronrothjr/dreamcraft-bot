@@ -1075,6 +1075,9 @@ class CharacterCommand():
             self.char = selection
             self.user.set_active_character(self.char)
             char_svc.save_user(self.user)
+            self.args = ('copy',)
+            self.can_copy = str(self.char.user.id) != str(self.user.id)
+            messages.extend(self.copy_character(self.args))
             return [self.dialog('active_character')]
 
         def formatter(item, item_num, page_num, page_size):

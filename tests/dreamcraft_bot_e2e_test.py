@@ -652,14 +652,9 @@ class TestDreamcraftBotE2E(unittest.TestCase):
             },
             {
                 'ctx': ctx4,
-                'args': [('c', 'shared')],
-                'assertions': [
-                    ['**_Sharing Enabled_""\nAnyone can find this _Character_', 'should select shared character']
-                ]
-            },
-            {
-                'ctx': ctx4,
-                'args': [('copy',)],
+                'args': [
+                    ('c', 'shared')
+                ],
                 'assertions': [
                     ['***Test Character 1*** copied', 'should copy shared \'Test Character 1\'']
                 ]

@@ -26,8 +26,10 @@ CONSEQUENCES_HELP = SETUP.consequences_help
 X = SETUP.x
 O = SETUP.o
 STRESS = SETUP.stress
+STRESS_CATEGORIES = SETUP.stress_categories
 STRESS_TITLES = SETUP.stress_titles
 CONSEQUENCES = SETUP.consequences
+CONSEQUENCES_CATEGORIES = SETUP.consequences_categories
 CONSEQUENCES_TITLES = SETUP.consequences_titles
 CONSEQUENCES_SHIFTS = SETUP.consequence_shifts
 
@@ -396,6 +398,14 @@ class CharacterCommand():
                 f'***THIS IS YOUR ACTIVE CHARACTER:***\n',
                 f':point_down:\n\n{get_short_string}'
             ]),
+            'copy_and_share': ''.join([
+                '\n***Share a character***```css\n.d c share anyone /* READ-ONLY */\n',
+                '.d c share to copy /* LET OTHERS COPY */\n',
+                '.d c share revoke /* TURN OFF SHARING */```',
+                '\n***Copy a character***```css\n.d c shared /* VIEW SHARED CHARACTERS */\n',
+                '.d c copy /* COPIES SELECTED CHARACTER */\n',
+                '.d c copy to SERVER_NAME /* COPIES YOU CHARACTER TO ANOTHER SERVER */```'
+            ]),
             'add_more_info': ''.join([
                 f'Add more information about ***{name}***',
                 '```css\n.d c description CHARACTER_DESCRIPTION\n',
@@ -420,10 +430,14 @@ class CharacterCommand():
             'add_aspects_and_stunts': ''.join([
                 f'\n\nAdd an aspect or two for ***{name}***',
                 '```css\n.d c aspect ASPECT_NAME\n',
-                '.d c aspect delete ASPECT_NAME```',
+                '.d c aspect delete ASPECT_NAME\n',
+                '/* Add custom aspect type */\n',
+                '.d c aspect type ASPECT_TYPE```',
                 f'Give  ***{name}*** some cool stunts',
                 '```css\n.d c stunt STUNT_NAME\n',
-                '.d c stunt delete STUNT_NAME```'
+                '.d c stunt delete STUNT_NAME\n',
+                '/* Add custom stunt type */\n',
+                '.d c stunt type STUNT_TYPE```'
             ]) if can_edit else '',
             'edit_active_aspect': ''.join([
                 f'\n***You can edit this aspect as if it were a character***',
@@ -469,6 +483,7 @@ class CharacterCommand():
             dialog_string += dialog.get('add_aspects_and_stunts', '')
             dialog_string += dialog.get('manage_stress', '')
             dialog_string += dialog.get('manage_conditions', '')
+            dialog_string += dialog.get('copy_and_share')
         elif char.category == 'Character':
             if dialog_text:
                 dialog_string += dialog.get(dialog_text, '')
@@ -485,6 +500,7 @@ class CharacterCommand():
                     dialog_string += dialog.get('add_aspects_and_stunts', '')
                     dialog_string += dialog.get('manage_stress', '')
                     dialog_string += dialog.get('manage_conditions', '')
+                    dialog_string += dialog.get('copy_and_share')
         else:
             if dialog_text:
                 dialog_string += dialog.get(dialog_text, '')
@@ -1250,6 +1266,8 @@ class CharacterCommand():
         """
 
         messages = []
+
+        # Validate syntax and permissions
         if len(args) == 1:
             if not self.asp:
                 return ['You don\'t have an active aspect.\nTry this: ```css\n.d c a {aspect}```']
@@ -1258,8 +1276,12 @@ class CharacterCommand():
             return ['You don\'t have an active character.\nTry this: ```css\n.d c CHARACTER_NAME```']
         elif not self.can_edit:
             raise Exception('You do not have permission to edit this character')
+
+        # Handle aspect 'list' subcomand
         elif args[1].lower() == 'list':
             return [self.char.get_string_aspects(self.user)]
+
+        # Handle aspect 'delete' subcomand
         elif args[1].lower() in ['delete','d']:
             aspect = ' '.join(args[2:])
             for a in Character().get_by_parent(self.char, aspect, 'Aspect'):
@@ -1269,6 +1291,16 @@ class CharacterCommand():
                 char_svc.save(a, self.user)
             messages.append(f'"{aspect}" removed from aspects')
             messages.append(self.char.get_string_aspects(self.user))
+        
+        # Handle aspect 'type' subcomand
+        elif args[1].lower() in ['type','t']:
+            if not self.asp:
+                return ['You don\'t have an active aspect.\nTry this: ```css\n.d c a {aspect}```']
+            self.asp.type_name = ' '.join(args[2:])
+            char_svc.save(self.asp, self.user)
+            messages.append(f'Set the ***{self.asp.name}*** aspect with type _{self.asp.type_name}_')
+        
+        # Handle aspect Fate Fractal option to edit it as a character
         elif args[1].lower() in ['character', 'char', 'c']:
             if not self.asp:
                 return ['You don\'t have an active aspect.\nTry this: ```css\n.d c a {aspect}```']
@@ -1279,6 +1311,9 @@ class CharacterCommand():
             char_svc.save(self.char, self.user)
             command = CharacterCommand(parent=self.parent, ctx=self.ctx, args=args[1:], guild=self.guild, user=self.user, char=self.asp, channel=self.channel)
             messages.extend(command.run())
+        
+        # Save the aspect as a character with this character as a parent
+        # This alows editing an aspect as a character
         else:
             aspect = ' '.join(args[1:])
             self.asp = Character().get_or_create(self.user, aspect, self.guild.name, self.char, 'Aspect')
@@ -1302,6 +1337,8 @@ class CharacterCommand():
         """
 
         messages = []
+
+        # Validate stunt subcomand syntax and permisions
         if len(args) == 1:
             if not self.stu:
                 return ['You don\'t have an active stunt.\nTry this: ```css\n.d c a {aspect}```']
@@ -1310,8 +1347,12 @@ class CharacterCommand():
             return ['You don\'t have an active character.\nTry this: ```css\n.d c CHARACTER_NAME```']
         elif not self.can_edit:
             raise Exception('You do not have permission to edit this character')
+
+        # Handle stunt 'list' subcommand
         elif args[1].lower() == 'list':
             return [self.char.get_string_stunts(self.user)]
+        
+        # Handle stunt 'delete'subcommand
         elif args[1].lower() in ['delete','d']:
             stunt = ' '.join(args[2:])
             for s in Character().get_by_parent(self.char, stunt, 'Stunt'):
@@ -1321,6 +1362,8 @@ class CharacterCommand():
                 char_svc.save(s, self.user)
             messages.append(f'"{stunt}" removed from stunts')
             messages.append(self.char.get_string_stunts(self.user))
+
+        # Handle stunt Fate Fractal option to edit it as a character
         elif args[1].lower() in ['character', 'char', 'c']:
             self.user.active_character = str(self.stu.id)
             char_svc.save_user(self.user)
@@ -1329,11 +1372,21 @@ class CharacterCommand():
             char_svc.save(self.char, self.user)
             command = CharacterCommand(parent=self.parent, ctx=self.ctx, args=args[1:], guild=self.guild, user=self.user, channel=self.channel, char=self.stu)
             messages.extend(command.run())
+        
+        # Handle aspect 'type' subcomand
+        elif args[1].lower() in ['type','t']:
+            if not self.stu:
+                return ['You don\'t have an active stunt.\nTry this: ```css\n.d c s STUNT_NAME```']
+            self.stu.type_name = ' '.join(args[2:])
+            char_svc.save(self.stu, self.user)
+            messages.append(f'Set the ***{self.stu.name}*** stunt with type _{self.stu.type_name}_')
+        
+        # Save the stunt as a character with this character as a parent
+        # This alows editing a stunt as a character
         else:
             stunt = ' '.join(args[1:])
             self.stu = Character().get_or_create(self.user, stunt, self.guild.name, self.char, 'Stunt')
             self.char.active_stunt = str(self.stu.id)
-            self.char.active_character = str(self.stu.id)
             char_svc.save(self.char, self.user)
             messages.append(self.char.get_string_stunts(self.user) + '\n')
             messages.append(self.dialog('edit_active_stunt'))
@@ -1376,6 +1429,7 @@ class CharacterCommand():
             return messages
         modified = None
         stress_titles = self.char.stress_titles if self.char.stress_titles else STRESS_TITLES
+        stress_categories = self.char.stress_categories if self.char.stress_categories else []
         stress_checks = []
         [stress_checks.append(t[0:2].lower()) for t in stress_titles]
         [stress_checks.append(t.lower()) for t in stress_titles]
@@ -1388,6 +1442,8 @@ class CharacterCommand():
         if len(args) == 1:
             messages.append(f'{self.char.get_string_name(self.user)}{self.char.get_string_stress()}')
             return messages
+
+        # Handle stress title setup option
         if args[1] in ['title', 't']:
             if len(args) == 2:
                 messages.append('No stress title provided')

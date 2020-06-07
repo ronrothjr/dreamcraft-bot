@@ -27,7 +27,9 @@ class Character(Document):
     active_character = StringField()
     npc = BooleanField()
     characters = ListField(StringField())
-    category = StringField()
+    category = StringField() # 'Character', 'Aspect', 'Stunt'
+    # Used to create custom aspect and stunt types
+    type_name = StringField()
     description = StringField()
     high_concept = StringField()
     trouble = StringField()
@@ -43,8 +45,10 @@ class Character(Document):
     last_roll = DynamicField()
     stress = DynamicField()
     stress_titles = ListField()
+    stress_categories = ListField()
     consequences = DynamicField()
     consequences_titles = ListField()
+    consequences_categories = ListField()
     consequences_shifts = ListField()
     image_url = StringField()
     is_boost = BooleanField()
@@ -211,11 +215,15 @@ class Character(Document):
             c.updated = T.now()
             c.save()
 
-    def get_string_name(self, user=None):
+    def get_string_name(self, user=None, parent=None):
         active = ''
         player = 'Nonplayer ' if self.npc else ''
         category = f' _({player}{self.category})_ ' if self.category else ''
-        if user and str(self.id) == user.active_character:
+        if self.category == 'Character' and user and str(self.id) == user.active_character:
+            active = f' _(Active)_ '
+        if self.category == 'Aspect' and parent and parent.active_aspect and str(self.id) == parent.active_aspect:
+            active = f' _(Active)_ '
+        if self.category == 'Stunt' and parent and parent.active_stunt and str(self.id) == parent.active_stunt:
             active = f' _(Active)_ '
         return f'***{self.name}***{active}{category}'
 
@@ -281,15 +289,27 @@ class Character(Document):
             available.append(f'***{TextUtils.clean(self.name)}*** ({self.category}{parent_string})')
         return available
 
-    def get_string_aspects(self, user=None):
+    def get_string_aspects(self, user=None, parent=None):
         aspects = Character().get_by_parent(self, '', 'Aspect')
-        aspects_string = self.sep().join([a.get_string(user) for a in aspects]) if aspects else ''
-        return f'{self.nl()}{self.nl()}**Aspects:**{self.sep()}{aspects_string}' if aspects_string else ''
+        aspects_by_type = {}
+        for a in aspects:
+            aspect_type = a.type_name if a.type_name else 'Aspects'
+            if aspect_type not in aspects_by_type:
+                aspects_by_type[aspect_type] = ''
+            aspects_by_type[aspect_type] += self.sep() + a.get_string(user, self)
+        aspects_string = f'{self.nl()}{self.nl()}' + (f'{self.nl()}{self.nl()}'.join([ f'**{a}:**{aspects_by_type[a]}' for a in aspects_by_type])) if aspects else ''
+        return aspects_string
 
-    def get_string_stunts(self, user=None):
+    def get_string_stunts(self, user=None, parent=None):
         stunts = Character().get_by_parent(self, '', 'Stunt')
-        stunts_string = self.sep().join([s.get_string(self) for s in stunts]) if stunts else ''
-        return f'{self.nl()}{self.nl()}**Stunts:**{self.sep()}{stunts_string}' if stunts_string else ''
+        stunts_by_type = {}
+        for s in stunts:
+            stunt_type = s.type_name if s.type_name else 'Stunts'
+            if stunt_type not in stunts_by_type:
+                stunts_by_type[stunt_type] = ''
+            stunts_by_type[stunt_type] += self.sep() + s.get_string(user, self)
+        stunts_string =  f'{self.nl()}{self.nl()}' + (f'{self.nl()}{self.nl()}'.join([ f'**{s}:**{stunts_by_type[s]}' for s in stunts_by_type])) if stunts else ''
+        return stunts_string
 
     def get_string_skills(self):
         title = 'Approaches' if self.use_approaches else 'Skills'
@@ -356,9 +376,9 @@ class Character(Document):
             sharing_string = self.nl().join(sharing)
         return sharing_string
 
-    def get_string(self, user=None):
+    def get_string(self, user=None, parent=None):
         archived = '```css\nARCHIVED```' if self.archived else ''
-        name = self.get_string_name(user)
+        name = self.get_string_name(user, parent)
         fate_points = self.get_string_fate()
         description = f'{self.sep()}**Description:** {self.description}' if self.description else ''
         high_concept = f'{self.sep()}**High Concept:** {self.high_concept}' if self.high_concept else ''
@@ -373,9 +393,9 @@ class Character(Document):
         sharing = self.get_sharing_string(user)
         return f'{archived}{name}{description}{high_concept}{trouble}{fate_points}{custom}{skills}{stress}{aspects}{stunts}{consequenses}{sharing}{image}'
 
-    def get_short_string(self, user=None):
+    def get_short_string(self, user=None, parent=None):
         archived = '```css\nARCHIVED```' if self.archived else ''
-        name = self.get_string_name(user)
+        name = self.get_string_name(user, parent)
         fate_points = self.get_string_fate()
         description = f'{self.nl()}**Description:** {self.description}' if self.description else ''
         high_concept = f'{self.nl()}**High Concept:** {self.high_concept}' if self.high_concept else ''

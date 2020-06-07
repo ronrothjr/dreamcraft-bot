@@ -173,9 +173,15 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                 ]
             },
             {
-                'args': [('aspect', 'Test Aspect')],
+                'args': [('aspect', 'Test Aspect 1')],
                 'assertions': [
-                    ['***Test Aspect*** _(Aspect)_', 'Should add Test Aspect']
+                    ['***Test Aspect 1*** _(Active)_  _(Aspect)_', 'Should add Test Aspect 1']
+                ]
+            },
+            {
+                'args': [('aspect', 'type', 'Weapons')],
+                'assertions': [
+                    ['Set the ***Test Aspect 1*** aspect with type _Weapons_', 'Should \'Weapons\' aspect type']
                 ]
             },
             {
@@ -187,7 +193,7 @@ class TestDreamcraftBotE2E(unittest.TestCase):
             {
                 'args': [('c', 'stunt', 'character')],
                 'assertions': [
-                    ['Test Stunt', 'Should ecit Test Stunt']
+                    ['Test Stunt', 'Should edit Test Stunt']
                 ]
             },
             {
@@ -297,7 +303,7 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                 ],
                 'assertions': [
                     ['***Test Character 1*** _(Active)_  _(Character)_', 'Test Character 1 should be the active character'],
-                    ['***Test Aspect*** _(Aspect)_', 'Should have Test Aspect'],
+                    ['***Test Aspect 1*** _(Aspect)_', 'Should have Test Aspect 1'],
                     ['***Test Stunt*** _(Stunt)_', 'Should have Test Stunt']
                 ]
             }
@@ -705,7 +711,7 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                 ],
                 'assertions': [
                     ['***Test Character 1*** restored', 'should restore \'Test Character 1\''],
-                    ['***Test Aspect*** _(Aspect)_', 'Should have Test Aspect'],
+                    ['***Test Aspect 1*** _(Active)_  _(Aspect)_', 'Should have Test Aspect 1'],
                     ['***Test Stunt*** _(Active)_  _(Stunt)_', 'Should have Test Stunt']
                 ]
             },
@@ -745,7 +751,7 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                 ],
                 'assertions': [
                     ['***Test Character 1*** restored', 'should restore \'Test Character 1\''],
-                    ['***Test Aspect*** _(Aspect)_', 'should have Test Aspect'],
+                    ['***Test Aspect 1*** _(Active)_  _(Aspect)_', 'should have Test Aspect 1'],
                     ['***Test Stunt*** _(Active)_  _(Stunt)_', 'should have Test Stunt']
                 ]
             }

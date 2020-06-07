@@ -38,7 +38,8 @@ class Setup():
             \n***User Setup:***\n\
             Display user info```css\n.d (u)ser```\n\
             Set user time zone```css\n.d u tz {timezone}```\n\
-            Search the list of time zones```css\n.d u tz (l)ist {search}```\n'
+            Search the list of time zones```css\n.d u tz (l)ist {search}```\n\
+            Add contact information```css\n.d u contact "CONTACT_INFO".d u contact "\nReddit - u/fuzzywuzzy\nEmail - fuzzy@gmail.com"```\n'
 
     revision_help = '.d revision help - display revision help\n\
             \nRevision Setup:\n\
@@ -62,13 +63,17 @@ class Setup():
             Removes a character```css\n.d c (d)delete \{name}```\n\
             Display, refresh, add or subtract fate points```css\n.d c (f)ate {refresh|+|-}```\n\
             Add/remove aspects```css\n.d c (a)spect [(d)elete] \{aspect}```\n\
+            Set custom aspect type```css\n.d c (a)spect (t)elete ASPECT_TYPE```\n\
             Set the current aspect as the active character```css\n.d c (a)spect (c)character```\n\
             Add/remove stunts```css\n.d c (s)tunt [(d)elete] \{stunt}```\n\
+            Set custom stunt type```css\n.d c (s)stunt (t)elete STUNT_TYPE```\n\
             Set the current stunt as the active character```css\n.d c (s)tunt (c)character```\n\
             Add/remove approach bonuses```css\n.d c (app)roach [(d)elete] \{approach\} \{bonus\}```\n\
             Display a list of approach descriptions```css\n.d c (app)roach help```\n\
             Set/remove bonuses```css\n.d c (sk)ill [(d)elete] \{skill\} \{bonus\}```\n\
-            Display a list of skill descriptions```css\n.d c (sk)ill help```'
+            Display a list of skill descriptions```css\n.d c (sk)ill help```\n\
+            Share a character```css\n.d c share anyone /* READ-ONLY */\n.d c share to copy /* LET OTHERS COPY */\n.d c share revoke /* TURN OFF SHARING */```\n\
+            Copy a character```css\n.d c shared /* VIEW SHARED CHARACTERS */\n.d c copy /* COPIES SELECTED CHARACTER */\n.d c copy to SERVER_NAME /* COPIES YOU CHARACTER TO ANOTHER SERVER */```'
 
     stress_help = '.d c (st)ress help - display these instructions\nStress Help:\n\
             Add stress```css\n.d c (st)ress (m)ental|(p)hysical {1,2,3}```\n\
@@ -354,10 +359,12 @@ class Setup():
     stress = [[['1', o],['1', o],['1', o]],[['1', o],['1', o],['1', o]]]
     stress_FAE = [[['1', o]],[['2', o]],[['3', o]]]
     stress_Core = [[['1', o],['1', o]],[['1', o],['1', o]]]
+    stress_categories = ['Stress', 'Stress']
     stress_titles = ['Physical', 'Mental']
     stress_titles_FAE = ['1', '2', '3']
     stress_titles_Core = ['Physical', 'Mental']
     consequences = [['2', o],['4', o],['6', o]]
+    consequences_categories = ['Consequences', 'Consequences', 'Consequences']
     consequences_titles = ['Mild', 'Moderate', 'Severe']
     consequence_shifts = ['2', '4', '6']
     fate_ladder = {

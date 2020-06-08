@@ -139,7 +139,7 @@ class RollCommand():
 
         self.get_available_invokes()
         self.available_invokes = []
-        [self.available_invokes.extend(a['char'].get_available_aspects(a['parent'])) for a in self.available]
+        [self.available_invokes.extend(a['char'].get_available_aspects(a['parent'], self.char)) for a in self.available]
         if self.available_invokes:
             return ['**Available invokes:**\n        ' + '\n        '.join([a for a in self.available_invokes])]
         else:

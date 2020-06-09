@@ -77,7 +77,13 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                 ]
             },
             {
-                'args': [('npc', 'Test', 'NPC')],
+                'args': [('undo','list')],
+                'assertions': [
+                    ['_args:_ [\'c\']', 'should display command in log']
+                ]
+            },
+            {
+                'args': [('c', 'npc', 'Test', 'NPC')],
                 'assertions': [
                     ['Create a new CHARACTER named ***Test NPC***', 'Should ask Create Test NPC question']
                 ]
@@ -305,6 +311,16 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                     ['***Test Character 1*** _(Active)_  _(Character)_', 'Test Character 1 should be the active character'],
                     ['***Test Aspect 1*** _(Aspect)_', 'Should have Test Aspect 1'],
                     ['***Test Stunt*** _(Stunt)_', 'Should have Test Stunt']
+                ]
+            }
+        ])
+
+    def test_command_logging(self):
+        self.send_and_validate_commands(ctx1, [
+            {
+                'args': [('undo','list')],
+                'assertions': [
+                    ['Command', 'should display comand in log']
                 ]
             }
         ])
@@ -753,6 +769,14 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                     ['***Test Character 1*** restored', 'should restore \'Test Character 1\''],
                     ['***Test Aspect 1*** _(Active)_  _(Aspect)_', 'should have Test Aspect 1'],
                     ['***Test Stunt*** _(Active)_  _(Stunt)_', 'should have Test Stunt']
+                ]
+            },
+            {
+                'args': [
+                    ('log', 'errors')
+                ],
+                'assertions': [
+                    ['Error', 'should show error in undo list']
                 ]
             }
         ])

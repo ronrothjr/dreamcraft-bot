@@ -5,8 +5,10 @@ __contact__ = 'u/ensosati'
 import os
 import re
 from dotenv import load_dotenv
+import traceback
 
-from models import Channel, User, Character
+from models import Channel, User, Character, Log
+from services import BaseService
 from commands import *
 from config.setup import Setup
 from utils import T
@@ -19,6 +21,8 @@ SETUP = Setup()
 APPROACHES = SETUP.approaches
 SKILLS = SETUP.skills
 from config.setup import Setup
+
+base_svc = BaseService()
 
 class DreamcraftHandler():
     """
@@ -72,103 +76,127 @@ class DreamcraftHandler():
                 The string for the response message content
         """
 
-        modules = {
-            'Channel': ChannelCommand,
-            'Scenario': ScenarioCommand,
-            'Scene': SceneCommand,
-            'Character': CharacterCommand,
-            'Undo': UndoCommand,
-            'User': UserCommand,
-            'Zone': ZoneCommand,
-            'Session': SessionCommand,
-            'Engagement': EngagementCommand,
-            'Revision': RevisionCommand,
-            'Suggestion': SuggestionCommand
-        }
-        switcher = {
-            'cheat': CheatCommand,
-            'undo': UndoCommand,
-            'redo': UndoCommand,
-            'log': UndoCommand,
-            'l': UndoCommand,
-            'revision': RevisionCommand,
-            'rev': RevisionCommand,
-            'suggestion': SuggestionCommand,
-            'suggest': SuggestionCommand,
-            'user': UserCommand,
-            'u': UserCommand,
-            'channel': ChannelCommand,
-            'chan': ChannelCommand,
-            'character': CharacterCommand,
-            'char': CharacterCommand,
-            'c': CharacterCommand,
-            'stats': CharacterCommand,
-            'scenario': ScenarioCommand,
-            'scene': SceneCommand,
-            's': SceneCommand,
-            'zone': ZoneCommand,
-            'z': ZoneCommand,
-            'session': SessionCommand,
-            'engagement': EngagementCommand,
-            'engage': EngagementCommand,
-            'e': EngagementCommand,
-            'attack': RollCommand,
-            'attk': RollCommand,
-            'defend': RollCommand,
-            'def': RollCommand,
-            'roll': RollCommand,
-            'r': RollCommand,
-            'reroll': RollCommand,
-            're': RollCommand,
-            'invoke': RollCommand,
-            'i': RollCommand,
-            'compel': RollCommand,
-            'available': RollCommand,
-            'avail': RollCommand,
-            'av': RollCommand,
-            'stress': CharacterCommand,
-            'st': CharacterCommand,
-            'consequence': CharacterCommand,
-            'con': CharacterCommand
-            # 'assist': RollCommand,
-            # 'concede': RollCommand
-        }
-        self.messages = []
-        self.search = str(self.args[0])
-        self.get_answer()
-        if not self.messages:
-            self.shortcuts()
-            # Get the function from switcher dictionary
-            if switcher.get(self.command, None):
-                self.func = switcher.get(self.command, None)
-                self.module = re.sub(r'commands\.|_command', '', self.func.__module__).title()
-                if self.module != self.user.module:
-                    self.user.module = self.module
-                    self.user.updated_by = str(self.user.id)
-                    self.user.updated = T.now()
-                    self.user.save()
-            # Get the function from User object
-            if self.func is None and self.user.module in modules:
-                self.module = self.user.module
-                self.func = modules.get(self.module, None)
-                self.args = (self.module.lower(),) + self.args
-            # Get the function from Character object
-            if self.func is None and self.module in modules:
-                self.func = modules.get(self.module, None)
-                self.args = (self.module.lower(),) + self.args
-            if self.func:
-                # Execute the function and store the returned messages
-                instance = self.func(ctx=self.ctx, args=self.args, guild=self.guild, user=self.user, channel=self.channel, parent=self)
-                # Call the run() method for the command
-                self.messages = instance.run()
+        try:
+
+            modules = {
+                'Channel': ChannelCommand,
+                'Scenario': ScenarioCommand,
+                'Scene': SceneCommand,
+                'Character': CharacterCommand,
+                'Undo': UndoCommand,
+                'User': UserCommand,
+                'Zone': ZoneCommand,
+                'Session': SessionCommand,
+                'Engagement': EngagementCommand,
+                'Revision': RevisionCommand,
+                'Suggestion': SuggestionCommand
+            }
+            switcher = {
+                'cheat': CheatCommand,
+                'undo': UndoCommand,
+                'redo': UndoCommand,
+                'log': UndoCommand,
+                'l': UndoCommand,
+                'revision': RevisionCommand,
+                'rev': RevisionCommand,
+                'suggestion': SuggestionCommand,
+                'suggest': SuggestionCommand,
+                'user': UserCommand,
+                'u': UserCommand,
+                'channel': ChannelCommand,
+                'chan': ChannelCommand,
+                'character': CharacterCommand,
+                'char': CharacterCommand,
+                'c': CharacterCommand,
+                'stats': CharacterCommand,
+                'scenario': ScenarioCommand,
+                'scene': SceneCommand,
+                's': SceneCommand,
+                'zone': ZoneCommand,
+                'z': ZoneCommand,
+                'session': SessionCommand,
+                'engagement': EngagementCommand,
+                'engage': EngagementCommand,
+                'e': EngagementCommand,
+                'attack': RollCommand,
+                'attk': RollCommand,
+                'defend': RollCommand,
+                'def': RollCommand,
+                'roll': RollCommand,
+                'r': RollCommand,
+                'reroll': RollCommand,
+                're': RollCommand,
+                'invoke': RollCommand,
+                'i': RollCommand,
+                'compel': RollCommand,
+                'available': RollCommand,
+                'avail': RollCommand,
+                'av': RollCommand,
+                'stress': CharacterCommand,
+                'st': CharacterCommand,
+                'consequence': CharacterCommand,
+                'con': CharacterCommand
+                # 'assist': RollCommand,
+                # 'concede': RollCommand
+            }
+            self.messages = []
+            self.search = str(self.args[0])
+            self.get_answer()
+            if not self.messages:
+                self.shortcuts()
+                # Get the function from switcher dictionary
+                if switcher.get(self.command, None):
+                    self.func = switcher.get(self.command, None)
+                    self.module = re.sub(r'commands\.|_command', '', self.func.__module__).title()
+                    if self.module != self.user.module:
+                        self.user.module = self.module
+                        self.user.updated_by = str(self.user.id)
+                        self.user.updated = T.now()
+                        self.user.save()
+                # Get the function from User object
+                if self.func is None and self.user.module in modules:
+                    self.module = self.user.module
+                    self.func = modules.get(self.module, None)
+                    self.args = (self.module.lower(),) + self.args
+                # Get the function from Character object
+                if self.func is None and self.module in modules:
+                    self.func = modules.get(self.module, None)
+                    self.args = (self.module.lower(),) + self.args
+                # Log every comand
+                base_svc.log(str(self.user.id), self.user.name, str(self.user.id), self.guild.name, 'Command', {
+                    'command': self.command,
+                    'module': self.module,
+                    'args': self.args
+                }, 'created')
+                if self.func:
+                    # Execute the function and store the returned messages
+                    instance = self.func(ctx=self.ctx, args=self.args, guild=self.guild, user=self.user, channel=self.channel, parent=self)
+                    # Call the run() method for the command
+                    self.messages = instance.run()
+                else:
+                    self.messages = [f'Unknown command: {self.command}']
+                
+            # Concatenate messages and send
+            if self.command == 'cheat':
+                return self.module, [f'{m}\n' for m in self.messages]
             else:
-                self.messages = [f'Unknown command: {self.command}']
-            
-        # Concatenate messages and send
-        if self.command == 'cheat':
-            return self.module, [f'{m}\n' for m in self.messages]
-        else:
-            return self.module, '\n'.join(self.messages)
+                return self.module, '\n'.join(self.messages)
+    
+        except Exception as err:
+            traceback.print_exc()    
+            # Log every error
+            base_svc.log(
+                str(self.user.id),
+                self.user.name,
+                str(self.user.id),
+                self.guild.name,
+                'Error',
+                {
+                    'command': self.command,
+                    'args': self.args,
+                    'traceback': traceback.format_exc()
+                }, 'created')
+            return 'Oops!', 'Hey, bugs happen! We\'re working on it...'
 
     def get_answer(self):
         """

@@ -20,6 +20,8 @@ class Setup():
             \n**Engagement Setup**```css\n.d e help\n/* Display active zone */\n.d zone```'
 
     undo_help = '\n***UNDO INSTRUCTIONS***\n\
+            \n**Log Story:**```css\n.d log story\n/* Display a list of changes */```\n\
+            \n**Log Errors:**```css\n.d log errors\n/* Display a list of errors */```\n\
             \n**Undo List:**```css\n.d undo list\n/* Display a list of changes to undo */```\n\
             \n**Undo Last:**```css\n.d undo last\n/* Undo the last change */```\n\
             \n**Redo Next:**```css\n.d redo next\n/* Redo the next change */```'

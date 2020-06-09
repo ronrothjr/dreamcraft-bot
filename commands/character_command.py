@@ -186,6 +186,18 @@ class CharacterCommand():
             return messages
         except Exception as err:
             traceback.print_exc()
+            # Log every error
+            char_svc.log(
+                str(self.char.id) if self.char else str(self.user.id),
+                self.char.name if self.char else self.user.name,
+                str(self.user.id),
+                self.guild.name,
+                'Error',
+                {
+                    'command': self.command,
+                    'args': self.args,
+                    'traceback': traceback.format_exc()
+                }, 'created')
             return list(err.args)
 
     def help(self, args):

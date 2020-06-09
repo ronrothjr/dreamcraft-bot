@@ -122,6 +122,18 @@ class ZoneCommand():
             return messages
         except Exception as err:
             traceback.print_exc()
+            # Log every error
+            zone_svc.log(
+                str(self.zone.id) if self.zone else str(self.user.id),
+                self.zone.name if self.zone else self.user.name,
+                str(self.user.id),
+                self.guild.name,
+                'Error',
+                {
+                    'command': self.command,
+                    'args': self.args,
+                    'traceback': traceback.format_exc()
+                }, 'created')
             return list(err.args)
 
     def help(self, args):

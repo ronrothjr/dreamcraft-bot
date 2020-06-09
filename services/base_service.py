@@ -5,12 +5,36 @@ __contact__ = 'u/ensosati'
 import traceback
 import copy
 from bson.objectid import ObjectId
-from models import User, Channel
+from models import User, Channel, Log
 from config.setup import Setup
 from utils import TextUtils, Dialog, T
 
 class BaseService():
     """Servcie class for handling common methods for view, save, and update of database models"""
+
+    def log(self, parent_id, name, user_id, guild, category, data, action):
+        """Create log entry
+        
+        Parameters
+        ----------
+        parent_id : str
+            The id of the record being edited
+        name : str
+            The name of the record being edited
+        user_id : str
+            The user id performing the action
+        guild : str
+            The guild name (or private channel name)
+        category : str
+            The kind of object being edited
+        data : dict
+            The data for the log entry
+        action : str
+            The action being performed: created or updated
+        """
+
+        # Log every comand
+        Log().create_new(parent_id, name, user_id, guild, category, data, action)
 
     def search(self, args, method, params):
         """Search for an item using a provided method and params

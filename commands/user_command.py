@@ -6,10 +6,13 @@ import traceback
 import pytz
 from config.setup import Setup
 from models.user import User
+from services import BaseService
 from utils import T
 
 SETUP = Setup()
 USER_HELP = SETUP.user_help
+
+base_svc = BaseService()
 
 class UserCommand():
     """
@@ -86,6 +89,18 @@ class UserCommand():
             return messages
         except Exception as err:
             traceback.print_exc()
+            # Log every error
+            base_svc.log(
+                str(self.user.id),
+                self.user.name,
+                str(self.user.id),
+                self.guild.name,
+                'Error',
+                {
+                    'command': self.command,
+                    'args': self.args,
+                    'traceback': traceback.format_exc()
+                }, 'created')
             return list(err.args)
 
     def help(self):

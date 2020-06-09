@@ -92,6 +92,18 @@ class RevisionCommand():
             return messages
         except Exception as err:
             traceback.print_exc()
+            # Log every error
+            revision_svc.log(
+                str(self.user.id),
+                self.user.name,
+                str(self.user.id),
+                self.guild.name,
+                'Error',
+                {
+                    'command': self.command,
+                    'args': self.args,
+                    'traceback': traceback.format_exc()
+                }, 'created')
             return list(err.args)
 
     def help(self):

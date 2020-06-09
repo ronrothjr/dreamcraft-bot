@@ -127,6 +127,18 @@ class EngagementCommand():
             return messages
         except Exception as err:
             traceback.print_exc()
+            # Log every error
+            engagement_svc.log(
+                str(self.engagement.id) if self.engagement else str(self.user.id),
+                self.engagement.name if self.engagement else self.user.name,
+                str(self.user.id),
+                self.guild.name,
+                'Error',
+                {
+                    'command': self.command,
+                    'args': self.args,
+                    'traceback': traceback.format_exc()
+                }, 'created')
             return list(err.args)
 
     def help(self, args):

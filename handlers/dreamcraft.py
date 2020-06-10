@@ -47,7 +47,7 @@ class DreamcraftHandler():
         self.ctx = ctx
         self.args = args
         self.guild = ctx.guild if ctx.guild else ctx.author
-        self.user = User().get_or_create(ctx.author.name, self.guild.name)
+        self.user = User().get_or_create(ctx.author.name, self.guild.name, ctx.author.discriminator, ctx.author.display_name)
         # The 'channel' variable can either be the name of the channel on a server or 'private' if Direct Message
         channel = 'private' if ctx.channel.type.name == 'private' else ctx.channel.name
         self.channel = Channel().get_or_create(channel, self.guild.name, self.user)

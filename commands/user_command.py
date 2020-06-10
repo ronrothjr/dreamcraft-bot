@@ -117,30 +117,41 @@ class UserCommand():
         """Set/edit the user's timezone information"""
 
         tz_help = 'Try this:```css\n.d u timezone ZONE_SEARCH\n/* ZONE_SEARCH must be at least 3 characters */```'
+        tz_search = ''.join([
+            'Try one of these searches:```css\n',
+            '.d u tz US/\n',
+            '.d u tz America\n',
+            '.d u tz Canada\n',
+            '.d u tz Europe\n',
+            '.d u tz Asia\n',
+            '.d u tz Atlantic\n',
+            '.d u tz Pacific\n',
+            '.d u tz Indian\n',
+            '.d u tz Africa\n',
+            '.d u tz Australia\n',
+            '.d u tz Antarctica\n',
+            '```'
+        ])
         if len(self.args) == 0:
             if not self.user:
                 return ['No active user or name provided']
         if len(self.args) < 2:
-            return [f'No time zone provided. {tz_help}']
+            return [f'No time zone provided. {tz_help}',tz_search]
         if self.args[1] in ['list', 'l']:
             if len(self.args) <3:
-                return [f'No time zone search term provided. {tz_help}']
+                return [f'No time zone search term provided. {tz_help}', tz_search]
             if len(self.args[2]) <3:
                 return ['No time zone search term must be at least 3 characters```css\n/* EXAMPLES */\n.d u tz New_York\n.d u timezone London```']
             search = self.args[2].lower()
             tz = [tz for tz in pytz.all_timezones if search in tz.lower()]
             if len(tz) == 0:
-                return [f'Time zone \'{search}\' not found']
-            if len(', '.join([t for t in tz])) > 2000:
-                return [f'Results too large: please narrow your search']
-            return [', '.join(tz)]
+                return [f'Time zone \'{search}\' not found', tz_search]
+            return ['\n'.join(tz)]
         else:
             search = self.args[1].lower()
             tz = [tz for tz in pytz.all_timezones if search in tz.lower()]
             if len(tz) == 0:
-                return [f'Time zone \'{search}\' not found']
-            if len(', '.join([t for t in tz])) > 1920:
-                return [f'Results too large: please narrow your search']
+                return [f'Time zone \'{search}\' not found', tz_search]
             if len(tz) > 1:
                 timezones = '\n'.join([f'.d u tz {t}' for t in tz])
                 return [f'Time zone search \'{search}\' returned more than one. Try one of these:```css\n{timezones}```']

@@ -209,6 +209,8 @@ class ZoneCommand():
         """
 
         messages =[]
+        if not self.sc:
+            raise Exception('No active scene. Try this:```css\n.d scene SCENE_NAME```')
         command = 'zone ' + (' '.join(args))
         def canceler(cancel_args):
             if cancel_args[0].lower() in ['zone','s']:
@@ -398,6 +400,8 @@ class ZoneCommand():
         """
 
         messages = []
+        if not self.sc:
+            raise Exception('No active scene. Try this:```css\n.d scene SCENE_NAME```')
         if len(args) == 0:
             if not self.zone:
                 return [
@@ -457,6 +461,8 @@ class ZoneCommand():
         """
 
         messages = []
+        if not self.sc:
+            raise Exception('No active scene. Try this:```css\n.d scene SCENE_NAME```')
         def canceler(cancel_args):
             if cancel_args[0].lower() in ['zone']:
                 return ZoneCommand(parent=self.parent, ctx=self.ctx, args=cancel_args, guild=self.guild, user=self.user, channel=self.channel).run()
@@ -557,5 +563,8 @@ class ZoneCommand():
         -------
         list(str) - the response messages string array
         """
+
+        if not self.sc:
+            raise Exception('No active scene. Try this:```css\n.d scene SCENE_NAME```')
 
         return zone_svc.delete_zone(args, self.guild, self.channel, self.sc, self.zone, self.user)

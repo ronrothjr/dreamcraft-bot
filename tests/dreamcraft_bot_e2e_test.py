@@ -44,6 +44,12 @@ class TestDreamcraftBotE2E(unittest.TestCase):
     def test_user_setup(self):
         self.send_and_validate_commands(ctx1, [
             {
+                'args': [('user', 'timezone', 'US/')],
+                'assertions': [
+                    ['Time zone search \'us/\' returned more than one. Try one of these:```css', 'should display list of other searches']
+                ]
+            },
+            {
                 'args': [('user', 'timezone', 'America/New_York')],
                 'assertions': [
                     ['Saved time zone as ***America/New_York***', 'should save user time_zone as New York']
@@ -54,12 +60,23 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                 'assertions': [
                     ['***Contact:*** _Reddit - u/ensosati_', 'should save user contact info']
                 ]
-            }
-        ])
-
-    def test_user_2_setup(self):
-        self.send_and_validate_commands(ctx2, [
+            },
             {
+                'cts': ctx2,
+                'args': [('user', 'timezone', 'America/New_York')],
+                'assertions': [
+                    ['Saved time zone as ***America/New_York***', 'should save user time_zone as New York']
+                ]
+            },
+            {
+                'cts': ctx3,
+                'args': [('user', 'timezone', 'America/New_York')],
+                'assertions': [
+                    ['Saved time zone as ***America/New_York***', 'should save user time_zone as New York']
+                ]
+            },
+            {
+                'cts': ctx4,
                 'args': [('user', 'timezone', 'America/New_York')],
                 'assertions': [
                     ['Saved time zone as ***America/New_York***', 'should save user time_zone as New York']
@@ -68,7 +85,19 @@ class TestDreamcraftBotE2E(unittest.TestCase):
         ])
 
     def test_npc_character_creation(self):
-        self.send_and_validate_commands(ctx2, [  
+        self.send_and_validate_commands(ctx2, [
+            {
+                'args': [('r',)],
+                'assertions': [
+                    ['No active character. Try this to create/select one: ```css\n.d c CHARACTER_NAME```', 'Should include instructions to create character']
+                ]
+            },
+            {
+                'args': [('s',)],
+                'assertions': [
+                    ['No active scenario. Try this:```css\n.d scenario SCENARIO_NAME```', 'Should include instructions to create scenario']
+                ]
+            },
             {
                 'args': [('c',)],
                 'assertions': [
@@ -359,6 +388,12 @@ class TestDreamcraftBotE2E(unittest.TestCase):
 
     def test_scenario_creation(self):
         self.send_and_validate_commands(ctx1, [
+            {
+                'args': [('s', 'Test Scene')],
+                'assertions': [
+                    ['No active scenario. Try this:```css\n.d scenario SCENARIO_NAME```', 'Should include instructions to create scenario']
+                ]
+            },
             {
                 'args': [('scenario',)],
                 'assertions': [

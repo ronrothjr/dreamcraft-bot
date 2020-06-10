@@ -338,6 +338,8 @@ class SceneCommand():
         """
 
         messages = []
+        if not self.scenario:
+            raise Exception('No active scenario. Try this:```css\n.d scenario SCENARIO_NAME```')
         if len(args) == 0:
             if not self.sc:
                 return [
@@ -423,6 +425,8 @@ class SceneCommand():
         """
 
         messages = []
+        if not self.scenario:
+            raise Exception('No active scenario. Try this:```css\n.d scenario SCENARIO_NAME```')
         if len(args) == 0:
             if not self.sc:
                 return [
@@ -480,6 +484,8 @@ class SceneCommand():
         """
 
         messages = []
+        if not self.scenario:
+            raise Exception('No active scenario. Try this:```css\n.d scenario SCENARIO_NAME```')
         def canceler(cancel_args):
             if cancel_args[0].lower() in ['scene']:
                 return SceneCommand(parent=self.parent, ctx=self.ctx, args=cancel_args, guild=self.guild, user=self.user, channel=self.channel).run()
@@ -591,6 +597,9 @@ class SceneCommand():
         -------
         list(str) - the response messages string array
         """
+
+        if not self.scenario:
+            raise Exception('No active scenario. Try this:```css\n.d scenario SCENARIO_NAME```')
 
         return scene_svc.delete_item(args, self.user, self.sc, Scene.find, {'guild': self.guild.name, 'channel_id': str(self.channel.id), 'scenario_id': str(self.scenario.id)})
 

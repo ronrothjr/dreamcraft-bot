@@ -6,10 +6,10 @@ import unittest
 from handlers import DreamcraftHandler
 from mocks import CTX
 
-ctx1 = CTX('Test Guild 1', 'Test User 1', 'bot_testing')
-ctx2 = CTX('Test Guild 1', 'Test User 2', 'bot_testing')
-ctx3 = CTX('Test Guild 2', 'Test User 1', 'bot_spamming')
-ctx4 = CTX('Test Guild 3', 'Test User 3', 'bot_spamming')
+ctx1 = CTX('Test Guild 1', 'Test User 1', 'bot_testing', '1111', 'test_user_1')
+ctx2 = CTX('Test Guild 1', 'Test User 2', 'bot_testing', '2222', 'test_user_2')
+ctx3 = CTX('Test Guild 2', 'Test User 1', 'bot_spamming', '1111', 'test_user_1')
+ctx4 = CTX('Test Guild 3', 'Test User 3', 'bot_spamming', '4444', 'test_user_4')
 
 class TestDreamcraftBotE2E(unittest.TestCase):
 

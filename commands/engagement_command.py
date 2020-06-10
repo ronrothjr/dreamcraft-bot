@@ -127,6 +127,18 @@ class EngagementCommand():
             return messages
         except Exception as err:
             traceback.print_exc()
+            # Log every error
+            engagement_svc.log(
+                str(self.engagement.id) if self.engagement else str(self.user.id),
+                self.engagement.name if self.engagement else self.user.name,
+                str(self.user.id),
+                self.guild.name,
+                'Error',
+                {
+                    'command': self.command,
+                    'args': self.args,
+                    'traceback': traceback.format_exc()
+                }, 'created')
             return list(err.args)
 
     def help(self, args):
@@ -137,7 +149,7 @@ class EngagementCommand():
         """Check for an active scene and if one is not found, raise an Exception"""
 
         if not self.sc:
-            raise Exception('You don\'t have an active engagement. Try this:```css\n.d engagement ENGAGEMENT_NAME```')
+            raise Exception('You don\'t have an active scene. Try this:```css\n.d scene SCENE_NAME```')
 
     def search(self, args):
         """Search for an existing Engagement using the command string
@@ -208,6 +220,7 @@ class EngagementCommand():
         """
 
         messages =[]
+        self.check_engagement()
         command = 'engagement ' + (' '.join(args))
         def canceler(cancel_args):
             if cancel_args[0].lower() in ['engagement','engage','e']:
@@ -315,9 +328,8 @@ class EngagementCommand():
         list(str) - the response messages string array
         """
 
-        if not self.sc:
-            raise Exception('No active scene or name provided. Try this:```css\n.d scene SCENE_NAME```')
         messages = []
+        self.check_engagement()
         if len(args) == 0:
             if not self.engagement:
                 return [
@@ -370,9 +382,10 @@ class EngagementCommand():
 
                 def creator(**params):
                     item = Engagement().get_or_create(**params)
-                    scenes = scenario_svc.get_scenes(self.scenario)
-                    characters = scenario_svc.get_characters(scenes)
-                    item.characters = [str(c.id) for c in characters]
+                    if self.scenario:
+                        scenes = scenario_svc.get_scenes(self.scenario)
+                        characters = scenario_svc.get_characters(scenes)
+                        item.characters = [str(c.id) for c in characters]
                     item.type_name = engagement_type.title()
                     engagement_svc.save(item, self.user)
                     return item
@@ -420,6 +433,7 @@ class EngagementCommand():
                 ]
             messages.append(self.engagement.get_string(self.channel))
         else:
+            self.check_engagement()
             if len(args) == 1 and args[0].lower() == 'short':
                 return [self.dialog('active_engagement_short')]
             if len(args) == 1 and self.char:
@@ -471,6 +485,7 @@ class EngagementCommand():
         """
 
         messages = []
+        self.check_engagement()
         def canceler(cancel_args):
             if cancel_args[0].lower() in ['engagement']:
                 return EngagementCommand(parent=self.parent, ctx=self.ctx, args=cancel_args, guild=self.guild, user=self.user, channel=self.channel).run()
@@ -586,6 +601,8 @@ class EngagementCommand():
         -------
         list(str) - the response messages string array
         """
+
+        self.check_engagement()
 
         return engagement_svc.delete_item(args, self.user, self.engagement, Engagement.find, {"guild": self.guild.name, "channel_id": str(self.channel.id), "scene_id": str(self.sc.id)})
 

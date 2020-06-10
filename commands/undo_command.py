@@ -16,13 +16,14 @@ UNDO_HELP = SETUP.undo_help
 
 class UndoCommand():
     """
-    Handle 'undo', 'redo' commands and subcommands
+    Handle 'undo', 'redo', 'log' commands and subcommands
 
     Subcommands:
         help - display a set of instructions on UndoCommand usage
         note - add a note to the log
         story - display the undo/redo story
         list, l - display a list of existing changes
+        errors, error, err, e - display a list of errors
         last - undo the last logged change
         next - redo the next logged change (based on the current history_id)
     """
@@ -80,6 +81,10 @@ class UndoCommand():
                 'n': self.note,
                 'story': self.story,
                 'list': self.undo_list,
+                'errors': self.error_list,
+                'error': self.error_list,
+                'err': self.error_list,
+                'e': self.error_list,
                 'last': self.last,
                 'next': self.next
             }
@@ -165,6 +170,49 @@ class UndoCommand():
         messages.extend(response)
         return messages
 
+    def error_list(self, args):
+        """Display a dialog for viewing errors
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
+        messages =[]
+        command = 'log ' + (' '.join(args))
+        def canceler(cancel_args):
+            if cancel_args[0].lower() in ['log','redo','undo']:
+                self.args = cancel_args
+                self.command = self.args[0]
+                return self.run()
+            else:
+                self.parent.args = cancel_args
+                self.parent.command = self.parent.args[0]
+                return self.parent.get_messages()
+        response = Dialog({
+            'svc': char_svc,
+            'user': self.user,
+            'title': 'Error List',
+            'type': 'view',
+            'type_name': 'Error List',
+            'command': command,
+            'getter': {
+                'method': Log.get_by_page,
+                'params': {
+                    'params': {'category': 'Error'}
+                }
+            },
+            'formatter': lambda undo, num, page_num, page_size: f'_Undo #{num+1}_\n{undo.get_string()}',
+            'cancel': canceler
+        }).open()
+        messages.extend(response)
+        return messages
+
     def set_dialog(self, command='', question='', answer=''):
         self.user.command = command
         self.user.question = question
@@ -187,7 +235,7 @@ class UndoCommand():
         messages =[]
         command = 'undo ' + (' '.join(args))
         def canceler(cancel_args):
-            if cancel_args[0].lower() in ['redo','undo']:
+            if cancel_args[0].lower() in ['log','redo','undo']:
                 self.args = cancel_args
                 self.command = self.args[0]
                 return self.run()

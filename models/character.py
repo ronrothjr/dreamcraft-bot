@@ -340,8 +340,10 @@ class Character(Document):
             else:
                 stress = [f'_{s}:_ ' for s in self.stress_titles] if self.stress_titles else ['_Physical:_ ', '_Mental:_   ']
                 for t in range(0, len(self.stress)):
-                    for s in range(0, len(self.stress[t])):
-                        stress[t] += f' {self.stress[t][s][1]}'
+                    # Ensure the number of stress titles match the number of stres tracks
+                    if len(stress) > t:
+                        for s in range(0, len(self.stress[t])):
+                            stress[t] += f' {self.stress[t][s][1]}'
                 stress_string = self.sep() + self.sep().join(stress)
         return f'{self.nl()}{self.nl()}{stress_name}{stress_string}' if stress_string else ''
 

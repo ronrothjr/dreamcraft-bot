@@ -87,6 +87,18 @@ class ChannelCommand():
             return messages
         except Exception as err:
             traceback.print_exc()
+            # Log every error
+            channel_svc.log(
+                str(self.channel.id) if self.channel else str(self.user.id),
+                self.channel.name if self.channel else self.user.name,
+                str(self.user.id),
+                self.guild.name,
+                'Error',
+                {
+                    'command': self.command,
+                    'args': self.args,
+                    'traceback': traceback.format_exc()
+                }, 'created')
             return list(err.args)
 
     def chan(self, args):

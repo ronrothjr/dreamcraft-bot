@@ -8,6 +8,8 @@ from utils import T
 
 class User(Document):
     name = StringField(required=True)
+    discriminator = StringField()
+    display_name = StringField()
     guild = StringField(required=True)
     role = StringField()
     active_character = StringField()
@@ -24,9 +26,13 @@ class User(Document):
     updated_by = StringField()
     updated = DateTimeField(required=True)
 
-    def create_new(self, name, guild):
+    def create_new(self, name, guild, discriminator=None, display_name=None):
         self.guild = guild
         self.name = name
+        if discriminator:
+            self.discriminator = discriminator
+        if display_name:
+            self.display_name = display_name
         self.created = T.now()
         self.updated = T.now()
         self.save()
@@ -46,10 +52,15 @@ class User(Document):
         character = cls.filter(id=ObjectId(id)).first()
         return character
 
-    def get_or_create(self, name, guild):
+    def get_or_create(self, name, guild, discriminator=None, display_name=None):
         user = self.find(name, guild)
         if user is None:
-            user = self.create_new(name, guild)
+            user = self.create_new(name, guild, discriminator, display_name)
+        elif discriminator and not user.discriminator:
+            user.discriminator = discriminator
+            user.display_name = display_name
+            user.updated = T.now()
+            user.save()
         return user
 
     def set_active_character(self, character):

@@ -8,8 +8,10 @@ class Guild(object):
         self.name = guild_name
 
 class Author(object):
-    def __init__(self, author_name):
+    def __init__(self, author_name, discriminator, display_name):
         self.name = author_name
+        self.discriminator = discriminator
+        self.display_name = display_name
 
 class Type(object):
     def __init__(self, name):
@@ -21,9 +23,9 @@ class CTXChannel(object):
         self.type = Type('public')
 
 class CTX(object):
-    def __init__(self, guild_name, author_name, channel_name):
+    def __init__(self, guild_name, author_name, channel_name, discriminator, display_name):
         self.guild = Guild(guild_name)
-        self.author = Author(author_name)
+        self.author = Author(author_name, discriminator, display_name)
         self.channel = CTXChannel(channel_name)
         self.sent = []
 

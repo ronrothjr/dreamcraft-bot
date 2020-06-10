@@ -6,10 +6,10 @@ import unittest
 from handlers import DreamcraftHandler
 from mocks import CTX
 
-ctx1 = CTX('Test Guild 1', 'Test User 1', 'bot_testing')
-ctx2 = CTX('Test Guild 1', 'Test User 2', 'bot_testing')
-ctx3 = CTX('Test Guild 2', 'Test User 1', 'bot_spamming')
-ctx4 = CTX('Test Guild 3', 'Test User 3', 'bot_spamming')
+ctx1 = CTX('Test Guild 1', 'Test User 1', 'bot_testing', '1111', 'test_user_1')
+ctx2 = CTX('Test Guild 1', 'Test User 2', 'bot_testing', '2222', 'test_user_2')
+ctx3 = CTX('Test Guild 2', 'Test User 1', 'bot_spamming', '1111', 'test_user_1')
+ctx4 = CTX('Test Guild 3', 'Test User 3', 'bot_spamming', '4444', 'test_user_4')
 
 class TestDreamcraftBotE2E(unittest.TestCase):
 
@@ -47,6 +47,12 @@ class TestDreamcraftBotE2E(unittest.TestCase):
     def test_user_setup(self):
         self.send_and_validate_commands(ctx1, [
             {
+                'args': [('user', 'timezone', 'US/')],
+                'assertions': [
+                    ['Time zone search \'us/\' returned more than one. Try one of these:```css', 'should display list of other searches']
+                ]
+            },
+            {
                 'args': [('user', 'timezone', 'America/New_York')],
                 'assertions': [
                     ['Saved time zone as ***America/New_York***', 'should save user time_zone as New York']
@@ -57,12 +63,23 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                 'assertions': [
                     ['***Contact:*** _Reddit - u/ensosati_', 'should save user contact info']
                 ]
-            }
-        ])
-
-    def test_user_2_setup(self):
-        self.send_and_validate_commands(ctx2, [
+            },
             {
+                'cts': ctx2,
+                'args': [('user', 'timezone', 'America/New_York')],
+                'assertions': [
+                    ['Saved time zone as ***America/New_York***', 'should save user time_zone as New York']
+                ]
+            },
+            {
+                'cts': ctx3,
+                'args': [('user', 'timezone', 'America/New_York')],
+                'assertions': [
+                    ['Saved time zone as ***America/New_York***', 'should save user time_zone as New York']
+                ]
+            },
+            {
+                'cts': ctx4,
                 'args': [('user', 'timezone', 'America/New_York')],
                 'assertions': [
                     ['Saved time zone as ***America/New_York***', 'should save user time_zone as New York']
@@ -71,7 +88,19 @@ class TestDreamcraftBotE2E(unittest.TestCase):
         ])
 
     def test_npc_character_creation(self):
-        self.send_and_validate_commands(ctx2, [  
+        self.send_and_validate_commands(ctx2, [
+            {
+                'args': [('r',)],
+                'assertions': [
+                    ['No active character. Try this to create/select one: ```css\n.d c CHARACTER_NAME```', 'Should include instructions to create character']
+                ]
+            },
+            {
+                'args': [('s',)],
+                'assertions': [
+                    ['No active scenario. Try this:```css\n.d scenario SCENARIO_NAME```', 'Should include instructions to create scenario']
+                ]
+            },
             {
                 'args': [('c',)],
                 'assertions': [
@@ -80,7 +109,13 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                 ]
             },
             {
-                'args': [('npc', 'Test', 'NPC')],
+                'args': [('undo','list')],
+                'assertions': [
+                    ['_args:_ [\'c\']', 'should display command in log']
+                ]
+            },
+            {
+                'args': [('c', 'npc', 'Test', 'NPC')],
                 'assertions': [
                     ['Create a new CHARACTER named ***Test NPC***', 'Should ask Create Test NPC question']
                 ]
@@ -330,6 +365,16 @@ class TestDreamcraftBotE2E(unittest.TestCase):
             }
         ])
 
+    def test_command_logging(self):
+        self.send_and_validate_commands(ctx1, [
+            {
+                'args': [('undo','list')],
+                'assertions': [
+                    ['Command', 'should display comand in log']
+                ]
+            }
+        ])
+
     def test_session_creation(self):
         self.send_and_validate_commands(ctx1, [
             {
@@ -364,6 +409,12 @@ class TestDreamcraftBotE2E(unittest.TestCase):
 
     def test_scenario_creation(self):
         self.send_and_validate_commands(ctx1, [
+            {
+                'args': [('s', 'Test Scene')],
+                'assertions': [
+                    ['No active scenario. Try this:```css\n.d scenario SCENARIO_NAME```', 'Should include instructions to create scenario']
+                ]
+            },
             {
                 'args': [('scenario',)],
                 'assertions': [
@@ -790,6 +841,14 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                     ['***Test Character 1*** restored', 'should restore \'Test Character 1\''],
                     ['***Test Aspect 1*** _(Aspect)_', 'should have Test Aspect 1'],
                     ['***Test Stunt 1*** _(Active)_  _(Stunt)_', 'should have Test Stunt 1']
+                ]
+            },
+            {
+                'args': [
+                    ('log', 'errors')
+                ],
+                'assertions': [
+                    ['Error', 'should show error in undo list']
                 ]
             }
         ])

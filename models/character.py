@@ -284,7 +284,7 @@ class Character(Document):
             available.append(f'***{TextUtils.clean(self.high_concept)}*** (High Concept of _\'{self.name}\'_)')
         if self.trouble:
             available.append(f'***{TextUtils.clean(self.trouble)}*** (Trouble of _\'{self.name}\'_)')
-        if self.category == 'Aspect' or (self.char and self.category == 'Stunt' and str(self.id) == str(char.id)):
+        if self.category == 'Aspect' or (char and self.category == 'Stunt' and str(self.id) == str(char.id)):
             parent_string = f' of ***{parent.name}***' if parent else ''
             available.append(f'***{TextUtils.clean(self.name)}*** ({self.category}{parent_string})')
         return available

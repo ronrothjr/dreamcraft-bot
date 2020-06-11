@@ -79,7 +79,7 @@ class RollCommand():
         self.char = Character().get_by_id(self.user.active_character) if self.user and self.user.active_character else None
         self.target = Character().get_by_id(self.char.active_target) if self.char and self.char.active_target else None
         self.targeted_by = Character().get_by_id(self.char.active_target_by) if self.char and self.char.active_target_by else None
-        self.skill = self.args[0] if len(self.args) > 0 else ''
+        self.skill = ''
         self.messages = []
         self.invokes = []
         self.compels = []
@@ -238,8 +238,7 @@ class RollCommand():
         self.save_char(self.char)
         messages.extend(self.add_chars_to_engagement())
         self.command = 'roll'
-        self.args = ('roll',) + self.args[1:]
-        self.skill = self.args[1] if len(self.args) > 0 else ''
+        self.args = self.args[1:]
         roll_str = self.roll()
         messages.extend(roll_str)
         return messages
@@ -258,8 +257,6 @@ class RollCommand():
         self.char.active_action = 'Defend'
         self.save_char(self.char)
         self.command = 'roll'
-        self.args = ('roll',) + self.args
-        self.skill = self.args[1] if len(self.args) > 0 else ''
         roll_str = self.roll()
         messages.extend(roll_str)
         return messages
@@ -272,6 +269,7 @@ class RollCommand():
         list(str) - the response messages string array
         """
 
+        self.skill = self.args[0] if len(self.args) > 0 and self.args[0].lower() not in ['i','invoke','c','compel'] else ''
         if len(self.args) > 0 and self.args[0].lower() in ['help','h']:
             return self.help()
         if not self.char:
@@ -741,7 +739,7 @@ class RollCommand():
         str - the skill matching the skill attribut search text
         """
 
-        if self.skill !='':
+        if self.skill:
             if self.char.use_approaches:
                 skill_name = [s for s in APPROACHES if self.skill[0:2].lower() == s[0:2].lower()]
             else:

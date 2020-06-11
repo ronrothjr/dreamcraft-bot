@@ -606,31 +606,32 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                     ['***Test Scene Aspect*** (Aspect of ***Test Zone 1***)', 'should show \'Test Scene Aspect\' from \'Test Zone 1\''],
                     ['***Test Stunt*** (Stunt of ***Test NPC***)', 'should not show \'Test Stunt\' from \'Test NPC\'']
                 ]
-            } # ,
-            # {
-            #     'args': [('attack', 'NPC', 'Forceful')],
-            #     'assertions': [
-            #         ['***Test NPC*** faces', 'should display \'Test NPC\' facing an attack'],
-            #         ['attack from ***Test Character 1***', 'should display an attack from \'Test Character 1\'']
-            #     ]
-            # },
-            # {
-            #     'ctx': ctx2,
-            #     'args': [
-            #         ('c', 'npc', 'Test NPC'),
-            #         ('defend', 'Forceful')
-            #     ],
-            #     'assertions': [
-            #         [' shifts to absorb', 'should display \'Test NPC\' rolling with shifts to absorb']
-            #     ]
-            # },
-            # {
-            #     'ctx': ctx2,
-            #     'args': [('c', 'st', 'Physical')],
-            #     'assertions': [
-            #         [' left to absorb.', 'should display remaining shifts to absorb']
-            #     ]
-            # }
+            },
+            {
+                'args': [('attack', 'NPC', 'Forceful')],
+                'assertions': [
+                    ['***Test NPC*** faces', 'should display \'Test NPC\' facing an attack'],
+                    ['attack from ***Test Character 1***', 'should display an attack from \'Test Character 1\'']
+                ]
+            },
+            {
+                'ctx': ctx2,
+                'args': [
+                    ('c', 'npc', 'Test NPC'),
+                    ('defend',),
+                    ('defend','Forceful')
+                ],
+                'assertions': [
+                    [' shifts to absorb', 'should display \'Test NPC\' rolling with shifts to absorb']
+                ]
+            },
+            {
+                'ctx': ctx2,
+                'args': [('c', 'st', 'Physical')],
+                'assertions': [
+                    [' left to absorb.', 'should display remaining shifts to absorb']
+                ]
+            }
         ])
 
     def test_end_delete_components(self):

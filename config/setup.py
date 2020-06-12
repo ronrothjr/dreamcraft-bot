@@ -34,7 +34,11 @@ class Setup():
             Reroll the character\'s last roll```css\n.d re (i)nvoke {aspect} (+2|reroll) [...(i)nvoke {aspect} (+2|reroll)]```\n\
             Display invocable/compelable aspects```css\n.d (av)ailable```\n\
             Invoke an aspect and uses the active character\'s fate point(s)```css\n.d (i)nvoke {aspect} (+2|reroll) [...(i)invoke {aspect} (+2|reroll)]```\n\
-            Compel aspect(s) and grants the active character a fate point```css\n.d compel {aspect} [...(c)compel {aspect}]```'
+            Compel aspect(s) and grants the active character a fate point```css\n.d compel {aspect} [...(c)compel {aspect}]```\n\
+            Attack another character```css\n.d attack "Character Name" Forceful invoke "Man of Steel"```\n\
+            Defend an attack```css\n.d defend /* regular defense roll */\n.d defend Quick /* defense roll with Quick bonus */\n.d defend exact +0 /* defend with a static roll of Mediocre (+0) */```\n\
+            Create a boost from a Tie or Succeed with Style outcome```css\n.d boost I Got You Now```\n\
+            Takeout a character that cannot absorb stress from an attack```css\n.d npc Mook 1\n.d takeout```'
 
     user_help = '.d u help - display user help\n\
             \n***User Setup:***\n\

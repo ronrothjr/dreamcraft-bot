@@ -7,8 +7,8 @@ import random
 import copy
 from bson.objectid import ObjectId
 from models import Channel, Scenario, Scene, Zone, Engagement, Exchange, User, Character
-from commands import CharacterCommand
-from services import EngagementService, ExchangeService, CharacterService
+from commands import CharacterCommand, SceneCommand, ZoneCommand
+from services import EngagementService, ExchangeService, CharacterService, SceneService
 from config.setup import Setup
 from utils import T
 import inflect
@@ -17,6 +17,7 @@ p = inflect.engine()
 engagement_svc = EngagementService()
 exchange_svc = ExchangeService()
 char_svc = CharacterService()
+scene_svc = SceneService()
 SETUP = Setup()
 ROLL_HELP = SETUP.roll_help
 APPROACHES = SETUP.approaches
@@ -34,6 +35,7 @@ class RollCommand():
         reroll, re - reroll a previous roll with additional invoke/compel options
         attack, att - attack another roll within a scene and roll
         defend, def - defend from an attack by another roll within the scene and roll
+        takeout, out - forcibly remove a character from an engagement
         boost - claim a boost after rolling a tie, succeed, or succeed with style
         available, avail, av - display a list of available aspects and stunts to invoke
     """
@@ -110,6 +112,8 @@ class RollCommand():
                 'defend': self.defend,
                 'def': self.defend,
                 'boost': self.boost,
+                'takeout': self.takeout,
+                'out': self.takeout,
                 'available': self.show_available,
                 'avail': self.show_available,
                 'av': self.show_available
@@ -341,6 +345,21 @@ class RollCommand():
                 self.char.last_roll = last_roll
                 char_svc.save(self.char, self.user)
                 self.messages.append(f'{p.no("shift", shifts_remaining)} left to absorb.')
+        return self.messages
+
+    def takeout(self):
+        """Forcibly remove a character from a conflict
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
+        if not self.char:
+            raise Exception('No active character. Try this to create/select one: ```css\n.d c CHARACTER_NAME```')
+        self.messages.append(f'***{self.char.name}*** was taken out.')
+        cmd = SceneCommand(self.parent, self.ctx, ('s', 'exit'), self.guild, self.user, self.channel)
+        self.messages.extend(cmd.run())
         return self.messages
 
     def roll(self, exact_roll=None):

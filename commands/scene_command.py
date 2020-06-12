@@ -736,6 +736,7 @@ class SceneCommand():
         list(str) - the response messages string array
         """
 
+        messages = []
         self.check_scene()
         if not self.char and not self.char.category == 'Character':
             raise Exception(f'You have no active character.```css\n.d c CHARACTER_NAME```')      
@@ -743,7 +744,12 @@ class SceneCommand():
             raise Exception(f'***{self.sc.name}*** has not yet started. You may not enter.')
         if self.sc.ended_on:
             raise Exception(f'***{self.sc.name}*** has already ended. You missed it.')
-        messages = self.player(('p', 'delete', self.char.name))
+        zones = list(Zone.filter(scene_id=str(self.sc.id), archived=False))
+        leaving = [z for z in zones if str(self.char.id) in z.characters]
+        for l in leaving:
+            messages.extend(zone_svc.player(('p', 'delete', self.char.name), self.channel, l, self.user))
+            self.note(('note', f'***{self.char.name}*** exits the _{l.name}_ zone'))
+        messages.extend(self.player(('p', 'delete', self.char.name)))
         self.note(('note', f'***{self.char.name}*** exits the _{self.sc.name}_ scene'))
         return messages
         

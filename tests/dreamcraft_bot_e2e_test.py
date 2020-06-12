@@ -679,10 +679,10 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                 ]
             },
             {
-                'args': [('attack', 'NPC', 'exact', '+0', 'Forceful', 'invoke', 'Ropes')],
+                'ctx': ctx2,
+                'args': [('takeout',)],
                 'assertions': [
-                    ['***Test NPC*** faces', 'should display \'Test NPC\' facing an attack'],
-                    ['attack from ***Test Character 1***', 'should display an attack from \'Test Character 1\'']
+                    ['***Test NPC*** was taken out.', 'should take out \'Test NPC\'']
                 ]
             }
         ])

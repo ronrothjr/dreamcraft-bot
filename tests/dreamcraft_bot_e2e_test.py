@@ -614,7 +614,7 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                 ]
             },
             {
-                'args': [('attack', 'NPC', 'exact', '+0', 'Forceful')],
+                'args': [('attack', 'NPC', 'exact', '+1', 'Forceful')],
                 'assertions': [
                     ['***Test NPC*** faces', 'should display \'Test NPC\' facing an attack'],
                     ['attack from ***Test Character 1***', 'should display an attack from \'Test Character 1\'']
@@ -624,7 +624,7 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                 'ctx': ctx2,
                 'args': [
                     ('c', 'npc', 'Test NPC'),
-                    ('defend', 'exact', '+1', 'Forceful')
+                    ('defend', 'exact', '+0', 'Forceful')
                 ],
                 'assertions': [
                     [' shifts to absorb', 'should display \'Test NPC\' rolling with shifts to absorb'],
@@ -635,7 +635,7 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                 'args': [('boost', 'Got \'em on the Ropes')],
                 'assertions': [
                     ['***Got \'em on the Ropes*** _(Active)_  _(Boost)_  _(Aspect)_', 'should add boost aspect'],
-                    ['4 shifts left to absorb.', 'should display remaining shifts']
+                    ['6 shifts left to absorb.', 'should display remaining shifts']
                 ]
             },
             {
@@ -648,7 +648,7 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                 'ctx': ctx2,
                 'args': [('c', 'con', 'Wounded')],
                 'assertions': [
-                    ['2 shifts left to absorb.', 'should display remaining shifts to absorb']
+                    ['4 shifts left to absorb.', 'should display remaining shifts to absorb']
                 ]
             },
             {
@@ -662,7 +662,7 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                 'ctx': ctx2,
                 'args': [('c', 'st', 'Physical', '1')],
                 'assertions': [
-                    ['1 shift left to absorb.', 'should display remaining shifts to absorb']
+                    ['3 shifts left to absorb.', 'should display remaining shifts to absorb']
                 ]
             },
             {
@@ -675,7 +675,7 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                 'ctx': ctx2,
                 'args': [('c', 'st', 'Physical', '1')],
                 'assertions': [
-                    ['no shifts left to absorb.', 'should display no shifts left to absorb']
+                    ['2 shifts left to absorb.', 'should display 1 shift left to absorb']
                 ]
             },
             {

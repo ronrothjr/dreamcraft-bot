@@ -357,9 +357,21 @@ class RollCommand():
 
         if not self.char:
             raise Exception('No active character. Try this to create/select one: ```css\n.d c CHARACTER_NAME```')
+        if not self.targeted_by:
+            raise Exception(f'***{self.char}*** is not being targeted in an attack.')
+        if self.targeted_by.last_roll and self.targeted_by.last_roll['shifts_remaining'] == 0:
+            raise Exception(f'***{self.char.name}*** will not be taken out because there are no shifts remaining.')
         self.messages.append(f'***{self.char.name}*** was taken out.')
         cmd = SceneCommand(self.parent, self.ctx, ('s', 'exit'), self.guild, self.user, self.channel)
         self.messages.extend(cmd.run())
+        if self.char and self.char.active_action == 'Defend':
+            self.char.active_action = ''
+            self.char.active_target_by = ''
+            char_svc.save(self.char, self.user)
+        self.targeted_by.active_action = ''
+        self.targeted_by.active_target = ''
+        char_svc.save(self.targeted_by, self.user)
+        self.messages.append(f'Attack from ***{self.targeted_by.name}*** has been resolved.')
         return self.messages
 
     def roll(self, exact_roll=None):

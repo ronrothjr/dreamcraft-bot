@@ -9,7 +9,7 @@ from mocks import CTX
 ctx1 = CTX('Test Guild 1', 'Test User 1', 'bot_testing', '1111', 'test_user_1')
 ctx2 = CTX('Test Guild 1', 'Test User 2', 'bot_testing', '2222', 'test_user_2')
 ctx3 = CTX('Test Guild 2', 'Test User 1', 'bot_spamming', '1111', 'test_user_1')
-ctx4 = CTX('Test Guild 3', 'Test User 3', 'bot_spamming', '4444', 'test_user_4')
+ctx4 = CTX('Test Guild 3', 'Test User 3', 'bot_spamming', '3333', 'test_user_3')
 
 class TestDreamcraftBotE2E(unittest.TestCase):
 
@@ -137,6 +137,12 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                 'args': [('st', 't', '2', 'Physical')],
                 'assertions': [
                     ['**_Physical_**  [   ]', 'Should add custom Physical stress track']
+                ]
+            },
+            {
+                'args': [('con', 't', '2', 'Wounded')],
+                'assertions': [
+                    ['[   ] _2_ _Wounded_', 'Should add custom Wounded condition track']
                 ]
             },
             {
@@ -608,7 +614,7 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                 ]
             },
             {
-                'args': [('attack', 'NPC', 'Forceful')],
+                'args': [('attack', 'NPC', 'exact', '+0', 'Forceful')],
                 'assertions': [
                     ['***Test NPC*** faces', 'should display \'Test NPC\' facing an attack'],
                     ['attack from ***Test Character 1***', 'should display an attack from \'Test Character 1\'']
@@ -618,18 +624,65 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                 'ctx': ctx2,
                 'args': [
                     ('c', 'npc', 'Test NPC'),
-                    ('defend',),
-                    ('defend','Forceful')
+                    ('defend', 'exact', '+1', 'Forceful')
                 ],
                 'assertions': [
-                    [' shifts to absorb', 'should display \'Test NPC\' rolling with shifts to absorb']
+                    [' shifts to absorb', 'should display \'Test NPC\' rolling with shifts to absorb'],
+                    ['option to take a boost in exchange for one shift', 'should allow succeed with style boost']
+                ]
+            },
+            {
+                'args': [('boost', 'Got \'em on the Ropes')],
+                'assertions': [
+                    ['***Got \'em on the Ropes*** _(Active)_  _(Boost)_  _(Aspect)_', 'should add boost aspect'],
+                    ['4 shifts left to absorb.', 'should display remaining shifts']
+                ]
+            },
+            {
+                'args': [('boost', 'Got \'em on the Ropes')],
+                'assertions': [
+                    ['boost has already been claimed', 'should warn of boost already being claimed']
                 ]
             },
             {
                 'ctx': ctx2,
-                'args': [('c', 'st', 'Physical')],
+                'args': [('c', 'con', 'Wounded')],
                 'assertions': [
-                    [' left to absorb.', 'should display remaining shifts to absorb']
+                    ['2 shifts left to absorb.', 'should display remaining shifts to absorb']
+                ]
+            },
+            {
+                'ctx': ctx2,
+                'args': [('c', 'st', 'Physical', '3')],
+                'assertions': [
+                    ['cannot absorb', 'should display cannot absorb warning']
+                ]
+            },
+            {
+                'ctx': ctx2,
+                'args': [('c', 'st', 'Physical', '1')],
+                'assertions': [
+                    ['1 shift left to absorb.', 'should display remaining shifts to absorb']
+                ]
+            },
+            {
+                'args': [('attack', 'NPC', 'Forceful')],
+                'assertions': [
+                    ['***Test Character 1*** cannot attack', 'should display cannot attack warning']
+                ]
+            },
+            {
+                'ctx': ctx2,
+                'args': [('c', 'st', 'Physical', '1')],
+                'assertions': [
+                    ['no shifts left to absorb.', 'should display no shifts left to absorb']
+                ]
+            },
+            {
+                'args': [('attack', 'NPC', 'exact', '+0', 'Forceful', 'invoke', 'Ropes')],
+                'assertions': [
+                    ['***Test NPC*** faces', 'should display \'Test NPC\' facing an attack'],
+                    ['attack from ***Test Character 1***', 'should display an attack from \'Test Character 1\'']
                 ]
             }
         ])

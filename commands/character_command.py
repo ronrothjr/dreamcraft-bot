@@ -150,8 +150,6 @@ class CharacterCommand():
                 'f': self.fate,
                 'aspect': self.aspect,
                 'a': self.aspect,
-                'boost': self.aspect,
-                'b': self.aspect,
                 'approach': self.approach,
                 'app': self.approach,
                 'skill': self.skill,
@@ -1327,8 +1325,16 @@ class CharacterCommand():
         # Save the aspect as a character with this character as a parent
         # This alows editing an aspect as a character
         else:
-            aspect = ' '.join(args[1:])
+            is_boost = False
+            if args[1].lower() == 'boost':
+                is_boost = True
+                aspect = ' '.join(args[2:])
+            else:
+                aspect = ' '.join(args[1:])
             self.asp = Character().get_or_create(self.user, aspect, self.guild.name, self.char, 'Aspect')
+            if is_boost:
+                self.asp.is_boost = True
+                char_svc.save(self.asp, self.user)
             self.char.active_aspect = str(self.asp.id)
             char_svc.save(self.char, self.user)
             messages.append(self.char.get_string_aspects(self.user) + '\n')

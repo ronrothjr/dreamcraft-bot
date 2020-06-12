@@ -122,6 +122,7 @@ class DreamcraftHandler():
                 'attk': RollCommand,
                 'defend': RollCommand,
                 'def': RollCommand,
+                'boost': RollCommand,
                 'roll': RollCommand,
                 'r': RollCommand,
                 'reroll': RollCommand,

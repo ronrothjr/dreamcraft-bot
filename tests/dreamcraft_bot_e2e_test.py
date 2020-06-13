@@ -115,16 +115,16 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                 ]
             },
             {
-                'args': [('c', 'npc', 'Test', 'NPC')],
+                'args': [('c', 'npc', 'Test NPC 1')],
                 'assertions': [
-                    ['Create a new CHARACTER named ***Test NPC***', 'Should ask Create Test NPC question']
+                    ['Create a new CHARACTER named ***Test NPC 1***', 'Should ask Create Test NPC 1 question']
                 ]
             },
             {
                 'args': [('y',)],
                 'assertions': [
                     ['YOU ARE CURRENTLY EDITING', 'Should be editing a character'],
-                    ['***Test NPC*** _(Active)_  _(Nonplayer Character)_', 'Test NPC should be the active character']
+                    ['***Test NPC 1*** _(Active)_  _(Nonplayer Character)_', 'Test NPC 1 should be the active character']
                 ]
             },
             {
@@ -552,18 +552,18 @@ class TestDreamcraftBotE2E(unittest.TestCase):
             {
                 'ctx': ctx2,
                 'args': [
-                    ('c', 'npc', 'Test NPC'),
+                    ('c', 'npc', 'Test NPC 1'),
                     ('scene', 'enter')
                 ],
                 'assertions': [
-                    ['Added ***Test NPC*** to _Test Scene_ scene', 'should add \'Test NPC\' to \'Test Scene\'']
+                    ['Added ***Test NPC 1*** to _Test Scene_ scene', 'should add \'Test NPC 1\' to \'Test Scene\'']
                 ]
             },
             {
                 'ctx': ctx2,
                 'args': [('scene', 'move', 'Test Zone 1')],
                 'assertions': [
-                    ['***Test NPC*** is already in the _Test Zone 1_ zone', 'should show \'Test NPC\' is already in \'Test Zone 1\'']
+                    ['***Test NPC 1*** is already in the _Test Zone 1_ zone', 'should show \'Test NPC 1\' is already in \'Test Zone 1\'']
                 ]
             },
             {
@@ -585,7 +585,7 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                 'ctx': ctx2,
                 'args': [('e', 'oppose', 'NPC')],
                 'assertions': [
-                    ['Added ***Test NPC*** to the opposition in the _Test Conflict_ engagement', 'should add \'Test NPC\' to the conflict']
+                    ['Added ***Test NPC 1*** to the opposition in the _Test Conflict_ engagement', 'should add \'Test NPC 1\' to the conflict']
                 ]
             },
             {
@@ -602,7 +602,11 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                 'assertions': [
                     ['***Test Character 1*** is already in the _Test Zone 1_ zone', 'should show \'Test Character 1\' is already in \'Test Zone 1\'']
                 ]
-            },
+            }
+        ])
+
+    def test_actions(self):
+        self.send_and_validate_commands(ctx1, [
             {
                 'args': [
                     ('c','Test Character 1'),
@@ -610,24 +614,24 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                 ],
                 'assertions': [
                     ['***Test Scene Aspect*** (Aspect of ***Test Zone 1***)', 'should show \'Test Scene Aspect\' from \'Test Zone 1\''],
-                    ['***Test Stunt*** (Stunt of ***Test NPC***)', 'should not show \'Test Stunt\' from \'Test NPC\'']
+                    ['***Test Stunt*** (Stunt of ***Test NPC 1***)', 'should not show \'Test Stunt\' from \'Test NPC 1\'']
                 ]
             },
             {
                 'args': [('attack', 'NPC', 'exact', '+1', 'Forceful')],
                 'assertions': [
-                    ['***Test NPC*** faces', 'should display \'Test NPC\' facing an attack'],
+                    ['***Test NPC 1*** faces', 'should display \'Test NPC 1\' facing an attack'],
                     ['attack from ***Test Character 1***', 'should display an attack from \'Test Character 1\'']
                 ]
             },
             {
                 'ctx': ctx2,
                 'args': [
-                    ('c', 'npc', 'Test NPC'),
+                    ('c', 'npc', 'Test NPC 1'),
                     ('defend', 'exact', '+0', 'Forceful')
                 ],
                 'assertions': [
-                    [' shifts to absorb', 'should display \'Test NPC\' rolling with shifts to absorb'],
+                    [' shifts to absorb', 'should display \'Test NPC 1\' rolling with shifts to absorb'],
                     ['option to take a boost in exchange for one shift', 'should allow succeed with style boost']
                 ]
             },
@@ -682,9 +686,43 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                 'ctx': ctx2,
                 'args': [('takeout',)],
                 'assertions': [
-                    ['***Test NPC*** was taken out.', 'should take out \'Test NPC\'']
+                    ['***Test NPC 1*** was taken out.', 'should take out \'Test NPC 1\'']
                 ]
-            }
+            } # ,
+            # {
+            #     'ctx': ctx2,
+            #     'args': [
+            #         ('c', 'npc', 'Test NPC 2'),
+            #         ('y',),
+            #         ('approach', 'Fo', '-2'),
+            #         ('st', 't', '2', 'Physical'),
+            #         ('con', 't', '2', 'Wounded'),
+            #         ('aspect', 'freeinvoke', 'Test Aspect 3'),
+            #         ('aspect', 'freeinvoke', '2', 'Test Aspect 4'),
+            #         ('stunt', 'Test Stunt 2'),
+            #         ('scene', 'enter')
+            #     ],
+            #     'assertions': [
+            #         ['**_Free Invokes_**  [   ]  [   ]', 'should add 2 \'Free Invokes\' to \'Test Aspect 4\'']
+            #     ]
+            # },
+            # {
+            #     'args': [('attack', 'Test NPC 2', 'exact', '+1', 'Forceful')],
+            #     'assertions': [
+            #         ['***Test NPC 2*** faces', 'should display \'Test NPC 2\' facing an attack'],
+            #         ['attack from ***Test Character 1***', 'should display an attack from \'Test Character 1\'']
+            #     ]
+            # },
+            # {
+            #     'ctx': ctx2,
+            #     'args': [
+            #         ('defend', 'exact', '+0', 'Forceful', 'invoke', 'Test Aspect 3')
+            #     ],
+            #     'assertions': [
+            #         [' shifts to absorb', 'should display \'Test NPC 2\' rolling with shifts to absorb'],
+            #         ['option to take a boost in exchange for one shift', 'should allow succeed with style boost']
+            #     ]
+            # }
         ])
 
     def test_end_delete_components(self):
@@ -701,11 +739,11 @@ class TestDreamcraftBotE2E(unittest.TestCase):
             {
                 'ctx': ctx2,
                 'args': [
-                    ('c', 'npc', 'Test NPC'),
+                    ('c', 'npc', 'Test NPC 1'),
                     ('scene', 'exit')
                 ],
                 'assertions': [
-                    ['***Test NPC*** removed from _Test Scene_', 'should remove \'Test NPC\' from \'Test Scene\'']
+                    ['***Test NPC 1*** removed from _Test Scene_', 'should remove \'Test NPC 1\' from \'Test Scene\'']
                 ]
             },
             {
@@ -824,12 +862,12 @@ class TestDreamcraftBotE2E(unittest.TestCase):
             {
                 'ctx': ctx2,
                 'args': [
-                    ('c', 'npc', 'Test NPC'),
+                    ('c', 'npc', 'Test NPC 1'),
                     ('c', 'delete'),
                     ('y',)
                 ],
                 'assertions': [
-                    ['***Test NPC*** removed', 'should archive \'Text NPC\'']
+                    ['***Test NPC 1*** removed', 'should archive \'Text NPC\'']
                 ]
             },
             {

@@ -7,8 +7,8 @@ import random
 import copy
 from bson.objectid import ObjectId
 from models import Channel, Scenario, Scene, Zone, Engagement, Exchange, User, Character
-from commands import CharacterCommand
-from services import EngagementService, ExchangeService
+from commands import CharacterCommand, SceneCommand, ZoneCommand
+from services import EngagementService, ExchangeService, CharacterService, SceneService
 from config.setup import Setup
 from utils import T
 import inflect
@@ -16,6 +16,8 @@ p = inflect.engine()
 
 engagement_svc = EngagementService()
 exchange_svc = ExchangeService()
+char_svc = CharacterService()
+scene_svc = SceneService()
 SETUP = Setup()
 ROLL_HELP = SETUP.roll_help
 APPROACHES = SETUP.approaches
@@ -31,8 +33,13 @@ class RollCommand():
         help - display a set of instructions on RollCommand usage
         roll, r - roll fate dice with approach/skill and invoke/compel options
         reroll, re - reroll a previous roll with additional invoke/compel options
+        create, advantage - create a situational advantage or get free invokes on existing aspects
         attack, att - attack another roll within a scene and roll
         defend, def - defend from an attack by another roll within the scene and roll
+        overcome - overcome an obstacle or oposition and roll
+        takeout, out - forcibly remove a character from an engagement
+        boost - claim a boost after rolling a tie, succeed, or succeed with style
+        freeinvoke - claim free invoke from an action
         available, avail, av - display a list of available aspects and stunts to invoke
     """
 
@@ -79,7 +86,7 @@ class RollCommand():
         self.char = Character().get_by_id(self.user.active_character) if self.user and self.user.active_character else None
         self.target = Character().get_by_id(self.char.active_target) if self.char and self.char.active_target else None
         self.targeted_by = Character().get_by_id(self.char.active_target_by) if self.char and self.char.active_target_by else None
-        self.skill = self.args[0] if len(self.args) > 0 else ''
+        self.skill = ''
         self.messages = []
         self.invokes = []
         self.compels = []
@@ -103,10 +110,19 @@ class RollCommand():
                 'r': self.roll,
                 'reroll': self.roll,
                 're': self.roll,
+                'create': self.advantage,
+                'advantage': self.advantage,
+                'attack': self.attack,
+                'attack': self.attack,
                 'attack': self.attack,
                 'att': self.attack,
                 'defend': self.defend,
+                'overcome': self.overcome,
                 'def': self.defend,
+                'boost': self.boost,
+                'freeinvoke': self.freeinvoke,
+                'takeout': self.takeout,
+                'out': self.takeout,
                 'available': self.show_available,
                 'avail': self.show_available,
                 'av': self.show_available
@@ -151,7 +167,7 @@ class RollCommand():
 
         self.get_available_invokes()
         self.available_invokes = []
-        [self.available_invokes.extend(a['char'].get_available_aspects(a['parent'])) for a in self.available]
+        [self.available_invokes.extend(a['char'].get_available_aspects(a['parent'], self.char)) for a in self.available]
         if self.available_invokes:
             return ['**Available invokes:**\n        ' + '\n        '.join([a for a in self.available_invokes])]
         else:
@@ -176,11 +192,6 @@ class RollCommand():
 
     def add_chars_to_engagement(self):
         """If there is an engagement started, add characters being attacked or defending
-        
-        Parameters
-        ----------
-        args : list(str)
-            List of strings with subcommands
 
         Returns
         -------
@@ -198,15 +209,47 @@ class RollCommand():
                 if str(self.target.id) not in self.engagement.characters:
                     self.engagement.characters.append(str(self.target.id))
                     messages.append(f'Added ***{self.target.name}*** to _{self.engagement.name}_ engagement characters')
+                    engagement_svc.save(self.engagement, self.user)
             else:
-                if str(self.char.id) not in self.engagement.opposition:
-                    self.engagement.characters.append(str(self.char.id))
-                    messages.append(f'Added ***{self.char.name}*** to _{self.engagement.name}_ engagement characters')
-                if str(self.target.id) not in self.engagement.characters:
+                if str(self.target.id) not in self.engagement.opposition:
                     self.engagement.opposition.append(str(self.target.id))
-                    messages.append(f'Added ***{self.char.target}*** to _{self.engagement.name}_ engagement opposition')
-            engagement_svc.save(self.engagement, self.user)
+                    messages.append(f'Added ***{self.target.name}*** to _{self.engagement.name}_ engagement opposition')
+                if str(self.char.id) not in self.engagement.characters:
+                    self.engagement.characters.append(str(self.char.id))
+                    messages.append(f'Added ***{self.char.target}*** to _{self.engagement.name}_ engagement characters')
+                    engagement_svc.save(self.engagement, self.user)
         return messages
+
+    def check_unresolved_actions(self):
+        """If there are any unresolved actions and warn of them"""
+        messages = []
+        characters = []
+        if self.engagement and self.engagement.characters:
+            characters.extend(self.engagement.characters)
+        if self.engagement and self.engagement.opposition:
+            characters.extend(self.engagement.opposition)
+        if characters:
+            attackers = list(Character().filter(id__in=characters, active_action='Attack').all())
+            for a in attackers:
+                if a.last_roll and a.last_roll['shifts'] and a.last_roll['shifts_remaining']:
+                    target = Character().get_by_id(a.active_target)
+                    shifts_remaining = a.last_roll['shifts_remaining']
+                    messages.append('\n'.join([
+                        f'***{self.char.name}*** cannot attack.',
+                        f'{self.get_attack_text(a, target)} with {p.no("shift", shifts_remaining)} left to absorb.'
+                    ]))
+        if messages:
+            raise Exception('\n\n'.join(messages))
+
+    def advantage(self):
+        """Execute the advantage subcommand to create a situational advantage or get fre invokes on an existing one and roll for advantage
+        
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
+        raise Exception('Create Advantage action is not yet implemented')
 
     def attack(self):
         """Execute the attack subcommand to target another character and roll for attack
@@ -216,7 +259,9 @@ class RollCommand():
         list(str) - the response messages string array
         """
 
+        self.check_unresolved_actions()
         messages = self.conflict_check()
+        self
         if len(self.args) == 0:
             raise Exception('No target identified for your attack action')
         search = self.args[0]
@@ -238,9 +283,16 @@ class RollCommand():
         self.save_char(self.char)
         messages.extend(self.add_chars_to_engagement())
         self.command = 'roll'
-        self.args = ('roll',) + self.args[1:]
-        self.skill = self.args[1] if len(self.args) > 0 else ''
-        roll_str = self.roll()
+        # Allow for exact roll designation
+        if self.args[1] == 'exact' and len(self.args) > 2:
+            exact_roll = self.args[2]
+            self.args = self.args[3:] if len(self.args) > 3 else tuple()
+            self.invoke_index = [i for i in range(0, len(self.args)) if self.args[i] in ['invoke', 'i']]
+            self.compel_index = [i for i in range(0, len(self.args)) if self.args[i] in ['compel', 'c']]
+            roll_str = self.roll(exact_roll)
+        else:
+            self.args = self.args[1:]
+            roll_str = self.roll()
         messages.extend(roll_str)
         return messages
 
@@ -258,20 +310,127 @@ class RollCommand():
         self.char.active_action = 'Defend'
         self.save_char(self.char)
         self.command = 'roll'
-        self.args = ('roll',) + self.args
-        self.skill = self.args[1] if len(self.args) > 0 else ''
-        roll_str = self.roll()
+        # Allow for exact roll designation
+        if len(self.args) > 1 and self.args[0] == 'exact':
+            exact_roll = self.args[1]
+            self.args = self.args[2:] if len(self.args) > 2 else tuple()
+            self.invoke_index = [i for i in range(0, len(self.args)) if self.args[i] in ['invoke', 'i']]
+            self.compel_index = [i for i in range(0, len(self.args)) if self.args[i] in ['compel', 'c']]
+            roll_str = self.roll(exact_roll)
+        else:
+            roll_str = self.roll()
         messages.extend(roll_str)
         return messages
 
-    def roll(self):
-        """Roll the Dreamcreaft Bot Fate dice and process all subcommands
-        
+    def boost(self):
+        """Claim a boost generated by an attack, create advantage, or overcome roll"""
+
+        if not self.char:
+            raise Exception('No active character. Try this to create/select one: ```css\n.d c CHARACTER_NAME```')
+        if not self.char.last_roll:
+            raise Exception('You have not rolled. There is no boost to claim.')
+        if not self.char.active_action:
+            raise Exception('You have not taken any action. Try one of these:```\n.d attack "OPPONENT_NAME" "SKILL_NAME"```')
+        if 'outcome' not in self.char.last_roll:
+            raise Exception(f'The outcome of your \'{self.char.active_action}\' has not yet been determined.')
+        if self.char.active_action == 'Attack' and self.char.last_roll['outcome'] in ['Tie', 'Succeed with Style']:
+            outcome = self.char.last_roll['outcome']
+            if not self.args:
+                raise Exception(f'No name given to claim the boost from \'{outcome}\'.```css\n.d boost "BOOST_NAME"```')
+            cmd = CharacterCommand(self.parent, self.ctx, ('c', 'aspect', 'boost', ' '.join(self.args)), self.guild, self.user, self.channel, self.char)
+            self.messages.extend(cmd.run())
+
+            # Add boost from 'Tie' and resolve the action
+            if outcome == 'Tie':
+                if self.target and self.target.active_action == 'Defend':
+                    self.target.active_action = ''
+                    self.char.active_target_by = ''
+                    char_svc.save(self.target, self.user)
+                self.char.active_action = ''
+                self.char.active_target = ''
+                char_svc.save(self.char, self.user)
+                self.messages.append(f'Attack from ***{self.char.name}*** has been resolved.')
+
+            # Add boost from 'Succeed with Style' and decrement the shifts_remaining
+            if outcome == 'Succeed with Style':
+                last_roll = copy.deepcopy(self.char.last_roll)
+                if 'boost_claimed' in last_roll:
+                    raise Exception(f'The boost has already been claimed from \'{outcome}\'.')
+                if last_roll['shifts_remaining'] < 3:
+                    raise Exception(f'You do not have enough shifts to claim the boost from \'{outcome}\'.')
+                shifts_remaining = last_roll['shifts_remaining'] - 1
+                last_roll['shifts_remaining'] = shifts_remaining
+                last_roll['boost_claimed'] = True
+                self.char.last_roll = last_roll
+                char_svc.save(self.char, self.user)
+                self.messages.append(f'{p.no("shift", shifts_remaining)} left to absorb.')
+        return self.messages
+
+    def freeinvoke(self):
+        """Claim free invoke generated by an attack, create advantage, or overcome roll"""
+
+        if not self.char:
+            raise Exception('No active character. Try this to create/select one: ```css\n.d c CHARACTER_NAME```')
+        if not self.char.last_roll:
+            raise Exception('You have not rolled. There is no free invoke to claim.')
+        if not self.char.active_action:
+            raise Exception('You have not taken any action. Try one of these:```\n.d attack "OPPONENT_NAME" "SKILL_NAME"```')
+        if 'outcome' not in self.char.last_roll:
+            raise Exception(f'The outcome of your \'{self.char.active_action}\' has not yet been determined.')
+        if self.char.active_action == 'Advantage' and self.char.last_roll['outcome'] in ['Fail', 'Succeed', 'Succeed with Style']:
+            outcome = self.char.last_roll['outcome']
+            if not self.args:
+                raise Exception(f'No name given to claim the free invok(s) from \'{outcome}\'.```css\n.d freeinvoke "ASPECT NAME"```')
+            freeinvokes_num = 2 if outcome == 'Succeed with Style' else 1
+            cmd = CharacterCommand(self.parent, self.ctx, ('c', 'aspect', 'freeinvoke', freeinvokes_num, ' '.join(self.args)), self.guild, self.user, self.channel, self.char)
+            self.messages.extend(cmd.run())
+            self.char.active_action = ''
+            self.char.active_target = ''
+            char_svc.save(self.char, self.user)
+            self.messages.append(f'{self.char.active_action} from ***{self.char.name}*** has been resolved.')
+        return self.messages
+
+    def takeout(self):
+        """Forcibly remove a character from a conflict
+
         Returns
         -------
         list(str) - the response messages string array
         """
 
+        if not self.char:
+            raise Exception('No active character. Try this to create/select one: ```css\n.d c CHARACTER_NAME```')
+        if not self.targeted_by:
+            raise Exception(f'***{self.char}*** is not being targeted in an attack.')
+        if self.targeted_by.last_roll and self.targeted_by.last_roll['shifts_remaining'] == 0:
+            raise Exception(f'***{self.char.name}*** will not be taken out because there are no shifts remaining.')
+        self.messages.append(f'***{self.char.name}*** was taken out.')
+        cmd = SceneCommand(self.parent, self.ctx, ('s', 'exit'), self.guild, self.user, self.channel)
+        self.messages.extend(cmd.run())
+        if self.char and self.char.active_action == 'Defend':
+            self.char.active_action = ''
+            self.char.active_target_by = ''
+            char_svc.save(self.char, self.user)
+        self.targeted_by.active_action = ''
+        self.targeted_by.active_target = ''
+        char_svc.save(self.targeted_by, self.user)
+        self.messages.append(f'Attack from ***{self.targeted_by.name}*** has been resolved.')
+        return self.messages
+
+    def roll(self, exact_roll=None):
+        """Roll the Dreamcreaft Bot Fate dice and process all subcommands
+        
+        Paramenters
+        -----------
+        exact_roll : str
+            The string representation of the exact roll to replace the dice
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
+        self.skill = self.args[0] if len(self.args) > 0 and self.args[0].lower() not in ['i','invoke','c','compel'] else ''
         if len(self.args) > 0 and self.args[0].lower() in ['help','h']:
             return self.help()
         if not self.char:
@@ -289,7 +448,7 @@ class RollCommand():
         # Execute the roll command and apply fate point cost
         if self.command in ['roll', 'r']:
             self.roll_invokes = copy.deepcopy(self.invokes)
-            self.last_roll = self.roll_next()
+            self.last_roll = self.roll_next(exact_roll)
             self.char.last_roll = self.last_roll
             self.invokes_cost = sum([invoke['fate_points'] for invoke in self.invokes])
             self.messages.append(self.char.last_roll['roll_text'])
@@ -370,6 +529,10 @@ class RollCommand():
                 if invoke['stress_titles']:
                     for i in range(0, len(invoke['stress_titles'])):
                         self.absorb_invoke_stress(invoke['stress_titles'][i], invoke['stress'][i][0][0], invoke['stress_targets'][i])
+                # Remove invoked boost aspect
+                if invoke['is_boost']:
+                    cmd = CharacterCommand(self.parent, self.ctx, ('c', 'aspect', 'delete', invoke['aspect_name']), self.guild, self.user, self.channel, self.char)
+                    self.messages.extend(cmd.run())
             self.messages.append(self.char.get_string_fate())
 
     def absorb_invoke_stress(self, title, stress, target):
@@ -400,16 +563,21 @@ class RollCommand():
             raise Exception(*stress_messages)
         self.messages.extend(stress_messages)
 
+    def get_attack_text(self, char, target):
+        """Get the display text for an attack"""
+
+        attack_roll = char.last_roll['final_roll']
+        attack_roll_cleaned = str(attack_roll).replace('-','')
+        attack_roll_ladder = f'b{attack_roll_cleaned}' if '-' in str(attack_roll) else f'a{str(attack_roll)}'
+        attack_roll_str = attack_roll_ladder.replace('a','+').replace('b','-')
+        ladder_text = LADDER[attack_roll_ladder]
+        return f'***{target.name}*** faces {p.an(ladder_text)} ({attack_roll_str}) attack from ***{char.name}***'
+
     def resolve_attack(self):
         """Apply the attack action results and add it to the roll message response"""
 
         if self.target:
-            attack_roll = self.last_roll['final_roll']
-            attack_roll_cleaned = str(attack_roll).replace('-','')
-            attack_roll_ladder = f'b{attack_roll_cleaned}' if '-' in str(attack_roll) else f'a{str(attack_roll)}'
-            attack_roll_str = attack_roll_ladder.replace('a','+').replace('b','-')
-            ladder_text = LADDER[attack_roll_ladder]
-            self.messages.append(f'***{self.target.name}*** faces {p.an(ladder_text)} ({attack_roll_str}) attack from ***{self.char.name}***')
+            self.messages.append(self.get_attack_text(self.char, self.target))
 
     def resolve_defend(self):
         """Apply the defend action results and add it to the roll message response"""
@@ -421,11 +589,36 @@ class RollCommand():
             defense_roll_str = defense_roll_ladder.replace('a','+').replace('b','-')
             ladder_text = LADDER[defense_roll_ladder]
             self.targeted_by.last_roll['defense_roll'] = defense_roll
-            shifts_remaining = self.targeted_by.last_roll['final_roll'] - defense_roll
-            shifts = shifts_remaining if shifts_remaining > 0 else 0
-            self.targeted_by.last_roll['shifts'] = shifts
-            self.targeted_by.last_roll['shifts_remaining'] = shifts
-            self.messages.append(f'... offering {p.an(ladder_text)} ({defense_roll_str}) defense leaving {shifts} shifts to absorb.')
+            shifts = self.targeted_by.last_roll['final_roll'] - defense_roll
+            shifts_remaining = shifts if shifts > 0 else 0
+            self.messages.append(f'... offering {p.an(ladder_text)} ({defense_roll_str}) defense leaving {shifts_remaining} shifts to absorb.')
+            last_roll = copy.deepcopy(self.targeted_by.last_roll)
+            last_roll['shifts'] = shifts
+            last_roll['shifts_remaining'] = shifts_remaining
+            if shifts > 2:
+                last_roll['outcome'] = 'Succeed with Style'
+                self.messages.append('\n'.join([
+                    f'... allowing ***{self.targeted_by.name}*** the option to take a boost in exchange for one shift:```',
+                    f'.d boost NAME_OF_BOOST_ASPECT```'
+                ]))
+            elif shifts > 0:
+                last_roll['outcome'] = 'Succeed'
+            elif shifts == 0:
+                last_roll['outcome'] = 'Tie'
+            else:
+                last_roll['outcome'] = 'Fail'
+            self.targeted_by.last_roll = last_roll
+            char_svc.save(self.targeted_by, self.user)
+
+    def overcome(self):
+        """Execute the overcome subcommand to overcome am obstacle or opposition and roll for overcome
+        
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
+        raise Exception('Overcome action is not yet implemented')
 
     def handle_compels(self):
         """Apply the compels stored for processing"""
@@ -444,13 +637,14 @@ class RollCommand():
         stress_targets = []
         for i in self.invoke_index:
             if len(self.args) < i+1 or self.skill and len(self.args) < i+2:
-                self.invokes.append({'aspect_name': 'error', 'error': f'An invoke is mssing an aspect'})
+                self.invokes.append({'aspect_name': 'error', 'error': f'An invoke is missing an aspect'})
                 continue
             search = self.args[i+1]
             aspect_name = ''
             category = ''
             skills = []
             aspect = None
+            is_boost = False
             fate_points = None
             asp = self.find_aspect(search)
             if asp:
@@ -464,11 +658,13 @@ class RollCommand():
                     stress_titles = []
                 else:
                     aspect_name = aspect.name
+                    is_boost = True if aspect.is_boost else False
                     skills = aspect.skills if aspect.skills else []
                     if aspect.fate_points is not None:
                         fate_points = aspect.fate_points
                     else:
-                        fate_points = 0 if category == 'Stunt' else 1
+                        # Don't incur fate point cost if is_boost or is a 'Stunt'
+                        fate_points = 0 if is_boost or category == 'Stunt' else 1
                     stress = aspect.stress if aspect.stress else []
                     stress_titles = aspect.stress_titles if aspect.stress_titles else []
                     stress_errors, stress_targets = self.validate_stress(aspect, stress, stress_titles, stress_targets)
@@ -488,6 +684,7 @@ class RollCommand():
                 continue
             invoke = {
                 'aspect_name': aspect_name,
+                'is_boost': is_boost,
                 'bonus_str': '+2',
                 'skills': skills,
                 'fate_points': fate_points,
@@ -682,9 +879,14 @@ class RollCommand():
                 return aspects[0]
         return aspects
 
-    def roll_next(self):
+    def roll_next(self, exact_roll=None):
         """Make a fate roll and return the roll information
         
+        Paramenters
+        -----------
+        exact_roll : str
+            The string representation of the exact roll to replace the dice
+
         Returns
         -------
         dict - the attributes of a Dreamcraft Bot fate roll
@@ -695,6 +897,8 @@ class RollCommand():
             self.get_invoke_bonus()
         bonus += bonus_invokes_total
         dice_roll = self.roll_dice()
+        if exact_roll and exact_roll.replace('+','').replace('-','').isdigit():
+            dice_roll['rolled'] = int(exact_roll)
         final_roll = dice_roll['rolled'] + bonus
         skill_bonus_str = f' + ({self.skill}{skill_str})' if skill_str else ''
         skill_bonus_str += f' = {final_roll}' if skill_bonus_str or bonus_invokes else ''
@@ -741,7 +945,7 @@ class RollCommand():
         str - the skill matching the skill attribut search text
         """
 
-        if self.skill !='':
+        if self.skill:
             if self.char.use_approaches:
                 skill_name = [s for s in APPROACHES if self.skill[0:2].lower() == s[0:2].lower()]
             else:

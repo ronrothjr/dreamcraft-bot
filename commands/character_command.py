@@ -150,8 +150,6 @@ class CharacterCommand():
                 'f': self.fate,
                 'aspect': self.aspect,
                 'a': self.aspect,
-                'boost': self.aspect,
-                'b': self.aspect,
                 'approach': self.approach,
                 'app': self.approach,
                 'skill': self.skill,
@@ -1327,8 +1325,29 @@ class CharacterCommand():
         # Save the aspect as a character with this character as a parent
         # This alows editing an aspect as a character
         else:
-            aspect = ' '.join(args[1:])
+            is_boost = False
+            freeinvokes = 0
+            if args[1].lower() == 'boost':
+                is_boost = True
+                aspect = ' '.join(args[2:])
+            else:
+                aspect = ' '.join(args[1:])
+            if args[1].lower() == 'freeinvoke':
+                if len(args) < 3:
+                    raise Exception('Here\'s how to create an aspect with a free invoke:```css\n.d c aspect freeinvoke "Aspect Name```Create an aspect with 2 free invokes:```css\n.d c aspect freeinvoke 2 "Aspect Name"```')
+                if args[2].isdigit():
+                    freeinvokes = int(args[2])
+                    aspect = ' '.join(args[3:])
+                else:
+                    freeinvokes = 1
+                    aspect = ' '.join(args[2:])
             self.asp = Character().get_or_create(self.user, aspect, self.guild.name, self.char, 'Aspect')
+            if is_boost:
+                self.asp.is_boost = True
+                char_svc.save(self.asp, self.user)
+            if freeinvokes:
+                cmd = CharacterCommand(self.parent, self.ctx, ('stress', 'title', str(freeinvokes), 'Free Invokes'), self.guild, self.user, self.channel, self.asp)
+                cmd.run()
             self.char.active_aspect = str(self.asp.id)
             char_svc.save(self.char, self.user)
             messages.append(self.char.get_string_aspects(self.user) + '\n')

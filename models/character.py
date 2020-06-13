@@ -222,7 +222,7 @@ class Character(Document):
         if self.category == 'Character' and user and str(self.id) == user.active_character:
             active = f' _(Active)_ '
         if self.category == 'Aspect' and parent and parent.active_aspect and str(self.id) == parent.active_aspect:
-            active = f' _(Active)_ '
+            active = f' _(Active)_ ' + (' _(Boost)_ ' if self.is_boost else '')
         if self.category == 'Stunt' and parent and parent.active_stunt and str(self.id) == parent.active_stunt:
             active = f' _(Active)_ '
         return f'***{self.name}***{active}{category}'
@@ -273,19 +273,19 @@ class Character(Document):
                 aspects_strings.append(f'***{trouble}*** (Trouble of _\'{name}\'_)')
             if obj.category in ['Aspect','Stunt']:
                 name = TextUtils.clean(obj['char'].name)
-                category = TextUtils.clean(obj['char'].category)
+                category = TextUtils.clean(obj['char'].category) + (' _(Boost)_ ' if self.is_boost else '')
                 parent = TextUtils.clean(obj['parent'].name)
                 aspects_strings.append(f'***{name}*** ({category} of _\'{parent}\'_)')
         return aspects_strings
 
-    def get_available_aspects(self, parent=None):
+    def get_available_aspects(self, parent=None, char=None):
         available = []
         if self.high_concept:
             available.append(f'***{TextUtils.clean(self.high_concept)}*** (High Concept of _\'{self.name}\'_)')
         if self.trouble:
             available.append(f'***{TextUtils.clean(self.trouble)}*** (Trouble of _\'{self.name}\'_)')
-        if self.category in ['Aspect', 'Stunt']:
-            parent_string = f' of ***{parent.name}***' if parent else ''
+        if self.category == 'Aspect' or (char and self.category == 'Stunt' and str(self.id) == str(char.id)):
+            parent_string =  (' _(Boost)_ ' if self.is_boost else '') + f' of ***{parent.name}***' if parent else ''
             available.append(f'***{TextUtils.clean(self.name)}*** ({self.category}{parent_string})')
         return available
 

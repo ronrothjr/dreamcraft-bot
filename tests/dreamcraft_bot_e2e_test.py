@@ -9,7 +9,7 @@ from mocks import CTX
 ctx1 = CTX('Test Guild 1', 'Test User 1', 'bot_testing', '1111', 'test_user_1')
 ctx2 = CTX('Test Guild 1', 'Test User 2', 'bot_testing', '2222', 'test_user_2')
 ctx3 = CTX('Test Guild 2', 'Test User 1', 'bot_spamming', '1111', 'test_user_1')
-ctx4 = CTX('Test Guild 3', 'Test User 3', 'bot_spamming', '4444', 'test_user_4')
+ctx4 = CTX('Test Guild 3', 'Test User 3', 'bot_spamming', '3333', 'test_user_3')
 
 class TestDreamcraftBotE2E(unittest.TestCase):
 
@@ -27,7 +27,10 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                 [self.assert_command(complete_messages, a[0], a[1]) for a in command['assertions']]
 
     def assert_command(self, messages, assert_str, err_str):
-        assert_test = assert_str in ''.join(messages)
+        if 'should not' in err_str:
+            assert_test = assert_str not in ''.join(messages)
+        else:
+            assert_test = assert_str in ''.join(messages)
         assert_result = (f'Passed: ' if assert_test else 'Failed: ') + err_str
         self.print_command(assert_result)
         self.assertTrue(assert_test, err_str)
@@ -112,16 +115,16 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                 ]
             },
             {
-                'args': [('c', 'npc', 'Test', 'NPC')],
+                'args': [('c', 'npc', 'Test NPC 1')],
                 'assertions': [
-                    ['Create a new CHARACTER named ***Test NPC***', 'Should ask Create Test NPC question']
+                    ['Create a new CHARACTER named ***Test NPC 1***', 'Should ask Create Test NPC 1 question']
                 ]
             },
             {
                 'args': [('y',)],
                 'assertions': [
                     ['YOU ARE CURRENTLY EDITING', 'Should be editing a character'],
-                    ['***Test NPC*** _(Active)_  _(Nonplayer Character)_', 'Test NPC should be the active character']
+                    ['***Test NPC 1*** _(Active)_  _(Nonplayer Character)_', 'Test NPC 1 should be the active character']
                 ]
             },
             {
@@ -134,6 +137,24 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                 'args': [('st', 't', '2', 'Physical')],
                 'assertions': [
                     ['**_Physical_**  [   ]', 'Should add custom Physical stress track']
+                ]
+            },
+            {
+                'args': [('con', 't', '2', 'Wounded')],
+                'assertions': [
+                    ['[   ] _2_ _Wounded_', 'Should add custom Wounded condition track']
+                ]
+            },
+            {
+                'args': [('aspect', 'Test Aspect 2')],
+                'assertions': [
+                    ['***Test Aspect 2*** _(Active)_  _(Aspect)_', 'Should add Test Aspect 2']
+                ]
+            },
+            {
+                'args': [('stunt', 'Test Stunt 2')],
+                'assertions': [
+                    ['***Test Stunt 2*** _(Active)_  _(Stunt)_', 'Should add Test Stunt 2']
                 ]
             }
         ])
@@ -220,15 +241,15 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                 ]
             },
             {
-                'args': [('stunt', 'Test Stunt')],
+                'args': [('stunt', 'Test Stunt 1')],
                 'assertions': [
-                    ['***Test Stunt*** _(Active)_  _(Stunt)_', 'Should add Test Stunt']
+                    ['***Test Stunt 1*** _(Active)_  _(Stunt)_', 'Should add Test Stunt 1']
                 ]
             },
             {
                 'args': [('c', 'stunt', 'character')],
                 'assertions': [
-                    ['Test Stunt', 'Should edit Test Stunt']
+                    ['Test Stunt 1', 'Should edit Test Stunt 1']
                 ]
             },
             {
@@ -268,7 +289,7 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                 ]
             },
             {
-                'args': [('r', 'i', 'Test Stunt')],
+                'args': [('r', 'i', 'Test Stunt 1')],
                 'assertions': [
                     ['_Energy:_  [X] [   ] [   ] [   ]', 'Should absorb 1 custom Energy'],
                     ['**Fate Points:** 2', 'Should spend 1 Fate Point']
@@ -302,7 +323,7 @@ class TestDreamcraftBotE2E(unittest.TestCase):
             {
                 'args': [('t','Trouble 2')],
                 'assertions': [
-                    ['You do not have permission', 'should not allow Test User 2 to edit Test Character 1']
+                    ['You do not have permission', 'should prevent Test User 2 from editing Test Character 1']
                 ]
             }
         ])
@@ -326,6 +347,12 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                 ]
             },
             {
+                'args': [('aspect', 'Test Aspect 2')],
+                'assertions': [
+                    ['***Test Aspect 2*** _(Active)_  _(Aspect)_', 'Should add Test Aspect 2']
+                ]
+            },
+            {
                 'args': [('c', 'copy', 'to', 'Guild 2')],
                 'assertions': [
                     ['***Test Character 1*** copied to ***Test Guild 2***', 'should copy character to another server']
@@ -339,7 +366,7 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                 'assertions': [
                     ['***Test Character 1*** _(Active)_  _(Character)_', 'Test Character 1 should be the active character'],
                     ['***Test Aspect 1*** _(Aspect)_', 'Should have Test Aspect 1'],
-                    ['***Test Stunt*** _(Stunt)_', 'Should have Test Stunt']
+                    ['***Test Stunt 1*** _(Stunt)_', 'Should have Test Stunt 1']
                 ]
             }
         ])
@@ -489,6 +516,12 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                 ]
             },
             {
+                'args': [('z', 'character', 'aspect', 'Test Scene Aspect 1')],
+                'assertions': [
+                    ['***Test Scene Aspect 1*** _(Active)_  _(Aspect)_', 'should add a \'Test Scene Aspect 1\' aspect to \'Test Zone 1\'']
+                ]
+            },
+            {
                 'args': [
                     ('z', 'Test', 'Zone', '2'),
                     ('y',),
@@ -519,18 +552,18 @@ class TestDreamcraftBotE2E(unittest.TestCase):
             {
                 'ctx': ctx2,
                 'args': [
-                    ('c', 'npc', 'Test NPC'),
+                    ('c', 'npc', 'Test NPC 1'),
                     ('scene', 'enter')
                 ],
                 'assertions': [
-                    ['Added ***Test NPC*** to _Test Scene_ scene', 'should add \'Test NPC\' to \'Test Scene\'']
+                    ['Added ***Test NPC 1*** to _Test Scene_ scene', 'should add \'Test NPC 1\' to \'Test Scene\'']
                 ]
             },
             {
                 'ctx': ctx2,
                 'args': [('scene', 'move', 'Test Zone 1')],
                 'assertions': [
-                    ['***Test NPC*** is already in the _Test Zone 1_ zone', 'should show \'Test NPC\' is already in \'Test Zone 1\'']
+                    ['***Test NPC 1*** is already in the _Test Zone 1_ zone', 'should show \'Test NPC 1\' is already in \'Test Zone 1\'']
                 ]
             },
             {
@@ -552,7 +585,7 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                 'ctx': ctx2,
                 'args': [('e', 'oppose', 'NPC')],
                 'assertions': [
-                    ['Added ***Test NPC*** to the opposition in the _Test Conflict_ engagement', 'should add \'Test NPC\' to the conflict']
+                    ['Added ***Test NPC 1*** to the opposition in the _Test Conflict_ engagement', 'should add \'Test NPC 1\' to the conflict']
                 ]
             },
             {
@@ -569,31 +602,127 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                 'assertions': [
                     ['***Test Character 1*** is already in the _Test Zone 1_ zone', 'should show \'Test Character 1\' is already in \'Test Zone 1\'']
                 ]
+            }
+        ])
+
+    def test_actions(self):
+        self.send_and_validate_commands(ctx1, [
+            {
+                'args': [
+                    ('c','Test Character 1'),
+                    ('available',)
+                ],
+                'assertions': [
+                    ['***Test Scene Aspect*** (Aspect of ***Test Zone 1***)', 'should show \'Test Scene Aspect\' from \'Test Zone 1\''],
+                    ['***Test Stunt*** (Stunt of ***Test NPC 1***)', 'should not show \'Test Stunt\' from \'Test NPC 1\'']
+                ]
             },
             {
-                'args': [('attack', 'NPC', 'Forceful')],
+                'args': [('attack', 'NPC', 'exact', '+1', 'Forceful')],
                 'assertions': [
-                    ['***Test NPC*** faces', 'should display \'Test NPC\' facing an attack'],
+                    ['***Test NPC 1*** faces', 'should display \'Test NPC 1\' facing an attack'],
                     ['attack from ***Test Character 1***', 'should display an attack from \'Test Character 1\'']
                 ]
             },
             {
                 'ctx': ctx2,
                 'args': [
-                    ('c', 'npc', 'Test NPC'),
-                    ('defend', 'Forceful')
+                    ('c', 'npc', 'Test NPC 1'),
+                    ('defend', 'exact', '+0', 'Forceful')
                 ],
                 'assertions': [
-                    [' shifts to absorb', 'should display \'Test NPC\' rolling with shifts to absorb']
+                    [' shifts to absorb', 'should display \'Test NPC 1\' rolling with shifts to absorb'],
+                    ['option to take a boost in exchange for one shift', 'should allow succeed with style boost']
+                ]
+            },
+            {
+                'args': [('boost', 'Got \'em on the Ropes')],
+                'assertions': [
+                    ['***Got \'em on the Ropes*** _(Active)_  _(Boost)_  _(Aspect)_', 'should add boost aspect'],
+                    ['6 shifts left to absorb.', 'should display remaining shifts']
+                ]
+            },
+            {
+                'args': [('boost', 'Got \'em on the Ropes')],
+                'assertions': [
+                    ['boost has already been claimed', 'should warn of boost already being claimed']
                 ]
             },
             {
                 'ctx': ctx2,
-                'args': [('c', 'st', 'Physical')],
+                'args': [('c', 'con', 'Wounded')],
                 'assertions': [
-                    [' left to absorb.', 'should display remaining shifts to absorb']
+                    ['4 shifts left to absorb.', 'should display remaining shifts to absorb']
                 ]
-            }
+            },
+            {
+                'ctx': ctx2,
+                'args': [('c', 'st', 'Physical', '3')],
+                'assertions': [
+                    ['cannot absorb', 'should display cannot absorb warning']
+                ]
+            },
+            {
+                'ctx': ctx2,
+                'args': [('c', 'st', 'Physical', '1')],
+                'assertions': [
+                    ['3 shifts left to absorb.', 'should display remaining shifts to absorb']
+                ]
+            },
+            {
+                'args': [('attack', 'NPC', 'Forceful')],
+                'assertions': [
+                    ['***Test Character 1*** cannot attack', 'should display cannot attack warning']
+                ]
+            },
+            {
+                'ctx': ctx2,
+                'args': [('c', 'st', 'Physical', '1')],
+                'assertions': [
+                    ['2 shifts left to absorb.', 'should display 1 shift left to absorb']
+                ]
+            },
+            {
+                'ctx': ctx2,
+                'args': [('takeout',)],
+                'assertions': [
+                    ['***Test NPC 1*** was taken out.', 'should take out \'Test NPC 1\'']
+                ]
+            } # ,
+            # {
+            #     'ctx': ctx2,
+            #     'args': [
+            #         ('c', 'npc', 'Test NPC 2'),
+            #         ('y',),
+            #         ('approach', 'Fo', '-2'),
+            #         ('st', 't', '2', 'Physical'),
+            #         ('con', 't', '2', 'Wounded'),
+            #         ('aspect', 'freeinvoke', 'Test Aspect 3'),
+            #         ('aspect', 'freeinvoke', '2', 'Test Aspect 4'),
+            #         ('stunt', 'Test Stunt 2'),
+            #         ('scene', 'enter')
+            #     ],
+            #     'assertions': [
+            #         ['**_Free Invokes_**  [   ]  [   ]', 'should add 2 \'Free Invokes\' to \'Test Aspect 4\'']
+            #     ]
+            # },
+            # {
+            #     'args': [('attack', 'Test NPC 2', 'exact', '+1', 'Forceful')],
+            #     'assertions': [
+            #         ['***Test NPC 2*** faces', 'should display \'Test NPC 2\' facing an attack'],
+            #         ['attack from ***Test Character 1***', 'should display an attack from \'Test Character 1\'']
+            #     ]
+            # },
+            # {
+            #     'ctx': ctx2,
+            #     'args': [
+            #         ('defend', 'exact', '+0', 'Forceful', 'invoke', 'Test Aspect 3')
+            #     ],
+            #     'assertions': [
+            #         [' shifts to absorb', 'should display \'Test NPC 2\' rolling with shifts to absorb'],
+            #         ['option to take a boost in exchange for one shift', 'should allow succeed with style boost']
+            #     ]
+            # }
         ])
 
     def test_end_delete_components(self):
@@ -610,11 +739,11 @@ class TestDreamcraftBotE2E(unittest.TestCase):
             {
                 'ctx': ctx2,
                 'args': [
-                    ('c', 'npc', 'Test NPC'),
+                    ('c', 'npc', 'Test NPC 1'),
                     ('scene', 'exit')
                 ],
                 'assertions': [
-                    ['***Test NPC*** removed from _Test Scene_', 'should remove \'Test NPC\' from \'Test Scene\'']
+                    ['***Test NPC 1*** removed from _Test Scene_', 'should remove \'Test NPC 1\' from \'Test Scene\'']
                 ]
             },
             {
@@ -733,12 +862,12 @@ class TestDreamcraftBotE2E(unittest.TestCase):
             {
                 'ctx': ctx2,
                 'args': [
-                    ('c', 'npc', 'Test NPC'),
+                    ('c', 'npc', 'Test NPC 1'),
                     ('c', 'delete'),
                     ('y',)
                 ],
                 'assertions': [
-                    ['***Test NPC*** removed', 'should archive \'Text NPC\'']
+                    ['***Test NPC 1*** removed', 'should archive \'Text NPC\'']
                 ]
             },
             {
@@ -762,8 +891,8 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                 ],
                 'assertions': [
                     ['***Test Character 1*** restored', 'should restore \'Test Character 1\''],
-                    ['***Test Aspect 1*** _(Active)_  _(Aspect)_', 'Should have Test Aspect 1'],
-                    ['***Test Stunt*** _(Active)_  _(Stunt)_', 'Should have Test Stunt']
+                    ['***Test Aspect 1*** _(Aspect)_', 'Should have Test Aspect 1'],
+                    ['***Test Stunt 1*** _(Active)_  _(Stunt)_', 'Should have Test Stunt 1']
                 ]
             },
             {
@@ -802,8 +931,8 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                 ],
                 'assertions': [
                     ['***Test Character 1*** restored', 'should restore \'Test Character 1\''],
-                    ['***Test Aspect 1*** _(Active)_  _(Aspect)_', 'should have Test Aspect 1'],
-                    ['***Test Stunt*** _(Active)_  _(Stunt)_', 'should have Test Stunt']
+                    ['***Test Aspect 1*** _(Aspect)_', 'should have Test Aspect 1'],
+                    ['***Test Stunt 1*** _(Active)_  _(Stunt)_', 'should have Test Stunt 1']
                 ]
             },
             {

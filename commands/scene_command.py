@@ -279,7 +279,9 @@ class SceneCommand():
         list(str) - the response messages string array
         """
 
-        sc, name, get_string, get_short_string = scene_svc.get_info('scene', self.sc, self.channel, self.user)
+        sc = sc if sc else self.sc
+        sc, name, get_string, get_short_string = scene_svc.get_info('scene', sc, self.channel, self.user)
+        can_edit = str(self.user.id) == str(sc.created) or self.user.role in ['Admin','Game Master'] if self.user and sc else True
         category = 'Scene'
         dialog = {
             'create_scene': ''.join([
@@ -298,6 +300,28 @@ class SceneCommand():
                 f'\n\n_Is ***{name}*** not the {category.lower()} name you wanted?_',
                 f'```css\n.d scene rename NEW_NAME```_Want to remove ***{name}***?_',
                 '```css\n.d scene delete```'
+            ]) if self.can_edit else '',
+            'edit_active_scene': ''.join([
+                f'\n***You can edit this scene as if it were a character***',
+                '```css\n.d scene character\n',
+                '/* THIS WILL SHOW THE SCENE IS THE ACTIVE CHARACTER */\n',
+                '.d c\n',
+                '/* THIS WILL RETURN YOU TO EDITING THE SCENE ITSELF */\n',
+                '.d c parent```'
+            ]) if can_edit else '',
+            'scene_actions': ''.join([
+                f'\n***You can start and end the scene***',
+                '```css\n.d scene start\n',
+                '.d scene end```',
+                f'\n***You can have characters enter and exit the scene***',
+                '```css\n.d c "CHARACTER NAME" /* to select the character */\n',
+                '```css\n.d scene enter "CHARACTER NAME"\n',
+                '.d scene exit "CHARACTER NAME"```',
+                f'***You can connect zones to each other***',
+                '```css\n.d connect "Kitchen" to "Dining Room"```',
+                f'***You can move characters from zone to zone***',
+                '```css\n.d c "CHARACTER NAME" /* to select the character */\n',
+                '.d scene move from "Kitchen" to "Dining Room"```'
             ]),
             'go_back_to_parent': ''.join([
                 f'\n\n***You can GO BACK to the parent scene, aspect, or stunt***',
@@ -308,20 +332,25 @@ class SceneCommand():
         if dialog_text == 'all':
             if not sc:
                 dialog_string += dialog.get('create_scene', '')
-            dialog_string += dialog.get('rename_delete', '')
+            else:
+                dialog_string += dialog.get('rename_delete', '')
+                dialog_string += dialog.get('scene_actions', '')
+                dialog_string += dialog.get('edit_active_scene')
         elif category == 'Scene':
             if dialog_text:
                 dialog_string += dialog.get(dialog_text, '')
             else:
                 dialog_string += dialog.get('active_scene', '')
-                dialog_string += dialog.get('rename_delete', '') if self.can_edit else ''
+                dialog_string += dialog.get('rename_delete', '')
+                dialog_string += dialog.get('edit_active_scene', '')
+                dialog_string += dialog.get('scene_actions', '')
         else:
             if dialog_text:
                 dialog_string += dialog.get(dialog_text, '')
             else:
-                dialog_string += dialog.get('active_scene', '') if self.can_edit else ''
-                dialog_string += dialog.get('rename_delete', '') if self.can_edit else ''
-                dialog_string += dialog.get('go_back_to_parent', '') if self.can_edit else ''
+                dialog_string += dialog.get('active_scene', '')
+                dialog_string += dialog.get('rename_delete', '')
+                dialog_string += dialog.get('go_back_to_parent', '')
         return dialog_string
     
     def name(self, args):

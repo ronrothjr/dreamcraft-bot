@@ -55,11 +55,11 @@ class CharacterCommand():
         high, hc - add/edit the High Concept in the character sheet
         trouble, t - add/edit the Trouble in the character sheet
         fate, f - add/remove/refresh fate points
-        aspect, a - add/delete aspects
+        aspects, aspect, a - add/delete aspects
         boost, b - add aspects as a boost
-        approach, app - add/edit approaches in the character sheet
-        skill, sk - add/edit skills in the characater sheet
-        stunt, s - add/delete stunts
+        approaches, approach, apps, app - add/edit approaches in the character sheet
+        skills, skill, sks, sk - add/edit skills in the characater sheet
+        stunts, stunt, s - add/delete stunts
         stress, st - add/edit stress tracks in the character sheet
         consequence, con - add/edit consequences and conditions in the character sheet
         custom - add/edit custom fields in the character sheet
@@ -148,12 +148,18 @@ class CharacterCommand():
                 't': self.trouble,
                 'fate': self.fate,
                 'f': self.fate,
+                'aspects': self.aspect,
                 'aspect': self.aspect,
                 'a': self.aspect,
+                'approaches': self.approach,
                 'approach': self.approach,
+                'apps': self.approach,
                 'app': self.approach,
+                'skills': self.skill,
                 'skill': self.skill,
+                'sks': self.skill,
                 'sk': self.skill,
+                'stunts': self.stunt,
                 'stunt': self.stunt,
                 's': self.stunt,
                 'stress': self.stress,
@@ -777,6 +783,34 @@ class CharacterCommand():
             return ['No active character for deletion']
         if not self.can_edit:
             raise Exception('You do not have permission to delete this character')
+
+        # Handle alternate syntax for deleting character properties
+        if len(args) > 1:
+            if args[1] in ['approaches','approach','app']:
+                args[0] = 'approach'
+                args[1] = 'delete'
+                return self.approach(args)
+            if args[1] in ['skills','skill','sks','sk']:
+                args[0] = 'skill'
+                args[1] = 'delete'
+                return self.skill(args)
+            if args[1] in ['aspects','aspect','a']:
+                args[0] = 'aspect'
+                args[1] = 'delete'
+                return self.aspect(args)
+            if args[1] in ['stunts','stunt','s']:
+                args[0] = 'stunt'
+                args[1] = 'delete'
+                return self.stunt(args)
+            if args[1] in ['stresses','stress','st']:
+                args[0] = 'stress'
+                args[1] = 'delete'
+                return self.stress(args)
+            if args[1] in ['consequences','consequence','con']:
+                args[0] = 'consequence'
+                args[1] = 'delete'
+                return self.approach(args)
+
         def getter(item, page_num=0, page_size=5):
             return [item]
 
@@ -1182,7 +1216,7 @@ class CharacterCommand():
             app_str = '\n        '.join(APPROACHES)
             messages.append(f'**Approaches:**\n        {app_str}')
         elif len(args) < 3:
-            messages.append('Approach syntax: .d (app)roach {approach} {bonus}')
+            messages.append('Approach syntax: .d approach "APPROACH NAME" BONUS [..."APPROACH NAME" BONUS]')
         else:
             if not self.char:
                 messages.append('You don\'t have an active character.\nTry this: ```css\n.d c CHARACTER_NAME```')
@@ -1201,11 +1235,14 @@ class CharacterCommand():
                     char_svc.save(self.char, self.user)
                     messages.append(f'Removed {skill}')
                 else:
-                    for i in range(1, len(args), 2):
-                        abbr = args[i][0:2].lower()
-                        val = args[i+1]
-                        skill = [s for s in APPROACHES if abbr == s[0:2].lower()]
-                        skill = skill[0].split(' - ')[0] if skill else args[i]
+                    indices = [0] + [i for i in range(1, len(args)) if args[i].replace('+','').replace('-','').isdigit()]
+                    if len(indices) == 1:
+                        raise Exception('Approach syntax: .d approach "APPROACH NAME" BONUS [..."APPROACH NAME" BONUS]')
+                    for i in range(1, len(indices)):
+                        abbr = ' '.join(args[(indices[i-1]+1):indices[i]])
+                        val = args[indices[i]]
+                        skill = [s for s in APPROACHES if abbr.lower() == s[0:2].lower()]
+                        skill = skill[0].split(' - ')[0] if skill else abbr
                         self.char.skills[skill] = val
                         messages.append(f'Updated {skill} to {val}')
                     self.char.use_approaches = True
@@ -1250,11 +1287,14 @@ class CharacterCommand():
                     char_svc.save(self.char, self.user)
                     messages.append(f'Removed {skill} skill') 
                 else:
-                    for i in range(1, len(args), 2):
-                        abbr = args[i][0:2].lower()
-                        val = args[i+1]
-                        skill = [s for s in SKILLS if abbr == s[0:2].lower()]
-                        skill = skill[0].split(' - ')[0] if skill else args[i]
+                    indices = [0] + [i for i in range(1, len(args)) if args[i].replace('+','').replace('-','').isdigit()]
+                    if len(indices) == 1:
+                        raise Exception('Skill syntax: .d skill "APPROACH NAME" BONUS [..."APPROACH NAME" BONUS]')
+                    for i in range(1, len(indices)):
+                        abbr = ' '.join(args[(indices[i-1]+1):indices[i]])
+                        val = args[indices[i]]
+                        skill = [s for s in SKILLS if abbr.lower() == s[0:2].lower()]
+                        skill = skill[0].split(' - ')[0] if skill else abbr
                         self.char.skills[skill] = val
                         messages.append(f'Updated {skill} to {val}')
                     self.char.use_approaches = False

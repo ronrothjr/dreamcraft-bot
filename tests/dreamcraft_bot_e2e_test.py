@@ -199,7 +199,7 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                 ]
             },
             {
-                'args': [('skill', 'Will', '+4', 'Rapport', '+2', 'Lore', '+1')],
+                'args': [('skill', 'Will', '+4', 'Dark Magic', '+3', 'Rapport', '+2', 'Lore', '+1')],
                 'assertions': [
                     ['**Skills:**\n        +4 - Will', 'Should add skills']
                 ]
@@ -220,6 +220,12 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                 'args': [('skill', 'delete', 'Lore')],
                 'assertions': [
                     ['Removed Lore skill', 'Should remove Lore skill']
+                ]
+            },
+            {
+                'args': [('skill', 'delete', 'Dark Magic')],
+                'assertions': [
+                    ['Removed Dark Magic skill', 'Should remove Dark Magic skill']
                 ]
             },
             {

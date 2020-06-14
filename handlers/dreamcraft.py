@@ -112,6 +112,7 @@ class DreamcraftHandler():
                 'scenario': ScenarioCommand,
                 'scene': SceneCommand,
                 's': SceneCommand,
+                'connect': SceneCommand,
                 'zone': ZoneCommand,
                 'z': ZoneCommand,
                 'session': SessionCommand,
@@ -182,7 +183,11 @@ class DreamcraftHandler():
                     self.messages = instance.run()
                 else:
                     self.messages = [f'Unknown command: {self.command}']
-                
+
+            # Warn user of missing time zone setting
+            if not self.user.time_zone:
+                self.messages = ['No time zone defined```css\n.d user timezone America/New_York\n.d user timezone list Europe```\n'] + self.messages
+
             # Concatenate messages and send
             if self.command == 'cheat':
                 return self.module, [f'{m}\n' for m in self.messages]

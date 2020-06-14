@@ -30,7 +30,7 @@ class ZoneService(BaseService):
             return messages
         else:
             for char_name in args[1:]:
-                char = Character().find(None, char_name, channel.guild)
+                char = Character().find(user=None, name=char_name, guild=channel.guild, category='Character')
                 if char:
                     if str(char.id) in zone.characters:
                         messages.append(f'***{char.name}*** is already in _{zone.name}_')

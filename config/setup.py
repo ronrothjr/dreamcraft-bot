@@ -4,8 +4,8 @@ __contact__ = 'u/ensosati'
 
 
 class Setup():
-    start = '**CREATE A CHARACTER**```css\n.d character YOUR_CHARACTER\'S_NAME```\
-            \n**Character Help:**```css\n.d c help```**Additional Help:**```css\n.d help```Display condensed game instructions```css\n.d cheat\n.d cheat SEARCH_TEXT```'
+    start = '**CREATE A CHARACTER**```css\n.d character "YOUR CHARACTER\'S NAME"```\
+            \n**Character Help:**```css\n.d c help```**Additional Help:**```css\n.d help```Display condensed game instructions```css\n.d cheat\n.d cheat "SEARCH TEXT"```'
 
     help = '\n***ADDITIONAL INSTRUCTIONS***\n\
             \n**Character Setup:**```css\n.d c help\n/* Display active character */\n.d character\n.d c```\
@@ -28,13 +28,13 @@ class Setup():
 
     roll_help = '\n***Roll Instructions***\n\n\
             Roll fate dice```css\n.d r```\n\
-            Roll fate dice and invoke aspect(s)```css\n.d r (i)nvoke {aspect} [...(i)nvoke {aspect}]```\n\
-            Roll fate dice with active character\'s stat bonus```css\n.d r {approach|skill}```\n\
-            Roll fate dice skill/approach with invoke(s)```css\n.d r {approach|skill} (i)nvoke {aspect} (+2|reroll) [...(i)nvoke {aspect} (+2|reroll)]```\n\
-            Reroll the character\'s last roll```css\n.d re (i)nvoke {aspect} (+2|reroll) [...(i)nvoke {aspect} (+2|reroll)]```\n\
-            Display invocable/compelable aspects```css\n.d (av)ailable```\n\
-            Invoke an aspect and uses the active character\'s fate point(s)```css\n.d (i)nvoke {aspect} (+2|reroll) [...(i)invoke {aspect} (+2|reroll)]```\n\
-            Compel aspect(s) and grants the active character a fate point```css\n.d compel {aspect} [...(c)compel {aspect}]```\n\
+            Roll fate dice and invoke aspects```css\n.d r invoke "ASPECT NAME" [...invoke "ASPECT NAME"]```\n\
+            Roll fate dice with active character\'s stat bonus```css\n.d r "APPROACH NAME"|"SKILL NAME"```\n\
+            Roll fate dice skill/approach with invokes```css\n.d r "APPROACH NAME"|"SKILL NAME" invoke "ASPECT NAME" +2|rerolll [...invoke "ASPECT NAME" +2|reroll]```\n\
+            Reroll the character\'s last roll```css\n.d re invoke "ASPECT NAME" +2|rerolll [...invoke "ASPECT NAME" +2|rerolll]```\n\
+            Display invocable/compelable aspects```css\n.d available```\n\
+            Invoke an aspect and uses the active character\'s fate points```css\n.d invoke "ASPECT NAME" +2|rerolll [...iinvoke "ASPECT NAME" +2|rerolll]```\n\
+            Compel aspects and grants the active character a fate point```css\n.d compel "ASPECT NAME" [...ccompel "ASPECT NAME"]```\n\
             Attack another character```css\n.d attack "Character Name" Forceful invoke "Man of Steel"```\n\
             Defend an attack```css\n.d defend /* regular defense roll */\n.d defend Quick /* defense roll with Quick bonus */\n.d defend exact +0 /* defend with a static roll of Mediocre (+0) */```\n\
             Create a boost from a Tie or Succeed with Style outcome```css\n.d boost I Got You Now```\n\
@@ -42,14 +42,14 @@ class Setup():
 
     user_help = '.d u help - display user help\n\
             \n***User Setup:***\n\
-            Display user info```css\n.d (u)ser```\n\
-            Set user time zone```css\n.d u tz {timezone}```\n\
-            Search the list of time zones```css\n.d u tz (l)ist {search}```\n\
+            Display user info```css\n.d user```\n\
+            Set user time zone```css\n.d u tz "TIME ZONE NAME"```\n\
+            Search the list of time zones```css\n.d u tz list {search}```\n\
             Add contact information```css\n.d u contact "CONTACT_INFO".d u contact "\nReddit - u/fuzzywuzzy\nEmail - fuzzy@gmail.com"```\n'
 
     revision_help = '.d revision help - display revision help\n\
             \nRevision Setup:\n\
-            Display revision info```css\n.d (rev)ision```'
+            Display revision info```css\n.d revision```'
 
     suggestion_help = '.d suggest help - display suggestion help\n\
             \nSuggestion Setup:\n\
@@ -57,100 +57,100 @@ class Setup():
             Display the list of suggestions```css\n.d suggest list```'
 
     character_help = '.d c help - display these instructions\nCharacter Help:\n\
-            Display active character```css\n.d (c)haracter```\n\
+            Display active character```css\n.d character```\n\
             Display character help```css\n.d c help```\n\
-            Display help on stress tracks```css\n.d c (st)ress help```\n\
-            Display help on consequences and conditions```css\n.d c (con)sequence help```\n\
-            Display/set active character```css\n.d c \{name\}```\n\
-            Display list of characters```css\n.d c (l)ist```\n\
-            Set the description for the active character```css\n.d c (desc)ription \{description\}```\n\
-            Set the high concept for the active character```css\n.d c (high/hc) concept \{high concept\}```\n\
-            Set the trouble for the active character```css\n.d c (t)rouble \{trouble\}```\n\
-            Removes a character```css\n.d c (d)delete \{name}```\n\
-            Display, refresh, add or subtract fate points```css\n.d c (f)ate {refresh|+|-}```\n\
-            Add/remove aspects```css\n.d c (a)spect [(d)elete] \{aspect}```\n\
-            Set custom aspect type```css\n.d c (a)spect (t)elete ASPECT_TYPE```\n\
-            Set the current aspect as the active character```css\n.d c (a)spect (c)character```\n\
-            Add/remove stunts```css\n.d c (s)tunt [(d)elete] \{stunt}```\n\
-            Set custom stunt type```css\n.d c (s)stunt (t)elete STUNT_TYPE```\n\
-            Set the current stunt as the active character```css\n.d c (s)tunt (c)character```\n\
-            Add/remove approach bonuses```css\n.d c (app)roach [(d)elete] \{approach\} \{bonus\}```\n\
-            Display a list of approach descriptions```css\n.d c (app)roach help```\n\
-            Set/remove bonuses```css\n.d c (sk)ill [(d)elete] \{skill\} \{bonus\}```\n\
-            Display a list of skill descriptions```css\n.d c (sk)ill help```\n\
+            Display help on stress tracks```css\n.d c stress help```\n\
+            Display help on consequences and conditions```css\n.d c consequence help```\n\
+            Display/set active character```css\n.d c "NAME"```\n\
+            Display list of characters```css\n.d c list```\n\
+            Set the description for the active character```css\n.d c description "DESCRIPTION TEXT"```\n\
+            Set the high concept for the active character```css\n.d c high concept "HIGH CONCEPT TEXT"```\n\
+            Set the trouble for the active character```css\n.d c trouble \{trouble\}```\n\
+            Removes a character```css\n.d c delete "NAME"```\n\
+            Display, refresh, add or subtract fate points```css\n.d c fate refresh|+|-```\n\
+            Add/remove aspects```css\n.d c aspect [delete] "ASPECT NAME"```\n\
+            Set custom aspect type```css\n.d c aspect delete "ASPECT TYPE"```\n\
+            Set the current aspect as the active character```css\n.d c aspect character```\n\
+            Add/remove stunts```css\n.d c stunt [delete] "STUNT NAME"```\n\
+            Set custom stunt type```css\n.d c stunt delete "STUNT TYPE"```\n\
+            Set the current stunt as the active character```css\n.d c stunt character```\n\
+            Add/remove approach bonuses```css\n.d c approach [delete] "APPROACH NAME" BONUS```\n\
+            Display a list of approach descriptions```css\n.d c approach help```\n\
+            Set/remove bonuses```css\n.d c skill [delete] "SKILL NAME" BONUS```\n\
+            Display a list of skill descriptions```css\n.d c skill help```\n\
             Share a character```css\n.d c share anyone /* READ-ONLY */\n.d c share to copy /* LET OTHERS COPY */\n.d c share revoke /* TURN OFF SHARING */```\n\
-            Copy a character```css\n.d c shared /* VIEW SHARED CHARACTERS */\n.d c copy /* COPIES SELECTED CHARACTER */\n.d c copy to SERVER_NAME /* COPIES YOU CHARACTER TO ANOTHER SERVER */```'
+            Copy a character```css\n.d c shared /* VIEW SHARED CHARACTERS */\n.d c copy /* COPIES SELECTED CHARACTER */\n.d c copy to "SERVER NAME" /* COPIES YOU CHARACTER TO ANOTHER SERVER */```'
 
-    stress_help = '.d c (st)ress help - display these instructions\nStress Help:\n\
-            Add stress```css\n.d c (st)ress (m)ental|(p)hysical {1,2,3}```\n\
-            Remove stress```css\n.d c (st)ress (d)elete (m)ental|(p)hysical {1,2,3}```\n\
-            Create custom stress track```css\n.d c (st)ress (t)itle {total} {stress}```\n\
-            Delete custom stress track```css\n.d c (st)ress (t)itle (d)elete {(st)ress}```\n\
-            Add custom stress```css\n.d c (st)ress {(st)ress} {1,2,3}```\n\
-            Clear all stress tracks```css\n.d c (st)ress (r)efresh```\n\
-            Clears the titled stress track```css\n.d c (st)ress (r)efresh {(st)ress}```\n\
-            Remove custom stress```css\n.d c (st)ress (d)elete {(st)ress}```\n\
-            Reset stress boxes to standard FATE configuration```css\n.d c (st)ress (t)itle [FATE|FAE|CORE|None]```'
+    stress_help = '.d c stress help - display these instructions\nStress Help:\n\
+            Add stress```css\n.d c stress Mental|Physical 1|2|3```\n\
+            Remove stress```css\n.d c stress delete Mental|Physical 1|2|3```\n\
+            Create custom stress track```css\n.d c stress title TOTAL STRESS```\n\
+            Delete custom stress track```css\n.d c stress title delete stress```\n\
+            Add custom stress```css\n.d c stress STRESS TOTAL```\n\
+            Clear all stress tracks```css\n.d c stress refresh```\n\
+            Clears the titled stress track```css\n.d c stress refresh STRESS```\n\
+            Remove custom stress```css\n.d c stress delete stress```\n\
+            Reset stress boxes to standard FATE configuration```css\n.d c stress title [FATE|FAE|CORE|None]```'
 
-    consequences_help = '.d c (con)sequence help - display these instructions\nConsequences and Conditions Help:\n\
-            Add consequence```css\n.d c (con)sequence (mi)ld|(mo)derate|(se)vere {aspect}```\n\
-            Remove consequence```css\n.d c (con)sequence (d)elete (mi)ld|(mo)derate|(s)evere```\n\
-            Create condition```css\n.d c (con)sequence (t)itle {total} {condition}```\n\
-            Delete condition```css\n.d c (con)sequence (t)itle (d)elete {(co)ndition}```\n\
-            Add condition```css\n.d c (con)sequence {(co)ndition}```\n\
-            Remove condition```css\n.d c (con)sequence (d}elete {(co)ndition}```\n\
-            Reset consequences to standard FATE configuration```css\n.d c (con)sequence (t)itle [FATE|FAE|CORE|None]```'
+    consequences_help = '.d c consequence help - display these instructions\nConsequences and Conditions Help:\n\
+            Add consequence```css\n.d c conequence Mild|Moderate|Severe "ASPECT NAME"```\n\
+            Remove consequence```css\n.d c consequence delete Mild|Moderate|Severe```\n\
+            Create condition```css\n.d c consequence title TOTAL "CONDITION NAME"```\n\
+            Delete condition```css\n.d c consequence title delete "CONDITION Name"```\n\
+            Add condition```css\n.d c consequence "CONDITION Name"```\n\
+            Remove condition```css\n.d c consequence delete "CONDITION Name"```\n\
+            Reset consequences to standard FATE configuration```css\n.d c consequence title [FATE|FAE|CORE|None]```'
 
     scenario_help = '.d scenario help - display these instructions\nScenario Help:\n\
             Display active scenario```css\n.d scenario```\n\
-            Add/display/set active scenario```css\n.d scenario (n)ame \{name\}```\n\
-            Display list of scenarios```css\n.d scenario (l)ist```\n\
-            Set the description for the active scenario```css\n.d scenario (desc)ription \{description\}```\n\
-            Add/remove aspect for active scenario```css\n.d scenario (a)spect [(d)elete] \{aspect}```\n\
-            Set the current aspect as the active character```css\n.d scenario (a)spect (c)character```\n\
-            Add/remove character for active scenario```css\n.d scenario (c)haracter [(d)elete] \{character}```\n\
-            Remove a scenario```css\n.d scenario (d)delete \{name}```'
+            Add/display/set active scenario```css\n.d scenario name "NAME"```\n\
+            Display list of scenarios```css\n.d scenario list```\n\
+            Set the description for the active scenario```css\n.d scenario description "DESCRIPTION TEXT"```\n\
+            Add/remove aspect for active scenario```css\n.d scenario aspect [delete] "ASPECT NAME"```\n\
+            Set the current aspect as the active character```css\n.d scenario aspect character```\n\
+            Add/remove character for active scenario```css\n.d scenario character [delete] "CHARACTER NAME"```\n\
+            Remove a scenario```css\n.d scenario delete "NAME"```'
 
-    scene_help = '.d s help - display these instructions\nScene Help:\n\
-            Display active scene```css\n.d (s)cene```\n\
-            Add/display/set active scene```css\n.d s (n)ame \{name\}```\n\
-            Display list of scenes```css\n.d s (l)ist```\n\
-            Set the description for the active scene```css\n.d s (desc)ription \{description\}```\n\
-            Add/remove aspect for active scene```css\n.d s (a)spect [(d)elete] \{aspect}```\n\
-            Set the current aspect as the active character```css\n.d s (a)spect (c)character```\n\
-            Add/remove character for active scene```css\n.d s (c)haracter [(d)elete] \{character}```\n\
-            Remove a scene```css\n.d s (d)delete \{name}```'
+    scene_help = '.d scene help - display these instructions\nScene Help:\n\
+            Display active scene```css\n.d scene```\n\
+            Add/display/set active scene```css\n.d scene name "NAME"```\n\
+            Display list of scenes```css\n.d scene list```\n\
+            Set the description for the active scene```css\n.d scene description "DESCRIPTION TEXT"```\n\
+            Add/remove aspect for active scene```css\n.d scene aspect [delete] "ASPECT NAME"```\n\
+            Set the current aspect as the active character```css\n.d scene aspect character```\n\
+            Add/remove character for active scene```css\n.d scene character [delete] "CHARACTER NAME"```\n\
+            Remove a scene```css\n.d scene delete "NAME"```'
 
     zone_help = '.d z help - display these instructions\nZone Help:\n\
             Display active zone```css\n.d (z)one```\n\
-            Add/display/set active zone```css\n.d z (n)ame \{name\}```\n\
-            Display list of zones```css\n.d z (l)ist```\n\
-            Set the description for the active zone```css\n.d z (desc)ription \{description\}```\n\
-            Add/remove aspect for active zone```css\n.d z (a)spect [(d)elete] \{aspect}```\n\
-            Set the current aspect as the active character```css\n.d z (a)spect (c)character```\n\
-            Add/remove character for active zone```css\n.d z (c)haracter [(d)elete] \{character}```\n\
-            Remove a zone```css\n.d z (d)delete \{name}```\n\
+            Add/display/set active zone```css\n.d z name "NAME"```\n\
+            Display list of zones```css\n.d z list```\n\
+            Set the description for the active zone```css\n.d z description "DESCRIPTION TEXT"```\n\
+            Add/remove aspect for active zone```css\n.d z aspect [delete] "ASPECT NAME"```\n\
+            Set the current aspect as the active character```css\n.d z aspect character```\n\
+            Add/remove character for active zone```css\n.d z character [delete] "CHARACTER NAME"```\n\
+            Remove a zone```css\n.d z delete "NAME"```\n\
             Connet two zones within a scene```css\n.d z connect "Zone 1" to "Zone 2"```'
 
     session_help = '.d session help - display these instructions\nSession Help:\n\
             Display active session```css\n.d session```\n\
-            Add/display/set active session```css\n.d session (n)ame \{name\}```\n\
-            Display list of sessions```css\n.d session (l)ist```\n\
-            Set the description for the active session```css\n.d session (desc)ription \{description\}```\n\
-            Add/remove aspect for active session```css\n.d session (a)spect [(d)elete] \{aspect}```\n\
-            Set the current aspect as the active character```css\n.d session (a)spect (c)character```\n\
-            Add/remove character for active session```css\n.d session (c)haracter [(d)elete] \{character}```\n\
-            Remove a session```css\n.d session (d)delete \{name}```'
+            Add/display/set active session```css\n.d session name "NAME"```\n\
+            Display list of sessions```css\n.d session list```\n\
+            Set the description for the active session```css\n.d session description "DESCRIPTION TEXT"```\n\
+            Add/remove aspect for active session```css\n.d session aspect [delete] "ASPECT NAME"```\n\
+            Set the current aspect as the active character```css\n.d session aspect character```\n\
+            Add/remove character for active session```css\n.d session character [delete] "CHARACTER NAME"```\n\
+            Remove a session```css\n.d session delete "NAME"```'
 
     engagement_help = '.d e help - display these instructions\nEngagement Help:\n\
             Display active engagement```css\n.d (e)ngagement```\n\
-            Add/display/set active engagement```css\n.d e (n)ame \{name\}```\n\
-            Display list of engagements```css\n.d e (l)ist```\n\
-            Set the description for the active engagement```css\n.d e (desc)ription \{description\}```\n\
-            Add/remove aspect for active engagement```css\n.d e (a)spect [(d)elete] \{aspect}```\n\
-            Set the current aspect as the active character```css\n.d e (a)spect (c)character```\n\
-            Add/remove character for active engagement```css\n.d e (c)haracter [(d)elete] \{character}```\n\
-            Remove a engagement```css\n.d e (d)delete \{name}```'
+            Add/display/set active engagement```css\n.d e name "NAME"```\n\
+            Display list of engagements```css\n.d e list```\n\
+            Set the description for the active engagement```css\n.d e description "DESCRIPTION TEXT"```\n\
+            Add/remove aspect for active engagement```css\n.d e aspect [delete] "ASPECT NAME"```\n\
+            Set the current aspect as the active character```css\n.d e aspect character```\n\
+            Add/remove character for active engagement```css\n.d e character [delete] "CHARACTER NAME"```\n\
+            Remove a engagement```css\n.d e delete "NAME"```'
 
     approaches = [
         'Careful - pay close attention to detail and take your time.',
@@ -188,7 +188,7 @@ class Setup():
  Describe what you’re trying to do.\n\
  Choose the skill & action that fit.\n\
  Roll: 4dF + skill + stunt.\n\
- Optional: invoke aspect(s) \n\
+ Optional: invoke aspects \n\
   •  re-roll or add +2 (1 Fate point each)\n\
  Resolve action (see Outcomes/Actions).\n\
   •  Absorb shifts (if attacked).\n\
@@ -230,7 +230,7 @@ class Setup():
      to harm a target\n\
         *Fail*:  you fail to connect\n\
         *Tie*:  you get a boost\n\
-        *Success*:  deal a hit equal to shift(s)\n\
+        *Success*:  deal a hit equal to shifts\n\
         *SwS*:  may reduce 1 shift for a boost\n\n\
 **Defend**:\n\
      to oppose attack or stop foe\n\

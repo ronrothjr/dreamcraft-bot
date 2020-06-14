@@ -388,7 +388,7 @@ class CharacterCommand():
 
         char = char if char else self.char
         char, name, get_string, get_short_string = char_svc.get_info('character', char, self.user)
-        can_edit = str(self.user.id) == str(char.user.id) or self.user.role == 'Game Master' if self.user and char else True
+        can_edit = str(self.user.id) == str(char.user.id) or self.user.role in ['Admin','Game Master'] if self.user and char else True
         category = char.category if char else 'Character'
         dialog = {
             'create_character': ''.join([
@@ -647,7 +647,7 @@ class CharacterCommand():
             'type_name': 'CHARACTER',
             'getter': {
                 'method': Character.get_by_page,
-                'params': {'params': {'user': self.user, 'name__icontains': char_name, 'guild': self.guild.name, 'npc': self.npc, 'archived': False}}
+                'params': {'params': {'name__icontains': char_name, 'guild': self.guild.name, 'npc': self.npc, 'archived': False}}
             },
             'formatter': formatter,
             'cancel': self.canceler,

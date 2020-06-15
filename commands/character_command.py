@@ -55,11 +55,11 @@ class CharacterCommand():
         high, hc - add/edit the High Concept in the character sheet
         trouble, t - add/edit the Trouble in the character sheet
         fate, f - add/remove/refresh fate points
-        aspect, a - add/delete aspects
+        aspects, aspect, a - add/delete aspects
         boost, b - add aspects as a boost
-        approach, app - add/edit approaches in the character sheet
-        skill, sk - add/edit skills in the characater sheet
-        stunt, s - add/delete stunts
+        approaches, approach, apps, app - add/edit approaches in the character sheet
+        skills, skill, sks, sk - add/edit skills in the characater sheet
+        stunts, stunt, s - add/delete stunts
         stress, st - add/edit stress tracks in the character sheet
         consequence, con - add/edit consequences and conditions in the character sheet
         custom - add/edit custom fields in the character sheet
@@ -148,12 +148,18 @@ class CharacterCommand():
                 't': self.trouble,
                 'fate': self.fate,
                 'f': self.fate,
+                'aspects': self.aspect,
                 'aspect': self.aspect,
                 'a': self.aspect,
+                'approaches': self.approach,
                 'approach': self.approach,
+                'apps': self.approach,
                 'app': self.approach,
+                'skills': self.skill,
                 'skill': self.skill,
+                'sks': self.skill,
                 'sk': self.skill,
+                'stunts': self.stunt,
                 'stunt': self.stunt,
                 's': self.stunt,
                 'stress': self.stress,
@@ -393,7 +399,7 @@ class CharacterCommand():
         dialog = {
             'create_character': ''.join([
                 '**CREATE or SELECT A CHARACTER**```css\n',
-                '.d character YOUR_CHARACTER\'S_NAME```'
+                '.d character "YOUR CHARACTER\'S NAME"```'
             ]),
             'active_character': ''.join([
                 '***YOU ARE CURRENTLY EDITING...***\n' if can_edit else '',
@@ -401,7 +407,7 @@ class CharacterCommand():
             ]),
             'rename_delete': ''.join([
                 f'\n\n_Is ***{name}*** not the {category.lower()} name you wanted?_',
-                f'```css\n.d c rename NEW_NAME```_Want to remove ***{name}***?_',
+                f'```css\n.d c rename "NEW NAME"```_Want to remove ***{name}***?_',
                 '```css\n.d c delete```'
             ]) if can_edit else '',
             'active_character_short': ''.join([
@@ -414,12 +420,12 @@ class CharacterCommand():
                 '.d c share revoke /* TURN OFF SHARING */```',
                 '\n***Copy a character***```css\n.d c shared /* VIEW SHARED CHARACTERS */\n',
                 '.d c copy /* COPIES SELECTED CHARACTER */\n',
-                '.d c copy to SERVER_NAME /* COPIES YOU CHARACTER TO ANOTHER SERVER */```'
+                '.d c copy to "SERVER NAME" /* COPIES YOU CHARACTER TO ANOTHER SERVER */```'
             ]),
             'add_more_info': ''.join([
                 f'Add more information about ***{name}***',
-                '```css\n.d c description CHARACTER_DESCRIPTION\n',
-                '.d c high concept HIGH_CONCEPT\n.d c trouble TROUBLE```'
+                '```css\n.d c description "CHARACTER DESCRIPTION"\n',
+                '.d c high concept "HIGH CONCEPT"\n.d c trouble TROUBLE```'
             ]) if can_edit else '',
             'add_skills': ''.join([
                 f'\nAdd approaches or skills for ***{name}***',
@@ -439,15 +445,15 @@ class CharacterCommand():
             ]) if can_edit else '',
             'add_aspects_and_stunts': ''.join([
                 f'\n\nAdd an aspect or two for ***{name}***',
-                '```css\n.d c aspect ASPECT_NAME\n',
-                '.d c aspect delete ASPECT_NAME\n',
+                '```css\n.d c aspect "ASPECT NAME"\n',
+                '.d c aspect delete "ASPECT NAME"\n',
                 '/* Add custom aspect type */\n',
-                '.d c aspect type ASPECT_TYPE```',
+                '.d c aspect type "ASPECT TYPE"```',
                 f'Give  ***{name}*** some cool stunts',
-                '```css\n.d c stunt STUNT_NAME\n',
-                '.d c stunt delete STUNT_NAME\n',
+                '```css\n.d c stunt "STUNT NAME"\n',
+                '.d c stunt delete "STUNT NAME"\n',
                 '/* Add custom stunt type */\n',
-                '.d c stunt type STUNT_TYPE```'
+                '.d c stunt type "STUNT TYPE"```'
             ]) if can_edit else '',
             'edit_active_aspect': ''.join([
                 f'\n***You can edit this aspect as if it were a character***',
@@ -777,6 +783,34 @@ class CharacterCommand():
             return ['No active character for deletion']
         if not self.can_edit:
             raise Exception('You do not have permission to delete this character')
+
+        # Handle alternate syntax for deleting character properties
+        if len(args) > 1:
+            if args[1] in ['approaches','approach','app']:
+                args[0] = 'approach'
+                args[1] = 'delete'
+                return self.approach(args)
+            if args[1] in ['skills','skill','sks','sk']:
+                args[0] = 'skill'
+                args[1] = 'delete'
+                return self.skill(args)
+            if args[1] in ['aspects','aspect','a']:
+                args[0] = 'aspect'
+                args[1] = 'delete'
+                return self.aspect(args)
+            if args[1] in ['stunts','stunt','s']:
+                args[0] = 'stunt'
+                args[1] = 'delete'
+                return self.stunt(args)
+            if args[1] in ['stresses','stress','st']:
+                args[0] = 'stress'
+                args[1] = 'delete'
+                return self.stress(args)
+            if args[1] in ['consequences','consequence','con']:
+                args[0] = 'consequence'
+                args[1] = 'delete'
+                return self.approach(args)
+
         def getter(item, page_num=0, page_size=5):
             return [item]
 
@@ -890,7 +924,7 @@ class CharacterCommand():
         if len(args) == 1:
             messages.append('No description provided')
         if not self.char:
-            messages.append('You don\'t have an active character.\nTry this: ```css\n.d c CHARACTER_NAME```')
+            messages.append('You don\'t have an active character.\nTry this: ```css\n.d c "CHARACTER NAME"```')
         elif not self.can_edit:
             raise Exception('You do not have permission to edit this character')
         else:
@@ -918,7 +952,7 @@ class CharacterCommand():
         if len(args) == 2 or (len(args) == 1 and args[1].lower() != 'concept'):
             messages.append('No high concept provided')
         if not self.char:
-            messages.append('You don\'t have an active character.\nTry this: ```css\n.d c CHARACTER_NAME```')
+            messages.append('You don\'t have an active character.\nTry this: ```css\n.d c "CHARACTER NAME"```')
         elif not self.can_edit:
             raise Exception('You do not have permission to edit this character')
         else:
@@ -952,7 +986,7 @@ class CharacterCommand():
         if len(args) == 1:
             messages.append('No trouble provided')
         if not self.char:
-            messages.append('You don\'t have an active character.\nTry this: ```css\n.d c CHARACTER_NAME```')
+            messages.append('You don\'t have an active character.\nTry this: ```css\n.d c "CHARACTER NAME"```')
         else:
             trouble = TextUtils.value_with_quotes(args[1:])
             self.char.trouble = trouble
@@ -975,7 +1009,7 @@ class CharacterCommand():
         """
 
         if not self.char:
-            return ['You don\'t have an active character.\nTry this: ```css\n.d c CHARACTER_NAME```']
+            return ['You don\'t have an active character.\nTry this: ```css\n.d c "CHARACTER NAME"```']
         elif not self.can_edit:
             raise Exception('You do not have permission to edit this character')
         elif args[1].lower() == 'none':
@@ -1014,20 +1048,20 @@ class CharacterCommand():
         """
 
         if not self.char:
-            raise Exception('You don\'t have an active character.\nTry this: ```css\n.d c CHARACTER_NAME```')
+            raise Exception('You don\'t have an active character.\nTry this: ```css\n.d c "CHARACTER NAME"```')
         if not self.can_edit:
             raise Exception('You do not have permission to edit this character')
         messages = []
         if len(args) == 1:
-            raise Exception('No custom name provided. Try this: ```css\n.d c custom CUSTOM_NAME\n/* EXAMPLE:\n.d c custom Home World */```')
+            raise Exception('No custom name provided. Try this: ```css\n.d c custom "CUSTOM NAME"\n/* EXAMPLE:\n.d c custom Home World */```')
         if len(args) == 2:
-            raise Exception('No custom property information provided. Try this: ```css\n.d c custom CUSTOM_NAME_ABBREVIATION CUSTOM_PROPERTY_INFORMATION\n/* EXAMPLE:\n.d c custom Home Earth (alternate history) */```')
+            raise Exception('No custom property information provided. Try this: ```css\n.d c custom "CUSTOM NAME" "CUSTOM PROPERTY INFORMATION"\n/* EXAMPLE:\n.d c custom "Home" "Earth (alternate history)" */```')
         if args[1] in ['delete', 'd']:
             custom_properties = copy.deepcopy(self.char.custom_properties) if self.char.custom_properties else {}
             display_name = TextUtils.clean(args[2])
             property_name = display_name.lower().replace(' ', '_')
             if property_name not in custom_properties:
-                raise Exception('***{self.char.name}*** does not have a custom property named {display_name}')
+                raise Exception(f'***{self.char.name}*** does not have a custom property named {display_name}')
             custom_properties.pop(property_name, None)
         else:
             display_name = TextUtils.clean(args[1])
@@ -1057,7 +1091,7 @@ class CharacterCommand():
         """
 
         if not self.char:
-            raise Exception('You don\'t have an active character.\nTry this: ```css\n.d c CHARACTER_NAME```')
+            raise Exception('You don\'t have an active character.\nTry this: ```css\n.d c "CHARACTER NAME"```')
         if not self.can_edit:
             raise Exception('You do not have permission to edit this character')
         messages = []
@@ -1140,7 +1174,7 @@ class CharacterCommand():
         """
 
         if not self.char:
-            raise Exception('You don\'t have an active character.\nTry this: ```css\n.d c CHARACTER_NAME```')
+            raise Exception('You don\'t have an active character.\nTry this: ```css\n.d c "CHARACTER NAME"```')
         if not self.can_edit:
             raise Exception('You do not have permission to edit this character')
         messages = []
@@ -1182,10 +1216,10 @@ class CharacterCommand():
             app_str = '\n        '.join(APPROACHES)
             messages.append(f'**Approaches:**\n        {app_str}')
         elif len(args) < 3:
-            messages.append('Approach syntax: .d (app)roach {approach} {bonus}')
+            messages.append('Approach syntax: .d approach "APPROACH NAME" BONUS [..."APPROACH NAME" BONUS]')
         else:
             if not self.char:
-                messages.append('You don\'t have an active character.\nTry this: ```css\n.d c CHARACTER_NAME```')
+                messages.append('You don\'t have an active character.\nTry this: ```css\n.d c "CHARACTER NAME"```')
             elif not self.can_edit:
                 raise Exception('You do not have permission to edit this character')
             else:
@@ -1201,11 +1235,14 @@ class CharacterCommand():
                     char_svc.save(self.char, self.user)
                     messages.append(f'Removed {skill}')
                 else:
-                    for i in range(1, len(args), 2):
-                        abbr = args[i][0:2].lower()
-                        val = args[i+1]
-                        skill = [s for s in APPROACHES if abbr == s[0:2].lower()]
-                        skill = skill[0].split(' - ')[0] if skill else args[i]
+                    indices = [0] + [i for i in range(1, len(args)) if args[i].replace('+','').replace('-','').isdigit()]
+                    if len(indices) == 1:
+                        raise Exception('Approach syntax: .d approach "APPROACH NAME" BONUS [..."APPROACH NAME" BONUS]')
+                    for i in range(1, len(indices)):
+                        abbr = ' '.join(args[(indices[i-1]+1):indices[i]])
+                        val = args[indices[i]]
+                        skill = [s for s in APPROACHES if abbr.lower() == s[0:2].lower()]
+                        skill = skill[0].split(' - ')[0] if skill else abbr
                         self.char.skills[skill] = val
                         messages.append(f'Updated {skill} to {val}')
                     self.char.use_approaches = True
@@ -1231,10 +1268,10 @@ class CharacterCommand():
             sk_str = '\n        '.join(SKILLS)
             messages.append(f'**Skills:**\n        {sk_str}')
         elif len(args) < 3:
-            messages.append('Skill syntax: .d (sk)ill {skill} {bonus}')
+            raise Exception('Skill syntax: .d skill "SKILL NAME" BONUS [..."SKILL NAME" BONUS]')
         else:
             if not self.char:
-                messages.append('You don\'t have an active character.\nTry this: ```css\n.d c CHARACTER_NAME```')
+                messages.append('You don\'t have an active character.\nTry this: ```css\n.d c "CHARACTER NAME"```')
             elif not self.can_edit:
                 raise Exception('You do not have permission to edit this character')
             else:
@@ -1250,11 +1287,14 @@ class CharacterCommand():
                     char_svc.save(self.char, self.user)
                     messages.append(f'Removed {skill} skill') 
                 else:
-                    for i in range(1, len(args), 2):
-                        abbr = args[i][0:2].lower()
-                        val = args[i+1]
-                        skill = [s for s in SKILLS if abbr == s[0:2].lower()]
-                        skill = skill[0].split(' - ')[0] if skill else args[i]
+                    indices = [0] + [i for i in range(1, len(args)) if args[i].replace('+','').replace('-','').isdigit()]
+                    if len(indices) == 1:
+                        raise Exception('Skill syntax: .d skill "SKILL NAME" BONUS [..."SKILL NAME" BONUS]')
+                    for i in range(1, len(indices)):
+                        abbr = ' '.join(args[(indices[i-1]+1):indices[i]])
+                        val = args[indices[i]]
+                        skill = [s for s in SKILLS if abbr.lower() == s[0:2].lower()]
+                        skill = skill[0].split(' - ')[0] if skill else abbr
                         self.char.skills[skill] = val
                         messages.append(f'Updated {skill} to {val}')
                     self.char.use_approaches = False
@@ -1280,10 +1320,10 @@ class CharacterCommand():
         # Validate syntax and permissions
         if len(args) == 1:
             if not self.asp:
-                return ['You don\'t have an active aspect.\nTry this: ```css\n.d c a {aspect}```']
+                return ['You don\'t have an active aspect.\nTry this: ```css\n.d c a "ASPECT NAME"```']
             messages.append(f'{self.asp.get_string(self.char)}')
         if not self.char:
-            return ['You don\'t have an active character.\nTry this: ```css\n.d c CHARACTER_NAME```']
+            return ['You don\'t have an active character.\nTry this: ```css\n.d c "CHARACTER NAME"```']
         elif not self.can_edit:
             raise Exception('You do not have permission to edit this character')
 
@@ -1305,7 +1345,7 @@ class CharacterCommand():
         # Handle aspect 'type' subcomand
         elif args[1].lower() in ['type','t']:
             if not self.asp:
-                return ['You don\'t have an active aspect.\nTry this: ```css\n.d c a {aspect}```']
+                return ['You don\'t have an active aspect.\nTry this: ```css\n.d c a "ASPECT NAME"```']
             self.asp.type_name = ' '.join(args[2:])
             char_svc.save(self.asp, self.user)
             messages.append(f'Set the ***{self.asp.name}*** aspect with type _{self.asp.type_name}_')
@@ -1313,7 +1353,7 @@ class CharacterCommand():
         # Handle aspect Fate Fractal option to edit it as a character
         elif args[1].lower() in ['character', 'char', 'c']:
             if not self.asp:
-                return ['You don\'t have an active aspect.\nTry this: ```css\n.d c a {aspect}```']
+                return ['You don\'t have an active aspect.\nTry this: ```css\n.d c a "ASPECT NAME"```']
             self.user.active_character = str(self.asp.id)
             char_svc.save_user(self.user)
             self.char.active_aspect = str(self.asp.id)
@@ -1372,10 +1412,10 @@ class CharacterCommand():
         # Validate stunt subcomand syntax and permisions
         if len(args) == 1:
             if not self.stu:
-                return ['You don\'t have an active stunt.\nTry this: ```css\n.d c a {aspect}```']
+                return ['You don\'t have an active stunt.\nTry this: ```css\n.d c a "STUNT NAME"```']
             messages.append(f'{self.stu.get_string(self.char)}')
         if not self.char:
-            return ['You don\'t have an active character.\nTry this: ```css\n.d c CHARACTER_NAME```']
+            return ['You don\'t have an active character.\nTry this: ```css\n.d c "CHARACTER NAME"```']
         elif not self.can_edit:
             raise Exception('You do not have permission to edit this character')
 
@@ -1466,7 +1506,7 @@ class CharacterCommand():
         [stress_checks.append(t.lower()) for t in stress_titles]
         stress_check_types = ' or '.join([f'({t[0:2 ].lower()}){t[2:].lower()}' for t in stress_titles])
         if not self.char:
-            messages.append('You don\'t have an active character.\nTry this: ```css\n.d c CHARACTER_NAME```')
+            messages.append('You don\'t have an active character.\nTry this: ```css\n.d c "CHARACTER NAME"```')
             return messages
         if not self.can_edit:
             raise Exception('You do not have permission to edit this character')
@@ -1649,7 +1689,7 @@ class CharacterCommand():
         [consequences_checks.append(t.lower()) for t in consequences_titles]
         consequences_check_types = ' or '.join([f'({t[0:2].lower()}){t[2:].lower()}' for t in consequences_titles])
         if not self.char:
-            messages.append('You don\'t have an active character.\nTry this: ```css\n.d c CHARACTER_NAME```')
+            messages.append('You don\'t have an active character.\nTry this: ```css\n.d c "CHARACTER NAME"```')
             return messages
         if not self.can_edit:
             raise Exception('You do not have permission to edit this character')

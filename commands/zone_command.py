@@ -93,6 +93,26 @@ class ZoneCommand():
                 'character': self.character,
                 'char': self.character,
                 'c': self.character,
+                'approaches': self.character,
+                'approach': self.character,
+                'apps': self.character,
+                'app': self.character,
+                'skills': self.character,
+                'skill': self.character,
+                'sks': self.character,
+                'sk': self.character,
+                'aspects': self.character,
+                'aspect': self.character,
+                'a': self.character,
+                'stunts': self.character,
+                'stunt': self.character,
+                's': self.character,
+                'custom': self.character,
+                'stress': self.character,
+                'st': self.character,
+                'consequences': self.character,
+                'consequence':self.character,
+                'con': self.character,
                 'players': self.player,
                 'player': self.player,
                 'p': self.player,
@@ -210,7 +230,7 @@ class ZoneCommand():
 
         messages =[]
         if not self.sc:
-            raise Exception('No active scene. Try this:```css\n.d scene SCENE_NAME```')
+            raise Exception('No active scene. Try this:```css\n.d scene "SCENE NAME"```')
         command = 'zone ' + (' '.join(args))
         def canceler(cancel_args):
             if cancel_args[0].lower() in ['zone','s']:
@@ -265,7 +285,7 @@ class ZoneCommand():
         dialog = {
             'create_zone': ''.join([
                 '**CREATE or ZONE**```css\n',
-                '.d zone YOUR_ZONE\'S_NAME```'
+                '.d zone "YOUR ZONE\'S NAME"```'
             ]),
             'active_zone': ''.join([
                 '***YOU ARE CURRENTLY EDITING...***\n' if self.can_edit else '',
@@ -277,7 +297,7 @@ class ZoneCommand():
             ]),
             'rename_delete': ''.join([
                 f'\n\n_Is ***{name}*** not the {category.lower()} name you wanted?_',
-                f'```css\n.d zone rename NEW_NAME```_Want to remove ***{name}***?_',
+                f'```css\n.d zone rename "NEW NAME"```_Want to remove ***{name}***?_',
                 '```css\n.d zone delete```'
             ]),
             'go_back_to_parent': ''.join([
@@ -319,7 +339,7 @@ class ZoneCommand():
         """
 
         if not self.sc:
-            raise Exception('No active scene or name provided. Try this:```css\n.d scene SCENE_NAME```')
+            raise Exception('No active scene or name provided. Try this:```css\n.d scene "SCENE NAME"```')
         messages = []
         if len(args) == 0:
             if not self.zone:
@@ -401,7 +421,7 @@ class ZoneCommand():
 
         messages = []
         if not self.sc:
-            raise Exception('No active scene. Try this:```css\n.d scene SCENE_NAME```')
+            raise Exception('No active scene. Try this:```css\n.d scene "SCENE NAME"```')
         if len(args) == 0:
             if not self.zone:
                 return [
@@ -462,7 +482,7 @@ class ZoneCommand():
 
         messages = []
         if not self.sc:
-            raise Exception('No active scene. Try this:```css\n.d scene SCENE_NAME```')
+            raise Exception('No active scene. Try this:```css\n.d scene "SCENE NAME"```')
         def canceler(cancel_args):
             if cancel_args[0].lower() in ['zone']:
                 return ZoneCommand(parent=self.parent, ctx=self.ctx, args=cancel_args, guild=self.guild, user=self.user, channel=self.channel).run()
@@ -507,9 +527,7 @@ class ZoneCommand():
         else:
             description = ' '.join(args[1:])
             self.zone.description = description
-            self.zone.updated_by = str(self.user.id)
-            self.zone.updated = T.now()
-            self.zone.save()
+            zone_svc.save(self.zone, self.user)
             return [
                 f'Description updated to "{description}"',
                 self.zone.get_string(self.channel)
@@ -530,9 +548,7 @@ class ZoneCommand():
 
         if self.user:
             self.user.active_character = str(self.zone.character.id)
-            self.user.updated_by = str(self.user.id)
-            self.user.updated = T.now()
-            self.user.save()
+            zone_svc.save_user(self.user)
         command = CharacterCommand(parent=self.parent, ctx=self.ctx, args=args, guild=self.guild, user=self.user, channel=self.channel, char=self.zone.character)
         return command.run()
 
@@ -565,6 +581,6 @@ class ZoneCommand():
         """
 
         if not self.sc:
-            raise Exception('No active scene. Try this:```css\n.d scene SCENE_NAME```')
+            raise Exception('No active scene. Try this:```css\n.d scene "SCENE NAME"```')
 
         return zone_svc.delete_zone(args, self.guild, self.channel, self.sc, self.zone, self.user)

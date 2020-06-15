@@ -17,7 +17,7 @@ class ExchangeService(BaseService):
         if len(args) == 1:
             raise Exception('No characters added')
         if not exchange:
-            raise Exception('You don\'t have an active exchange. Try this:```css\n.d exchange EXCHANGE_NAME```')
+            raise Exception('You don\'t have an active exchange. Try this:```css\n.d exchange "EXCHANGE NAME"```')
         elif args[1].lower() == 'list' or args[1].lower() == 'l':
             return [exchange.get_string_characters(channel)]
         elif args[1].lower() in ['delete','d']:
@@ -48,7 +48,7 @@ class ExchangeService(BaseService):
         if len(args) == 1:
             raise Exception('No opposition added')
         if not exchange:
-            raise Exception('You don\'t have an active exchange. Try this:```css\n.d exchange EXCHANGE_NAME```')
+            raise Exception('You don\'t have an active exchange. Try this:```css\n.d exchange "EXCHANGE NAME"```')
         elif args[1].lower() == 'list' or args[1].lower() == 'l':
             return [exchange.get_string_opposition(channel)]
         elif args[1].lower() in ['delete','d']:

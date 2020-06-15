@@ -45,7 +45,7 @@ class Setup():
             Display user info```css\n.d user```\n\
             Set user time zone```css\n.d u tz "TIME ZONE NAME"```\n\
             Search the list of time zones```css\n.d u tz list {search}```\n\
-            Add contact information```css\n.d u contact "CONTACT_INFO".d u contact "\nReddit - u/fuzzywuzzy\nEmail - fuzzy@gmail.com"```\n'
+            Add contact information```css\n.d u contact "CONTACT INFO".d u contact "\nReddit - u/fuzzywuzzy\nEmail - fuzzy@gmail.com"```\n'
 
     revision_help = '.d revision help - display revision help\n\
             \nRevision Setup:\n\

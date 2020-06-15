@@ -112,7 +112,7 @@ class SuggestionCommand():
 
         messages = []
         if len(args) < 2:
-            raise Exception('syntax: ```css\n.d suggest "SUGGESTION_TEXT"```')
+            raise Exception('syntax: ```css\n.d suggest "SUGGESTION TEXT"```')
         suggestion = Suggestion().create_new(name=self.user.name, text=' '.join(args[1:]))
         messages.append(suggestion.get_string(self.user))
         return messages

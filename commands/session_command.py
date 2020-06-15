@@ -145,7 +145,7 @@ class SessionCommand():
 
     def check_session(self):
         if not self.session:
-            raise Exception('You don\'t have an active session. Try this:```css\n.d session SESSION_NAME```')
+            raise Exception('You don\'t have an active session. Try this:```css\n.d session "SESSION NAME"```')
 
     def search(self, args):
         """Search for an existing Session using the command string
@@ -270,7 +270,7 @@ class SessionCommand():
         dialog = {
             'create_session': ''.join([
                 '**CREATE or SESSION**```css\n',
-                '.d session YOUR_SESSION\'S_NAME```'
+                '.d session "YOUR SESSION\'S NAME"```'
             ]),
             'active_session': ''.join([
                 '***YOU ARE CURRENTLY EDITING...***\n' if self.can_edit else '',
@@ -282,7 +282,7 @@ class SessionCommand():
             ]),
             'rename_delete': ''.join([
                 f'\n\n_Is ***{name}*** not the {category.lower()} name you wanted?_',
-                f'```css\n.d session rename NEW_NAME```_Want to remove ***{name}***?_',
+                f'```css\n.d session rename "NEW NAME"```_Want to remove ***{name}***?_',
                 '```css\n.d session delete```'
             ]),
             'go_back_to_parent': ''.join([

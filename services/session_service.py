@@ -17,7 +17,7 @@ class SessionService(BaseService):
         if len(args) == 1:
             raise Exception('No characters added')
         if not sc:
-            raise Exception('You don\'t have an active session. Try this:```css\n.d session SESSION_NAME```')
+            raise Exception('You don\'t have an active session. Try this:```css\n.d session "SESSION NAME"```')
         elif args[1].lower() == 'list' or args[1].lower() == 'l':
             return [sc.get_string_characters(channel)]
         elif args[1].lower() in ['delete','d']:

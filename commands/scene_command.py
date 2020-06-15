@@ -159,7 +159,7 @@ class SceneCommand():
 
     def check_scene(self):
         if not self.sc:
-            raise Exception('You don\'t have an active scene. Try this:```css\n.d scene SCENE_NAME```')
+            raise Exception('You don\'t have an active scene. Try this:```css\n.d scene "SCENE NAME"```')
 
     def search(self, args):
         """Search for an existing Scene using the command string
@@ -286,7 +286,7 @@ class SceneCommand():
         dialog = {
             'create_scene': ''.join([
                 '**CREATE or SCENE**```css\n',
-                '.d scene YOUR_SCENE\'S_NAME```'
+                '.d scene "YOUR SCENE\'S NAME"```'
             ]),
             'active_scene': ''.join([
                 '***YOU ARE CURRENTLY EDITING...***\n' if self.can_edit else '',
@@ -298,7 +298,7 @@ class SceneCommand():
             ]),
             'rename_delete': ''.join([
                 f'\n\n_Is ***{name}*** not the {category.lower()} name you wanted?_',
-                f'```css\n.d scene rename NEW_NAME```_Want to remove ***{name}***?_',
+                f'```css\n.d scene rename "NEW NAME"```_Want to remove ***{name}***?_',
                 '```css\n.d scene delete```'
             ]) if self.can_edit else '',
             'edit_active_scene': ''.join([
@@ -368,7 +368,7 @@ class SceneCommand():
 
         messages = []
         if not self.scenario:
-            raise Exception('No active scenario. Try this:```css\n.d scenario SCENARIO_NAME```')
+            raise Exception('No active scenario. Try this:```css\n.d scenario "SCENARIO NAME"```')
         if len(args) == 0:
             if not self.sc:
                 return [
@@ -455,7 +455,7 @@ class SceneCommand():
 
         messages = []
         if not self.scenario:
-            raise Exception('No active scenario. Try this:```css\n.d scenario SCENARIO_NAME```')
+            raise Exception('No active scenario. Try this:```css\n.d scenario "SCENARIO NAME"```')
         if len(args) == 0:
             if not self.sc:
                 return [
@@ -514,7 +514,7 @@ class SceneCommand():
 
         messages = []
         if not self.scenario:
-            raise Exception('No active scenario. Try this:```css\n.d scenario SCENARIO_NAME```')
+            raise Exception('No active scenario. Try this:```css\n.d scenario "SCENARIO NAME"```')
         def canceler(cancel_args):
             if cancel_args[0].lower() in ['scene']:
                 return SceneCommand(parent=self.parent, ctx=self.ctx, args=cancel_args, guild=self.guild, user=self.user, channel=self.channel).run()
@@ -628,7 +628,7 @@ class SceneCommand():
         """
 
         if not self.scenario:
-            raise Exception('No active scenario. Try this:```css\n.d scenario SCENARIO_NAME```')
+            raise Exception('No active scenario. Try this:```css\n.d scenario "SCENARIO NAME"```')
 
         return scene_svc.delete_item(args, self.user, self.sc, Scene.find, {'guild': self.guild.name, 'channel_id': str(self.channel.id), 'scenario_id': str(self.scenario.id)})
 
@@ -696,7 +696,7 @@ class SceneCommand():
 
         self.check_scene()
         if not self.char:
-            raise Exception(f'You have no active character.```css\n.d c CHARACTER_NAME```')      
+            raise Exception(f'You have no active character.```css\n.d c "CHARACTER NAME"```')      
         if not self.sc.started_on:
             raise Exception(f'***{self.sc.name}*** has not yet started. You may not enter.')
         if self.sc.ended_on:
@@ -723,7 +723,7 @@ class SceneCommand():
         messages = []
         self.check_scene()
         if not self.char or  (self.char and self.char.category != 'Character'):
-            raise Exception(f'You have no active character.```css\n.d c CHARACTER_NAME```')
+            raise Exception(f'You have no active character.```css\n.d c "CHARACTER NAME"```')
         zones = list(Zone.filter(scene_id=str(self.sc.id), archived=False))
         if len(args) == 1:
             leaving = [z for z in zones if str(self.char.id) in z.characters]
@@ -768,7 +768,7 @@ class SceneCommand():
         messages = []
         self.check_scene()
         if not self.char and not self.char.category == 'Character':
-            raise Exception(f'You have no active character.```css\n.d c CHARACTER_NAME```')      
+            raise Exception(f'You have no active character.```css\n.d c "CHARACTER NAME"```')      
         if not self.sc.started_on:
             raise Exception(f'***{self.sc.name}*** has not yet started. You may not enter.')
         if self.sc.ended_on:

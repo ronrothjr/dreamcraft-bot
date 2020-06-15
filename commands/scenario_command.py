@@ -271,7 +271,7 @@ class ScenarioCommand():
         dialog = {
             'create_scenario': ''.join([
                 '**CREATE or SCENARIO**```css\n',
-                '.d scenario YOUR_SCENARIOR\'S_NAME```'
+                '.d scenario "YOUR SCENARIOR\'SNAME"```'
             ]),
             'active_scenario': ''.join([
                 '***YOU ARE CURRENTLY EDITING...***\n' if self.can_edit else '',
@@ -283,7 +283,7 @@ class ScenarioCommand():
             ]),
             'rename_delete': ''.join([
                 f'\n\n_Is ***{name}*** not the {category.lower()} name you wanted?_',
-                f'```css\n.d scenario rename NEW_NAME```_Want to remove ***{name}***?_',
+                f'```css\n.d scenario rename "NEW NAME"```_Want to remove ***{name}***?_',
                 '```css\n.d scenario delete```'
             ]),
             'go_back_to_parent': ''.join([

@@ -149,7 +149,7 @@ class EngagementCommand():
         """Check for an active scene and if one is not found, raise an Exception"""
 
         if not self.sc:
-            raise Exception('You don\'t have an active scene. Try this:```css\n.d scene SCENE_NAME```')
+            raise Exception('You don\'t have an active scene. Try this:```css\n.d scene "SCENE NAME"```')
 
     def search(self, args):
         """Search for an existing Engagement using the command string
@@ -275,7 +275,7 @@ class EngagementCommand():
         dialog = {
             'create_engagement': ''.join([
                 '**CREATE or ENGAGEMENT**```css\n',
-                '.d engagement YOUR_ENGAGEMENT\'S_NAME```'
+                '.d engagement "YOUR ENGAGEMENT\'S NAME"```'
             ]),
             'active_engagement': ''.join([
                 '***YOU ARE CURRENTLY EDITING...***\n' if self.can_edit else '',
@@ -287,7 +287,7 @@ class EngagementCommand():
             ]),
             'rename_delete': ''.join([
                 f'\n\n_Is ***{name}*** not the {category.lower()} name you wanted?_',
-                f'```css\n.d engagement rename NEW_NAME```_Want to remove ***{name}***?_',
+                f'```css\n.d engagement rename "NEW NAME"```_Want to remove ***{name}***?_',
                 '```css\n.d engagement delete```'
             ]),
             'go_back_to_parent': ''.join([

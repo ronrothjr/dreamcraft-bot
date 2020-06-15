@@ -116,7 +116,7 @@ class UserCommand():
     def time_zone(self):
         """Set/edit the user's timezone information"""
 
-        tz_help = 'Try this:```css\n.d u timezone ZONE_SEARCH\n/* ZONE_SEARCH must be at least 3 characters */```'
+        tz_help = 'Try this:```css\n.d u timezone "ZONE SEARCH"\n/* "ZONE SEARCH" must be at least 3 characters */```'
         tz_search = ''.join([
             'Try one of these searches:```css\n',
             '.d u tz US/\n',
@@ -165,7 +165,7 @@ class UserCommand():
         """Set/edit the user's contact information"""
 
         if len(self.args) < 2:
-            return [f'No contact info provided.```css\n.d u contact "CONTACT_INFO"```']
+            return [f'No contact info provided.```css\n.d u contact "CONTACT INFO"```']
         self.user.url = ' '.join(self.args[1:])
         self.user.updated_by = str(self.user.id)
         self.user.updated = T.now()

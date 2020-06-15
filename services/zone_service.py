@@ -17,7 +17,7 @@ class ZoneService(BaseService):
         if len(args) == 1:
             raise Exception('No characters added')
         if not zone:
-            raise Exception('You don\'t have an active zone. Try this:```css\n.d zone ZONE_NAME```')
+            raise Exception('You don\'t have an active zone. Try this:```css\n.d zone "ZONE NAME"```')
         elif args[1].lower() == 'list' or args[1].lower() == 'l':
             return [zone.get_string_characters(channel)]
         elif args[1].lower() in ['delete','d']:

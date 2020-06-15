@@ -129,7 +129,7 @@ class RevisionCommand():
         rev_name = ' '.join(args[1:])
         if args[1] == 'rename':
             if len(args) < 4:
-                raise Exception('syntax: ```css\n.d revision rename "ORIGINAL_NAME" "NEW_NAME"```')
+                raise Exception('syntax: ```css\n.d revision rename "ORIGINAL NAME" "NEW NAME"```')
             rev_name_orig = ' '.join(args[2])
             rev_name_new = ' '.join(args[3])
             revision_new = Revision().find(rev_name_new)

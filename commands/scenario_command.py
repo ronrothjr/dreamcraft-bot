@@ -93,6 +93,26 @@ class ScenarioCommand():
                 'character': self.character,
                 'char': self.character,
                 'c': self.character,
+                'approaches': self.character,
+                'approach': self.character,
+                'apps': self.character,
+                'app': self.character,
+                'skills': self.character,
+                'skill': self.character,
+                'sks': self.character,
+                'sk': self.character,
+                'aspects': self.character,
+                'aspect': self.character,
+                'a': self.character,
+                'stunts': self.character,
+                'stunt': self.character,
+                's': self.character,
+                'custom': self.character,
+                'stress': self.character,
+                'st': self.character,
+                'consequences': self.character,
+                'consequence':self.character,
+                'con': self.character,
                 'players': self.player,
                 'player': self.player,
                 'p': self.player,
@@ -271,7 +291,7 @@ class ScenarioCommand():
         dialog = {
             'create_scenario': ''.join([
                 '**CREATE or SCENARIO**```css\n',
-                '.d scenario "YOUR SCENARIOR\'SNAME"```'
+                '.d scenario "YOUR SCENARIOR\'S NAME"```'
             ]),
             'active_scenario': ''.join([
                 '***YOU ARE CURRENTLY EDITING...***\n' if self.can_edit else '',

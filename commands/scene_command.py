@@ -101,6 +101,26 @@ class SceneCommand():
                 'character': self.character,
                 'char': self.character,
                 'c': self.character,
+                'approaches': self.character,
+                'approach': self.character,
+                'apps': self.character,
+                'app': self.character,
+                'skills': self.character,
+                'skill': self.character,
+                'sks': self.character,
+                'sk': self.character,
+                'aspects': self.character,
+                'aspect': self.character,
+                'a': self.character,
+                'stunts': self.character,
+                'stunt': self.character,
+                's': self.character,
+                'custom': self.character,
+                'stress': self.character,
+                'st': self.character,
+                'consequences': self.character,
+                'consequence':self.character,
+                'con': self.character,
                 'players': self.player,
                 'player': self.player,
                 'p': self.player,
@@ -556,9 +576,7 @@ class SceneCommand():
         self.check_scene()
         description = ' '.join(args[1:])
         self.sc.description = description
-        self.sc.updated_by = str(self.user.id)
-        self.sc.updated = T.now()
-        self.sc.save()
+        scene_svc.save(self.sc, self.user)
         return [
             f'Description updated to "{description}"',
             self.sc.get_string(self.channel, self.user)
@@ -578,9 +596,8 @@ class SceneCommand():
         """
 
         self.check_scene()
-        if self.user:
-            self.user.active_character = str(self.sc.character.id)
-            scene_svc.save_user(self.user)
+        self.user.active_character = str(self.sc.character.id)
+        scene_svc.save_user(self.user)
         command = CharacterCommand(parent=self.parent, ctx=self.ctx, args=args, guild=self.guild, user=self.user, channel=self.channel, char=self.sc.character)
         return command.run()
 

@@ -93,6 +93,26 @@ class ZoneCommand():
                 'character': self.character,
                 'char': self.character,
                 'c': self.character,
+                'approaches': self.character,
+                'approach': self.character,
+                'apps': self.character,
+                'app': self.character,
+                'skills': self.character,
+                'skill': self.character,
+                'sks': self.character,
+                'sk': self.character,
+                'aspects': self.character,
+                'aspect': self.character,
+                'a': self.character,
+                'stunts': self.character,
+                'stunt': self.character,
+                's': self.character,
+                'custom': self.character,
+                'stress': self.character,
+                'st': self.character,
+                'consequences': self.character,
+                'consequence':self.character,
+                'con': self.character,
                 'players': self.player,
                 'player': self.player,
                 'p': self.player,
@@ -507,9 +527,7 @@ class ZoneCommand():
         else:
             description = ' '.join(args[1:])
             self.zone.description = description
-            self.zone.updated_by = str(self.user.id)
-            self.zone.updated = T.now()
-            self.zone.save()
+            zone_svc.save(self.zone, self.user)
             return [
                 f'Description updated to "{description}"',
                 self.zone.get_string(self.channel)
@@ -530,9 +548,7 @@ class ZoneCommand():
 
         if self.user:
             self.user.active_character = str(self.zone.character.id)
-            self.user.updated_by = str(self.user.id)
-            self.user.updated = T.now()
-            self.user.save()
+            zone_svc.save_user(self.user)
         command = CharacterCommand(parent=self.parent, ctx=self.ctx, args=args, guild=self.guild, user=self.user, channel=self.channel, char=self.zone.character)
         return command.run()
 

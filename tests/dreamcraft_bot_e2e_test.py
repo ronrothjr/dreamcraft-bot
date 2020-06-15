@@ -92,13 +92,13 @@ class TestDreamcraftBotE2E(unittest.TestCase):
             {
                 'args': [('r',)],
                 'assertions': [
-                    ['No active character. Try this to create/select one: ```css\n.d c CHARACTER_NAME```', 'Should include instructions to create character']
+                    ['No active character. Try this to create/select one: ```css\n.d c "CHARACTER NAME"```', 'Should include instructions to create character']
                 ]
             },
             {
                 'args': [('s',)],
                 'assertions': [
-                    ['No active scenario. Try this:```css\n.d scenario SCENARIO_NAME```', 'Should include instructions to create scenario']
+                    ['No active scenario. Try this:```css\n.d scenario "SCENARIO NAME"```', 'Should include instructions to create scenario']
                 ]
             },
             {
@@ -393,7 +393,7 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                 'args': [('session',)],
                 'assertions': [
                     ['No active session or name provided', 'should return no active session if empty sessions'],
-                    ['**CREATE or SESSION**```css\n.d session YOUR_SESSION\'S_NAME```', 'Should include instructions to create session']
+                    ['**CREATE or SESSION**```css\n.d session "YOUR SESSION\'S NAME"```', 'Should include instructions to create session']
                 ]
             },
             {
@@ -424,14 +424,14 @@ class TestDreamcraftBotE2E(unittest.TestCase):
             {
                 'args': [('s', 'Test Scene')],
                 'assertions': [
-                    ['No active scenario. Try this:```css\n.d scenario SCENARIO_NAME```', 'Should include instructions to create scenario']
+                    ['No active scenario. Try this:```css\n.d scenario "SCENARIO NAME"```', 'Should include instructions to create scenario']
                 ]
             },
             {
                 'args': [('scenario',)],
                 'assertions': [
                     ['No active scenario or name provided', 'should return no active scenario if empty scenarios'],
-                    ['**CREATE or SCENARIO**```css\n.d scenario YOUR_SCENARIOR\'S_NAME```', 'Should include instructions to create scenario']
+                    ['**CREATE or SCENARIO**```css\n.d scenario "YOUR SCENARIOR\'S NAME"```', 'Should include instructions to create scenario']
                 ]
             },
             {
@@ -460,7 +460,7 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                 'args': [('scene',)],
                 'assertions': [
                     ['No active scene or name provided', 'should return no active scene if empty scenes'],
-                    ['**CREATE or SCENE**```css\n.d scene YOUR_SCENE\'S_NAME```', 'Should include instructions to create scene']
+                    ['**CREATE or SCENE**```css\n.d scene "YOUR SCENE\'S NAME"```', 'Should include instructions to create scene']
                 ]
             },
             {
@@ -500,7 +500,7 @@ class TestDreamcraftBotE2E(unittest.TestCase):
             {
                 'args': [('zone',)],
                 'assertions': [
-                    ['No active zone or name provided\n\n\n**CREATE or ZONE**```css\n.d zone YOUR_ZONE\'S_NAME```', 'should return no active scene if empty scenes and  include instructions to create scene']
+                    ['No active zone or name provided\n\n\n**CREATE or ZONE**```css\n.d zone "YOUR ZONE\'S NAME"```', 'should return no active scene if empty scenes and  include instructions to create scene']
                 ]
             },
             {

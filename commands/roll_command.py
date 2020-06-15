@@ -430,7 +430,6 @@ class RollCommand():
         list(str) - the response messages string array
         """
 
-        self.skill = self.args[0] if len(self.args) > 0 and self.args[0].lower() not in ['i','invoke','c','compel'] else ''
         if len(self.args) > 0 and self.args[0].lower() in ['help','h']:
             return self.help()
         if not self.char:
@@ -438,6 +437,8 @@ class RollCommand():
         self.messages = [self.char.get_string_name(self.user)]
         self.last_roll = None
         # parse skill from args
+        self.bonus_arg = self.args[0] if len(self.args) > 0 and ('+' in self.args[0] or '-' in self.args[0]) and self.args[0].replace('+','').replace('-','').isdigit() else ''
+        self.skill = self.args[0] if len(self.args) > 0 and not self.bonus_arg and self.args[0].lower() not in ['i','invoke','c','compel'] else ''
         self.get_skill()
 
         # Find and validate invokes and compels
@@ -899,13 +900,14 @@ class RollCommand():
         dice_roll = self.roll_dice()
         if exact_roll and exact_roll.replace('+','').replace('-','').isdigit():
             dice_roll['rolled'] = int(exact_roll)
-        final_roll = dice_roll['rolled'] + bonus
+        final_roll = dice_roll['rolled'] + bonus + (int(self.bonus_arg) if self.bonus_arg else 0)
         skill_bonus_str = f' + ({self.skill}{skill_str})' if skill_str else ''
-        skill_bonus_str += f' = {final_roll}' if skill_bonus_str or bonus_invokes else ''
+        bonus_arg_str = f' {self.bonus_arg}' if self.bonus_arg else ''
+        skill_bonus_str += f' = {final_roll}' if skill_bonus_str or bonus_invokes or bonus_arg_str else ''
         rolled = dice_roll['rolled']
         fate_roll_string = dice_roll['fate_roll_string']
         return {
-            'roll_text': f'... rolled: {fate_roll_string} = {rolled}{invokes_bonus_string}{skill_bonus_str}{invoke_string}',
+            'roll_text': f'... rolled: {fate_roll_string} = {rolled}{invokes_bonus_string}{bonus_arg_str}{skill_bonus_str}{invoke_string}',
             'roll': dice_roll['rolled'],
             'skill': self.skill,
             'skill_str': skill_str,

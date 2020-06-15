@@ -265,10 +265,12 @@ class RollCommand():
         if len(self.args) == 0:
             raise Exception('No target identified for your attack action')
         search = self.args[0]
+        chars = []
         if self.engagement and self.engagement.characters:
-            chars = list(Character().filter(id__in=[c for c in self.engagement.characters]).all())
-        else:
-            chars = list(Character().filter(id__in=[c for c in self.sc.characters]).all())
+            chars.extend(list(Character().filter(id__in=[c for c in self.engagement.characters]).all()))
+        targets = [c for c in chars if search.lower() in c.name.lower()]
+        if not targets and self.sc and self.sc.characters:
+            chars.extend(list(Character().filter(id__in=[c for c in self.sc.characters]).all()))
         targets = [c for c in chars if search.lower() in c.name.lower()]
         if not targets:
             raise Exception(f'No target match for _{search}_ found in the ***{self.sc.name}*** scene.')
@@ -525,7 +527,11 @@ class RollCommand():
             raise Exception(f'***{char.name}*** does not have enough fate points')
         else:
             # Apply any fate point cost of invokes
-            char.fate_points -= self.invokes_cost
+            if self.invokes_cost:
+                if char and hasattr(char, 'fate_points'):
+                    char.fate_points -= self.invokes_cost
+                # TODO: handle DM fate pool for NPCs
+                # if self.char.npc:
             # Absorb any stress as cost of invokes
             for invoke in self.invokes:
                 if invoke['stress_titles']:
@@ -535,6 +541,13 @@ class RollCommand():
                 if invoke['is_boost']:
                     cmd = CharacterCommand(self.parent, self.ctx, ('c', 'aspect', 'delete', invoke['aspect_name']), self.guild, self.user, self.channel, self.char)
                     self.messages.extend(cmd.run())
+                # Consume Free Invokes
+                if invoke['is_free_invoke'] and invoke['aspect']:
+                    cmd = CharacterCommand(self.parent, self.ctx, ('c', 'stress', 'Free Invokes', '1'), self.guild, self.user, self.channel, invoke['aspect'])
+                    self.messages.extend(cmd.run())
+                    if not invoke['aspect'].get_available_stress('Free Invokes'):
+                        cmd = CharacterCommand(self.parent, self.ctx, ('c', 'stress', 'title', 'delete', 'Free Invokes'), self.guild, self.user, self.channel, invoke['aspect'])
+                        self.messages.extend(cmd.run())
             self.messages.append(self.char.get_string_fate())
 
     def absorb_invoke_stress(self, title, stress, target):
@@ -647,6 +660,7 @@ class RollCommand():
             skills = []
             aspect = None
             is_boost = False
+            is_free_invoke = False
             fate_points = None
             asp = self.find_aspect(search)
             if asp:
@@ -661,12 +675,13 @@ class RollCommand():
                 else:
                     aspect_name = aspect.name
                     is_boost = True if aspect.is_boost else False
+                    is_free_invoke = True if 'Free Invokes' in aspect.stress_titles else False
                     skills = aspect.skills if aspect.skills else []
                     if aspect.fate_points is not None:
                         fate_points = aspect.fate_points
                     else:
                         # Don't incur fate point cost if is_boost or is a 'Stunt'
-                        fate_points = 0 if is_boost or category == 'Stunt' else 1
+                        fate_points = 0 if is_boost or is_free_invoke or category == 'Stunt' else 1
                     stress = aspect.stress if aspect.stress else []
                     stress_titles = aspect.stress_titles if aspect.stress_titles else []
                     stress_errors, stress_targets = self.validate_stress(aspect, stress, stress_titles, stress_targets)
@@ -685,8 +700,10 @@ class RollCommand():
                 self.invokes.append({'aspect_name': 'error', 'error': f'{aspect_name} cannot be invoked more than once on the same roll'})
                 continue
             invoke = {
+                'aspect': aspect,
                 'aspect_name': aspect_name,
                 'is_boost': is_boost,
+                'is_free_invoke': is_free_invoke,
                 'bonus_str': '+2',
                 'skills': skills,
                 'fate_points': fate_points,

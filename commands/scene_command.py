@@ -6,12 +6,13 @@ import traceback
 from commands import CharacterCommand
 from models import Channel, Scenario, Scene, Zone, Engagement, Character, User, Log
 from config.setup import Setup
-from services import SceneService, ZoneService, ScenarioService
+from services import SceneService, ZoneService, ScenarioService, EngagementService
 from utils import Dialog, T
 
 scene_svc = SceneService()
 zone_svc = ZoneService()
 scenario_svc = ScenarioService()
+engagement_svc = EngagementService()
 SETUP = Setup()
 SCENE_HELP = SETUP.scene_help
 
@@ -795,6 +796,9 @@ class SceneCommand():
         for l in leaving:
             messages.extend(zone_svc.player(('p', 'delete', self.char.name), self.channel, l, self.user))
             self.note(('note', f'***{self.char.name}*** exits the _{l.name}_ zone'))
+        if self.channel and self.channel.active_engagement:
+            engagement = Engagement().get_by_id(self.channel.active_engagement)
+            messages.extend(engagement_svc.player(('player', 'delete', self.char.name), self.channel, engagement, self.user))
         messages.extend(self.player(('p', 'delete', self.char.name)))
         self.note(('note', f'***{self.char.name}*** exits the _{self.sc.name}_ scene'))
         return messages

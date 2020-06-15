@@ -694,41 +694,41 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                 'assertions': [
                     ['***Test NPC 1*** was taken out.', 'should take out \'Test NPC 1\'']
                 ]
-            } # ,
-            # {
-            #     'ctx': ctx2,
-            #     'args': [
-            #         ('c', 'npc', 'Test NPC 2'),
-            #         ('y',),
-            #         ('approach', 'Fo', '-2'),
-            #         ('st', 't', '2', 'Physical'),
-            #         ('con', 't', '2', 'Wounded'),
-            #         ('aspect', 'freeinvoke', 'Test Aspect 3'),
-            #         ('aspect', 'freeinvoke', '2', 'Test Aspect 4'),
-            #         ('stunt', 'Test Stunt 2'),
-            #         ('scene', 'enter')
-            #     ],
-            #     'assertions': [
-            #         ['**_Free Invokes_**  [   ]  [   ]', 'should add 2 \'Free Invokes\' to \'Test Aspect 4\'']
-            #     ]
-            # },
-            # {
-            #     'args': [('attack', 'Test NPC 2', 'exact', '+1', 'Forceful')],
-            #     'assertions': [
-            #         ['***Test NPC 2*** faces', 'should display \'Test NPC 2\' facing an attack'],
-            #         ['attack from ***Test Character 1***', 'should display an attack from \'Test Character 1\'']
-            #     ]
-            # },
-            # {
-            #     'ctx': ctx2,
-            #     'args': [
-            #         ('defend', 'exact', '+0', 'Forceful', 'invoke', 'Test Aspect 3')
-            #     ],
-            #     'assertions': [
-            #         [' shifts to absorb', 'should display \'Test NPC 2\' rolling with shifts to absorb'],
-            #         ['option to take a boost in exchange for one shift', 'should allow succeed with style boost']
-            #     ]
-            # }
+            },
+            {
+                'ctx': ctx2,
+                'args': [
+                    ('c', 'npc', 'Test NPC 2'),
+                    ('y',),
+                    ('approach', 'Fo', '-2'),
+                    ('st', 't', '2', 'Physical'),
+                    ('con', 't', '2', 'Wounded'),
+                    ('aspect', 'freeinvoke', 'Test Aspect 3'),
+                    ('aspect', 'freeinvoke', '2', 'Test Aspect 4'),
+                    ('stunt', 'Test Stunt 2'),
+                    ('scene', 'enter')
+                ],
+                'assertions': [
+                    ['**_Free Invokes_**  [   ]  [   ]', 'should add 2 \'Free Invokes\' to \'Test Aspect 4\'']
+                ]
+            },
+            {
+                'args': [('attack', 'Test NPC 2', 'exact', '+1', 'Forceful')],
+                'assertions': [
+                    ['***Test NPC 2*** faces', 'should display \'Test NPC 2\' facing an attack'],
+                    ['attack from ***Test Character 1***', 'should display an attack from \'Test Character 1\'']
+                ]
+            },
+            {
+                'ctx': ctx2,
+                'args': [
+                    ('defend', 'exact', '+0', 'Forceful', 'invoke', 'Test Aspect 3')
+                ],
+                'assertions': [
+                    [' shifts to absorb', 'should display \'Test NPC 2\' rolling with shifts to absorb'],
+                    ['option to take a boost in exchange for one shift', 'should allow succeed with style boost']
+                ]
+            }
         ])
 
     def test_end_delete_components(self):

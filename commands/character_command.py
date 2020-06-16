@@ -1770,7 +1770,7 @@ class CharacterCommand():
             severity = [i for i in range(0, len(consequences_titles)) if 1 if severity_str in [consequences_titles[i].lower()[0:2], consequences_titles[i].lower()]][0]
             severity_shift = consequences_shifts[severity]
             severity_name = consequences_titles[severity]
-            if self.char.consequences[severity][1] == O:
+            if not self.char.consequences or self.char.consequences and self.char.consequences[severity][1] == O:
                 messages.append(f'***{self.char.name}*** does not currently have a _{severity_name}_ {consequences_name}')
                 return messages
             previous = copy.deepcopy(self.char.consequences)
@@ -1803,7 +1803,10 @@ class CharacterCommand():
             messages.append(f'***{self.char.name}*** absorbed {severity_shift} shift for a {severity_name} {consequences_name} "{aspect}"')
             messages.extend(self.aspect(['a', aspect]))
             self.char.consequences = modified
+            # If the character is being targeted, then absorb any available shifts from the attack roll
             messages.extend(self.absorb_shifts(int(severity_shift)))
+            # If the character is being targeted, then the consequence aspect should grant a free invoke
+            messages.extend(self.add_free_invokes())
         messages.append(f'{self.char.get_string_consequences()}')
         char_svc.save(self.char, self.user)
         return messages
@@ -1831,4 +1834,18 @@ class CharacterCommand():
             targeted_by.last_roll = last_roll
             char_svc.save(targeted_by, self.user)
             messages.append(f'{targeted_by.active_action} from ***{targeted_by.name}*** has {p.no("shift", shifts_remaining)} left to absorb.')
+        return messages
+
+    def add_free_invokes(self):
+        """Add free invokes on consequence aspects from an attack
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
+        messages = []
+        targeted_by = Character.filter(active_target=str(self.char.id)).first()
+        if targeted_by and targeted_by.last_roll:
+            messages.extend(self.aspect(['a', 'c', 'st', 't', '1', 'Free Invokes']))
         return messages

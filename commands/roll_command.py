@@ -249,7 +249,42 @@ class RollCommand():
         list(str) - the response messages string array
         """
 
-        raise Exception('Create Advantage action is not yet implemented')
+        self.check_unresolved_actions()
+        if len(self.args) == 0:
+            raise Exception('No target identified for your attack action')
+        search = self.args[0]
+        chars = []
+        if self.engagement and self.engagement.characters:
+            chars.extend(list(Character().filter(id__in=[c for c in self.engagement.characters]).all()))
+        targets = [c for c in chars if search.lower() in c.name.lower()]
+        if not targets and self.sc and self.sc.characters:
+            chars.extend(list(Character().filter(id__in=[c for c in self.sc.characters]).all()))
+        targets = [c for c in chars if search.lower() in c.name.lower()]
+        if not targets:
+            raise Exception(f'No target match for _{search}_ found in the ***{self.sc.name}*** scene.')
+        if len(targets) > 1:
+            names = '\n        '.join([f'***{m.name}***' for m in targets])
+            raise Exception(f'Multiple targets matched _{search}_ in the ***{self.sc.name}*** scene. Please specify which:{names}')
+        self.target = targets[0]
+        self.target.active_target_by = str(self.char.id)
+        self.save_char(self.target)
+        self.char.active_action = 'Attack'
+        self.char.active_target = str(self.target.id)
+        self.save_char(self.char)
+        messages.extend(self.add_chars_to_engagement())
+        self.command = 'roll'
+        # Allow for exact roll designation
+        if self.args[1] == 'exact' and len(self.args) > 2:
+            exact_roll = self.args[2]
+            self.args = self.args[3:] if len(self.args) > 3 else tuple()
+            self.invoke_index = [i for i in range(0, len(self.args)) if self.args[i] in ['invoke', 'i']]
+            self.compel_index = [i for i in range(0, len(self.args)) if self.args[i] in ['compel', 'c']]
+            roll_str = self.roll(exact_roll)
+        else:
+            self.args = self.args[1:]
+            roll_str = self.roll()
+        messages.extend(roll_str)
+        return messages
 
     def attack(self):
         """Execute the attack subcommand to target another character and roll for attack
@@ -261,7 +296,6 @@ class RollCommand():
 
         self.check_unresolved_actions()
         messages = self.conflict_check()
-        self
         if len(self.args) == 0:
             raise Exception('No target identified for your attack action')
         search = self.args[0]

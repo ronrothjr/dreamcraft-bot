@@ -663,7 +663,7 @@ class TestDreamcraftBotE2E(unittest.TestCase):
             },
             {
                 'ctx': ctx2,
-                'args': [('c', 'st', 'Physical', '3')],
+                'args': [('c', 'p'),('c', 'st', 'Physical', '3')],
                 'assertions': [
                     ['cannot absorb', 'should display cannot absorb warning']
                 ]
@@ -732,7 +732,8 @@ class TestDreamcraftBotE2E(unittest.TestCase):
             {
                 'ctx': ctx2,
                 'args': [
-                    ('c', 'con', 'Moderate', 'Dislocated Shoulder')
+                    ('c', 'con', 'Moderate', 'Dislocated Shoulder'),
+                    ('c', 'p')
                 ],
                 'assertions': [
                     ['[X] _4_ _Moderate:_  - Dislocated Shoulder', 'should display \'Dislocated Shoulder\' in Moderate consequence'],

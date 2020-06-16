@@ -65,21 +65,21 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                 ]
             },
             {
-                'cts': ctx2,
+                'ctx': ctx2,
                 'args': [('user', 'timezone', 'America/New_York')],
                 'assertions': [
                     ['Saved time zone as ***America/New_York***', 'should save user time_zone as New York']
                 ]
             },
             {
-                'cts': ctx3,
+                'ctx': ctx3,
                 'args': [('user', 'timezone', 'America/New_York')],
                 'assertions': [
                     ['Saved time zone as ***America/New_York***', 'should save user time_zone as New York']
                 ]
             },
             {
-                'cts': ctx4,
+                'ctx': ctx4,
                 'args': [('user', 'timezone', 'America/New_York')],
                 'assertions': [
                     ['Saved time zone as ***America/New_York***', 'should save user time_zone as New York']
@@ -701,8 +701,8 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                     ('c', 'npc', 'Test NPC 2'),
                     ('y',),
                     ('approach', 'Fo', '-2'),
-                    ('st', 't', '2', 'Physical'),
-                    ('con', 't', '2', 'Wounded'),
+                    ('st', 't', 'CORE'),
+                    ('con', 't', 'FATE'),
                     ('aspect', 'freeinvoke', 'Test Aspect 3'),
                     ('aspect', 'freeinvoke', '2', 'Test Aspect 4'),
                     ('stunt', 'Test Stunt 2'),
@@ -713,7 +713,7 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                 ]
             },
             {
-                'args': [('attack', 'Test NPC 2', 'exact', '+1', 'Forceful')],
+                'args': [('attack', 'Test NPC 2', 'exact', '+8', 'Forceful')],
                 'assertions': [
                     ['***Test NPC 2*** faces', 'should display \'Test NPC 2\' facing an attack'],
                     ['attack from ***Test Character 1***', 'should display an attack from \'Test Character 1\'']
@@ -727,6 +727,26 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                 'assertions': [
                     [' shifts to absorb', 'should display \'Test NPC 2\' rolling with shifts to absorb'],
                     ['option to take a boost in exchange for one shift', 'should allow succeed with style boost']
+                ]
+            },
+            {
+                'ctx': ctx2,
+                'args': [
+                    ('c', 'con', 'Moderate', 'Dislocated Shoulder')
+                ],
+                'assertions': [
+                    ['[X] _4_ _Moderate:_  - Dislocated Shoulder', 'should display \'Dislocated Shoulder\' in Moderate consequence'],
+                    ['***Dislocated Shoulder*** _(Active)_  _(Aspect)_', 'should show the \'Dislocated Shoulder\' aspect']
+                ]
+            },
+            {
+                'ctx': ctx2,
+                'args': [
+                    ('c', 'con', 'delete', 'Moderate')
+                ],
+                'assertions': [
+                    ['[X] _4_ _Moderate:_  - Dislocated Shoulder', 'should not display \'Dislocated Shoulder\' in Moderate consequence'],
+                    ['***Dislocated Shoulder*** _(Active)_  _(Aspect)_', 'should not show the \'Dislocated Shoulder\' aspect']
                 ]
             }
         ])

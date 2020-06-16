@@ -1682,8 +1682,9 @@ class CharacterCommand():
         modified = None
         consequences = copy.deepcopy(self.char.consequences) if self.char.consequences else CONSEQUENCES
         consequences_titles = copy.deepcopy(self.char.consequences_titles) if self.char.consequences_titles else CONSEQUENCES_TITLES
+        use_consequences = len([c for c in consequences_titles if c in ['Mild', 'Moderate', 'Severe']]) == 3 and len(consequences_titles) == 3
         consequences_shifts = copy.deepcopy(self.char.consequences_shifts) if self.char.consequences_shifts else CONSEQUENCES_SHIFTS
-        consequences_name = 'Condition' if self.char.consequences_titles else 'Consequence'
+        consequences_name = 'Consequence' if use_consequences else 'Condition'
         consequences_checks = []
         [consequences_checks.append(t[0:2].lower()) for t in consequences_titles]
         [consequences_checks.append(t.lower()) for t in consequences_titles]
@@ -1776,11 +1777,11 @@ class CharacterCommand():
             modified = copy.deepcopy(self.char.consequences)
             modified[severity] = [severity_shift, O]
             self.char.consequences = modified
-            aspect = severity_name if self.char.consequences_titles else previous[severity][2]
+            aspect = previous[severity][2] if use_consequences else severity_name
             messages.append(f'Removed ***{self.char.name}\'s*** _{severity_name}_ from {consequences_name} ("{aspect}")')
-            messages.extend(self.aspect(['a', 'd', aspect]))
+            messages.extend(self.aspect(['a', 'delete', aspect]))
         else:
-            if len(args) == 2 and not self.char.consequences_titles:
+            if len(args) == 2 and use_consequences:
                 messages.append('Missing Consequence aspect')
                 return messages
             if args[1].lower() not in consequences_checks:
@@ -1793,12 +1794,12 @@ class CharacterCommand():
             if self.char.consequences[severity][1] == X:
                 messages.append(f'***{self.char.name}*** already has a _{severity_name}_ {consequences_name} ("{self.char.consequences[severity][2]}")')
                 return messages
-            aspect = severity_name if self.char.consequences else ' '.join(args[2:])
+            aspect = severity_name if not use_consequences else ' '.join(args[2:])
             modified = copy.deepcopy(self.char.consequences)
-            if self.char.consequences_titles:
-                modified[severity] = [severity_shift, X]
-            else:
+            if use_consequences:
                 modified[severity] = [severity_shift, X, aspect]
+            else:
+                modified[severity] = [severity_shift, X]
             messages.append(f'***{self.char.name}*** absorbed {severity_shift} shift for a {severity_name} {consequences_name} "{aspect}"')
             messages.extend(self.aspect(['a', aspect]))
             self.char.consequences = modified

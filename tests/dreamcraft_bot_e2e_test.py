@@ -115,14 +115,9 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                 ]
             },
             {
-                'args': [('c', 'npc', 'Test NPC 1')],
+                'args': [('new', 'c', 'npc', 'Test NPC 1'), ('y',)],
                 'assertions': [
-                    ['Create a new CHARACTER named ***Test NPC 1***', 'Should ask Create Test NPC 1 question']
-                ]
-            },
-            {
-                'args': [('y',)],
-                'assertions': [
+                    ['Create a new CHARACTER named ***Test NPC 1***', 'Should ask Create Test NPC 1 question'],
                     ['YOU ARE CURRENTLY EDITING', 'Should be editing a character'],
                     ['***Test NPC 1*** _(Active)_  _(Nonplayer Character)_', 'Test NPC 1 should be the active character']
                 ]
@@ -162,7 +157,7 @@ class TestDreamcraftBotE2E(unittest.TestCase):
     def test_character_creation(self):
         self.send_and_validate_commands(ctx1, [
             {
-                'args': [('c', 'Test Character 1')],
+                'args': [('new', 'c', 'Test Character 1')],
                 'assertions': [
                     ['Create a new CHARACTER named ***Test Character 1***', 'Should ask Create Test Character 1 question']
                 ]
@@ -345,7 +340,7 @@ class TestDreamcraftBotE2E(unittest.TestCase):
             {
                 'ctx': ctx3,
                 'args': [
-                    ('c', 'Test Character 2'),
+                    ('new', 'c', 'Test Character 2'),
                     ('y',)
                 ],
                 'assertions': [
@@ -393,12 +388,12 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                 'args': [('session',)],
                 'assertions': [
                     ['No active session or name provided', 'should return no active session if empty sessions'],
-                    ['**CREATE or SESSION**```css\n.d session "YOUR SESSION\'S NAME"```', 'Should include instructions to create session']
+                    ['**CREATE or SESSION**```css\n.d new session "YOUR SESSION\'S NAME"```', 'Should include instructions to create session']
                 ]
             },
             {
                 'args': [
-                    ('session', 'Test', 'Session'),
+                    ('new', 'session', 'Test', 'Session'),
                     ('y')
                 ],
                 'assertions': [
@@ -431,11 +426,11 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                 'args': [('scenario',)],
                 'assertions': [
                     ['No active scenario or name provided', 'should return no active scenario if empty scenarios'],
-                    ['**CREATE or SCENARIO**```css\n.d scenario "YOUR SCENARIOR\'S NAME"```', 'Should include instructions to create scenario']
+                    ['**CREATE or SCENARIO**```css\n.d new scenario "YOUR SCENARIOR\'S NAME"```', 'Should include instructions to create scenario']
                 ]
             },
             {
-                'args': [('scenario', 'Test', 'Scenario')],
+                'args': [('new', 'scenario', 'Test', 'Scenario')],
                 'assertions': [
                     ['Create a new SCENARIO named ***Test Scenario***?', 'should ask question to create scenario named Test Scenario']
                 ]
@@ -460,11 +455,11 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                 'args': [('scene',)],
                 'assertions': [
                     ['No active scene or name provided', 'should return no active scene if empty scenes'],
-                    ['**CREATE or SCENE**```css\n.d scene "YOUR SCENE\'S NAME"```', 'Should include instructions to create scene']
+                    ['**CREATE or SCENE**```css\n.d new scene "YOUR SCENE\'S NAME"```', 'Should include instructions to create scene']
                 ]
             },
             {
-                'args': [('Test', 'Scene')],
+                'args': [('new', 'Test', 'Scene')],
                 'assertions': [
                     ['Create a new SCENE named ***Test Scene***?', 'should ask question to create scene named Test Scene']
                 ]
@@ -500,11 +495,11 @@ class TestDreamcraftBotE2E(unittest.TestCase):
             {
                 'args': [('zone',)],
                 'assertions': [
-                    ['No active zone or name provided\n\n\n**CREATE or ZONE**```css\n.d zone "YOUR ZONE\'S NAME"```', 'should return no active scene if empty scenes and  include instructions to create scene']
+                    ['No active zone or name provided\n\n\n**CREATE or ZONE**```css\n.d new zone "YOUR ZONE\'S NAME"```', 'should return no active scene if empty scenes and  include instructions to create scene']
                 ]
             },
             {
-                'args': [('Test', 'Zone', '1')],
+                'args': [('new', 'z', 'Test', 'Zone', '1')],
                 'assertions': [
                     ['Create a new ZONE named ***Test Zone 1***?', 'should ask question to create zone named Test Zone 1']
                 ]
@@ -529,7 +524,7 @@ class TestDreamcraftBotE2E(unittest.TestCase):
             },
             {
                 'args': [
-                    ('z', 'Test', 'Zone', '2'),
+                    ('new', 'z', 'Test', 'Zone', '2'),
                     ('y',),
                     ('desc', 'Test', 'description', '2')],
                 'assertions': [
@@ -574,7 +569,7 @@ class TestDreamcraftBotE2E(unittest.TestCase):
             },
             {
                 'args': [
-                    ('engagement', 'Conflict', 'Test Conflict'),
+                    ('new', 'engagement', 'Conflict', 'Test Conflict'),
                     ('y',)
                 ],
                 'assertions': [
@@ -698,7 +693,7 @@ class TestDreamcraftBotE2E(unittest.TestCase):
             {
                 'ctx': ctx2,
                 'args': [
-                    ('c', 'npc', 'Test NPC 2'),
+                    ('new', 'c', 'npc', 'Test NPC 2'),
                     ('y',),
                     ('approach', 'Fo', '-2'),
                     ('st', 't', 'CORE'),
@@ -934,7 +929,7 @@ class TestDreamcraftBotE2E(unittest.TestCase):
             },
             {
                 'args': [
-                    ('c', 'name', 'Test Character 1'),
+                    ('new', 'c', 'Test Character 1'),
                     ('y',)
                 ],
                 'assertions': [

@@ -53,7 +53,7 @@ class ScenarioService(BaseService):
         if len(args) == 1:
             return ['No characters added']
         if not scenario:
-            return ['You don\'t have an active scenario.\nTry this: ".d scenario name {name}"']
+            return ['You don\'t have an active scenario.\nTry this: ```css\n.d new scenario "Scenario Name"```']
         elif args[1].lower() == 'list' or args[1].lower() == 'l':
             return [scenario.get_string_characters(channel)]
         elif args[1].lower() == 'delete' or args[1].lower() == 'd':

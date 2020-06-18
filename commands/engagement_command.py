@@ -24,7 +24,8 @@ class EngagementCommand():
         say - add dialog to the scene from the character
         story - display the character's story
         parent, p - return viewing and editing focus to the character's parent component
-        name, n - display and create new engagements by name
+        new - create new engagements by name
+        name, n - display engagements by name
         description, desc - add/edit the Description in the engeagement
         select - display existing engeagement
         character, char, c - edit the engagement as a character
@@ -61,6 +62,7 @@ class EngagementCommand():
         """
 
         self.parent = parent
+        self.new = parent.new
         self.ctx = ctx
         self.args = args[1:]
         self.guild = guild
@@ -88,8 +90,8 @@ class EngagementCommand():
             # List of subcommands mapped the command methods
             switcher = {
                 'help': self.help,
-                'name': self.name,
-                'n': self.name,
+                'name': self.select,
+                'n': self.select,
                 'select': self.select,
                 'say': self.say,
                 'note': self.note,
@@ -112,15 +114,16 @@ class EngagementCommand():
                 'start': self.start,
                 'end': self.end
             }
+            if self.new:
+                func = self.new_engagement
             # Get the function from switcher dictionary
-            if self.command in switcher:
-                func = switcher.get(self.command, lambda: self.name)
-                # Execute the function
-                messages = func(self.args)
+            elif self.command in switcher:
+                func = switcher.get(self.command, lambda: self.select)
             else:
                 self.args = ('n',) + self.args
                 self.command = 'n'
-                func = self.name
+                func = self.select
+            if func:
                 # Execute the function
                 messages = func(self.args)
             # Send messages
@@ -275,7 +278,7 @@ class EngagementCommand():
         dialog = {
             'create_engagement': ''.join([
                 '**CREATE or ENGAGEMENT**```css\n',
-                '.d engagement "YOUR ENGAGEMENT\'S NAME"```'
+                '.d new engagement "YOUR ENGAGEMENT\'S NAME"```'
             ]),
             'active_engagement': ''.join([
                 '***YOU ARE CURRENTLY EDITING...***\n' if self.can_edit else '',
@@ -315,8 +318,8 @@ class EngagementCommand():
                 dialog_string += dialog.get('go_back_to_parent', '') if self.can_edit else ''
         return dialog_string
     
-    def name(self, args):
-        """Display and create a new Engagement by name
+    def new_engagement(self, args):
+        """Create a new Engagement by name
         
         Parameters
         ----------
@@ -340,11 +343,9 @@ class EngagementCommand():
         else:
             if len(args) == 1 and args[0].lower() == 'short':
                 return [self.dialog('active_engagement_short')]
-            if len(args) == 1 and self.engagement:
-                return [self.dialog('')]
-            engagement_type = args[1]
+            engagement_type = args[0]
             if engagement_type == 'rename':
-                engagement_name = ' '.join(args[2:])
+                engagement_name = ' '.join(args[1:])
                 if not self.engagement:
                     return [
                         'No active engagement or name provided\n\n',
@@ -361,8 +362,8 @@ class EngagementCommand():
             else:
                 if engagement_type.lower() not in ['conflict','contest','challenge']:
                     raise Exception('No engagement type (CONFLICT, CONTEST, CHALLENGE)')
-                if len(args) > 2:
-                    engagement_name = ' '.join(args[2:])
+                if len(args) > 1:
+                    engagement_name = ' '.join(args[1:])
                 else:
                     engagement_name = f'{engagement_type.title()} at {T.to(T.now())}'
                 def canceler(cancel_args):
@@ -394,7 +395,7 @@ class EngagementCommand():
                     'svc': engagement_svc,
                     'user': self.user,
                     'title': 'Engagement List',
-                    'command': 'engagement ' + ' '.join(args),
+                    'command': 'new engagement ' + ' '.join(args),
                     'type': 'select',
                     'type_name': 'ENGAGEMENT',
                     'getter': {

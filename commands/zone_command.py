@@ -22,7 +22,8 @@ class ZoneCommand():
         note - add a note to the zone
         say - add dialog to the zone from the zone
         story - display the zone's story
-        name, n - display and create new zones by name
+        new - create new zones by name
+        name, n - display zones by name
         description, desc - add/edit the Description in the zone
         select - display existing zone
         character, char, c - edit the zone as a character
@@ -56,6 +57,7 @@ class ZoneCommand():
         """
     
         self.parent = parent
+        self.new = parent.new
         self.ctx = ctx
         self.args = args[1:] if args[0] in ['zone', 'z'] else args
         self.guild = guild
@@ -82,8 +84,8 @@ class ZoneCommand():
             # List of subcommands mapped the command methods
             switcher = {
                 'help': self.help,
-                'name': self.name,
-                'n': self.name,
+                'name': self.select,
+                'n': self.select,
                 'select': self.select,
                 'say': self.say,
                 'note': self.note,
@@ -121,11 +123,11 @@ class ZoneCommand():
                 'delete': self.delete_zone,
                 'd': self.delete_zone
             }
+            if self.new:
+                func = self.new_zone
             # Get the function from switcher dictionary
-            if self.command in switcher:
-                func = switcher.get(self.command, lambda: self.name)
-                # Execute the function
-                messages = func(self.args)
+            elif self.command in switcher:
+                func = switcher.get(self.command, lambda: self.select)
             else:
                 match = self.search(self.args)
                 if match:
@@ -135,7 +137,8 @@ class ZoneCommand():
                 else:
                     self.args = ('n',) + self.args
                     self.command = 'n'
-                    func = self.name
+                    func = self.select
+            if func:
                 # Execute the function
                 messages = func(self.args)
             # Send messages
@@ -285,7 +288,7 @@ class ZoneCommand():
         dialog = {
             'create_zone': ''.join([
                 '**CREATE or ZONE**```css\n',
-                '.d zone "YOUR ZONE\'S NAME"```'
+                '.d new zone "YOUR ZONE\'S NAME"```'
             ]),
             'active_zone': ''.join([
                 '***YOU ARE CURRENTLY EDITING...***\n' if self.can_edit else '',
@@ -325,8 +328,8 @@ class ZoneCommand():
                 dialog_string += dialog.get('go_back_to_parent', '') if self.can_edit else ''
         return dialog_string
     
-    def name(self, args):
-        """Display and create a new Zone by name
+    def new_zone(self, args):
+        """Create a new Zone by name
         
         Parameters
         ----------
@@ -351,9 +354,7 @@ class ZoneCommand():
         else:
             if len(args) == 1 and args[0].lower() == 'short':
                 return [self.dialog('active_zone_short')]
-            if len(args) == 1 and self.zone:
-                return [self.dialog('')]
-            zone_name = ' '.join(args[1:])
+            zone_name = ' '.join(args)
             if len(args) > 1 and args[1] == 'rename':
                 zone_name = ' '.join(args[2:])
                 if not self.zone:
@@ -389,7 +390,7 @@ class ZoneCommand():
                     'svc': zone_svc,
                     'user': self.user,
                     'title': 'Zone List',
-                    'command': 'zone ' + ' '.join(args),
+                    'command': 'new zone ' + ' '.join(args),
                     'type': 'select',
                     'type_name': 'ZONE',
                     'getter': {

@@ -22,7 +22,8 @@ class SessionCommand():
         note - add a note to the session
         say - add dialog to the session from the session
         story - display the session's story
-        name, n - display and create new sessions by name
+        new - create new sessions by name
+        name, n - display sessions by name
         description, desc - add/edit the Description in the engeagement
         select, = - display existing engeagement
         character, char, c - edit the session as a character
@@ -58,6 +59,7 @@ class SessionCommand():
         """
     
         self.parent = parent
+        self.new = parent.new
         self.ctx = ctx
         self.args = args[1:]
         self.guild = guild
@@ -87,8 +89,8 @@ class SessionCommand():
                 'note': self.note,
                 'say': self.say,
                 'story': self.story,
-                'name': self.name,
-                'n': self.name,
+                'name': self.select,
+                'n': self.select,
                 'select': self.select,
                 'description': self.description,
                 'desc': self.description,
@@ -105,11 +107,11 @@ class SessionCommand():
                 'start': self.start,
                 'end': self.end
             }
+            if self.new:
+                func = self.new_session
             # Get the function from switcher dictionary
-            if self.command in switcher:
-                func = switcher.get(self.command, lambda: self.name)
-                # Execute the function
-                messages = func(self.args)
+            elif self.command in switcher:
+                func = switcher.get(self.command, lambda: self.select)
             else:
                 match = self.search(self.args)
                 if match:
@@ -119,7 +121,9 @@ class SessionCommand():
                 else:
                     self.args = ('n',) + self.args
                     self.command = 'n'
-                    func = self.name
+                    func = self.select
+            if func:
+                # Execute the function
                 messages = func(self.args)
             # Send messages
             return messages
@@ -145,7 +149,7 @@ class SessionCommand():
 
     def check_session(self):
         if not self.session:
-            raise Exception('You don\'t have an active session. Try this:```css\n.d session "SESSION NAME"```')
+            raise Exception('You don\'t have an active session. Try this:```css\n.d new session "SESSION NAME"```')
 
     def search(self, args):
         """Search for an existing Session using the command string
@@ -270,7 +274,7 @@ class SessionCommand():
         dialog = {
             'create_session': ''.join([
                 '**CREATE or SESSION**```css\n',
-                '.d session "YOUR SESSION\'S NAME"```'
+                '.d new session "YOUR SESSION\'S NAME"```'
             ]),
             'active_session': ''.join([
                 '***YOU ARE CURRENTLY EDITING...***\n' if self.can_edit else '',
@@ -310,8 +314,8 @@ class SessionCommand():
                 dialog_string += dialog.get('go_back_to_parent', '') if self.can_edit else ''
         return dialog_string
     
-    def name(self, args):
-        """Display and create a new Session by name
+    def new_session(self, args):
+        """Create a new Session by name
         
         Parameters
         ----------
@@ -334,9 +338,7 @@ class SessionCommand():
         else:
             if len(args) == 1 and args[0].lower() == 'short':
                 return [self.dialog('active_session_short')]
-            if len(args) == 1 and self.session:
-                return [self.dialog('')]
-            session_name = ' '.join(args[1:])
+            session_name = ' '.join(args)
             if len(args) > 1 and args[1] == 'rename':
                 session_name = ' '.join(args[2:])
                 if not self.session:
@@ -374,7 +376,7 @@ class SessionCommand():
                     'svc': session_svc,
                     'user': self.user,
                     'title': 'Session List',
-                    'command': 'session ' + ' '.join(args),
+                    'command': 'new session ' + ' '.join(args),
                     'type': 'select',
                     'type_name': 'SESSION',
                     'getter': {

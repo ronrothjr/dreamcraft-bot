@@ -248,9 +248,9 @@ class DreamcraftHandler():
         approach = [s for s in APPROACHES if self.search.lower() == s.split(' - ')[0].lower()] if len(self.args) > 0 else None
         if approach:
             self.command = 'c'
-            self.args = ('c', 'app', approach[0], self.args[1])
+            self.args = ('c', 'app', approach[0].split(' - ')[0]) + (self.args[1:] if len(self.args) > 1 else tuple())
         # shortcut for updating skills on a character (must enter full name)
         skill = [s for s in SKILLS if self.search.lower() == s.split(' - ')[0].lower()] if len(self.args) > 0 else None
         if skill:
             self.command = 'c'
-            self.args = ('c', 'sk', skill[0], self.args[1])
+            self.args = ('c', 'sk', skill[0].split(' - ')[0]) + (self.args[1:] if len(self.args) > 1 else tuple())

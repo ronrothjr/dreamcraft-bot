@@ -124,7 +124,7 @@ class Dialog(object):
                 if answer.isdigit():
                     new_page_num = int(answer)
                     if new_page_num > self.page_count or new_page_num < 1:
-                        raise Exception(f'Page number {self.page_num} does not exist')
+                        raise Exception(f'Page number {new_page_num} does not exist')
                 else:
                     options = {'<<': 1, '<': self.page_num - 1, '>': self.page_num + 1, '>>': self.page_count}
                     new_page_num = options.get(answer, None)

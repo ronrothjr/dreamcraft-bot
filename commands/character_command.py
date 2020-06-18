@@ -44,7 +44,8 @@ class CharacterCommand():
         story - display the character's story
         stats - display statistics on Dreamcraft Bot usage
         parent, p - return viewing and editing focus to the character's parent component
-        name, n - display and create new characters by name
+        new - create new characters by name
+        name, n - display characters by name
         select - display existing characters
         image - add an image to embed in the character sheet
         list, l - display a list of existing characters and NPCs
@@ -94,10 +95,11 @@ class CharacterCommand():
         """
 
         self.parent = parent
+        self.new = parent.new
         self.ctx = ctx
         self.args = args[1:] if args[0] in ['character', 'char', 'c'] else args
         self.npc = False
-        if self.args and len(self.args) and self.args[0] and self.args[0].lower() == 'npc':
+        if len(self.args) and self.args[0].lower() == 'npc':
             self.npc = True
             self.args = self.args[1:]
         self.command = self.args[0].lower() if len(self.args) > 0 else 'select'
@@ -131,8 +133,8 @@ class CharacterCommand():
                 'stats': self.stats,
                 'parent': self.parent,
                 'p': self.get_parent,
-                'name': self.name,
-                'n': self.name,
+                'name': self.select,
+                'n': self.select,
                 'select': self.select,
                 'image': self.image,
                 'list': self.character_list,
@@ -170,11 +172,11 @@ class CharacterCommand():
                 'share': self.share,
                 'shared': self.shared
             }
+            if self.new:
+                func = self.new_character
             # Get the function from switcher dictionary
-            if self.command in switcher:
-                func = switcher.get(self.command, lambda: self.name)
-                # Execute the function
-                messages = func(self.args)
+            elif self.command in switcher:
+                func = switcher.get(self.command, lambda: self.select)
             else:
                 match = self.search(self.args)
                 if match:
@@ -184,7 +186,9 @@ class CharacterCommand():
                 else:
                     self.args = ('n',) + self.args
                     self.command = 'n'
-                    func = self.name
+                    func = self.select
+            if func:
+                # Execute the function
                 messages = func(self.args)
             # Send messages
             return messages
@@ -399,7 +403,7 @@ class CharacterCommand():
         dialog = {
             'create_character': ''.join([
                 '**CREATE or SELECT A CHARACTER**```css\n',
-                '.d character "YOUR CHARACTER\'S NAME"```'
+                '.d new character "YOUR CHARACTER\'S NAME"```'
             ]),
             'active_character': ''.join([
                 '***YOU ARE CURRENTLY EDITING...***\n' if can_edit else '',
@@ -529,8 +533,8 @@ class CharacterCommand():
                 dialog_string += dialog.get('manage_conditions', '')
         return dialog_string
 
-    def name(self, args):
-        """Display and create a new Character by name
+    def new_character(self, args):
+        """Create a new Character by name
         
         Parameters
         ----------
@@ -553,9 +557,7 @@ class CharacterCommand():
             return messages
         if len(args) == 1 and args[0].lower() == 'short':
             return [self.dialog('active_character_short')]
-        if len(args) == 1 and self.char:
-            return [self.dialog('')]
-        char_name = ' '.join(args[1:])
+        char_name = ' '.join(args)
         if len(args) > 1 and args[1] == 'rename':
             char_name = ' '.join(args[2:])
             if not self.char:
@@ -591,7 +593,7 @@ class CharacterCommand():
                 'svc': char_svc,
                 'user': self.user,
                 'title': 'Character List',
-                'command': 'c ' + ('npc ' if self.npc else '' ) + ' '.join(args),
+                'command': 'new c ' + ('npc ' if self.npc else '' ) + ' '.join(args),
                 'type': 'select',
                 'type_name': 'CHARACTER',
                 'getter': {
@@ -924,7 +926,7 @@ class CharacterCommand():
         if len(args) == 1:
             messages.append('No description provided')
         if not self.char:
-            messages.append('You don\'t have an active character.\nTry this: ```css\n.d c "CHARACTER NAME"```')
+            messages.append('You don\'t have an active character.\nTry this: ```css\n.d new c "CHARACTER NAME"```')
         elif not self.can_edit:
             raise Exception('You do not have permission to edit this character')
         else:
@@ -952,7 +954,7 @@ class CharacterCommand():
         if len(args) == 2 or (len(args) == 1 and args[1].lower() != 'concept'):
             messages.append('No high concept provided')
         if not self.char:
-            messages.append('You don\'t have an active character.\nTry this: ```css\n.d c "CHARACTER NAME"```')
+            messages.append('You don\'t have an active character.\nTry this: ```css\n.d new c "CHARACTER NAME"```')
         elif not self.can_edit:
             raise Exception('You do not have permission to edit this character')
         else:
@@ -986,7 +988,7 @@ class CharacterCommand():
         if len(args) == 1:
             messages.append('No trouble provided')
         if not self.char:
-            messages.append('You don\'t have an active character.\nTry this: ```css\n.d c "CHARACTER NAME"```')
+            messages.append('You don\'t have an active character.\nTry this: ```css\n.d new c "CHARACTER NAME"```')
         else:
             trouble = TextUtils.value_with_quotes(args[1:])
             self.char.trouble = trouble
@@ -1009,7 +1011,7 @@ class CharacterCommand():
         """
 
         if not self.char:
-            return ['You don\'t have an active character.\nTry this: ```css\n.d c "CHARACTER NAME"```']
+            return ['You don\'t have an active character.\nTry this: ```css\n.d new c "CHARACTER NAME"```']
         elif not self.can_edit:
             raise Exception('You do not have permission to edit this character')
         elif args[1].lower() == 'none':
@@ -1048,7 +1050,7 @@ class CharacterCommand():
         """
 
         if not self.char:
-            raise Exception('You don\'t have an active character.\nTry this: ```css\n.d c "CHARACTER NAME"```')
+            raise Exception('You don\'t have an active character.\nTry this: ```css\n.d new c "CHARACTER NAME"```')
         if not self.can_edit:
             raise Exception('You do not have permission to edit this character')
         messages = []
@@ -1091,7 +1093,7 @@ class CharacterCommand():
         """
 
         if not self.char:
-            raise Exception('You don\'t have an active character.\nTry this: ```css\n.d c "CHARACTER NAME"```')
+            raise Exception('You don\'t have an active character.\nTry this: ```css\n.d new c "CHARACTER NAME"```')
         if not self.can_edit:
             raise Exception('You do not have permission to edit this character')
         messages = []
@@ -1174,7 +1176,7 @@ class CharacterCommand():
         """
 
         if not self.char:
-            raise Exception('You don\'t have an active character.\nTry this: ```css\n.d c "CHARACTER NAME"```')
+            raise Exception('You don\'t have an active character.\nTry this: ```css\n.d new c "CHARACTER NAME"```')
         if not self.can_edit:
             raise Exception('You do not have permission to edit this character')
         messages = []
@@ -1219,7 +1221,7 @@ class CharacterCommand():
             messages.append('Approach syntax: .d approach "APPROACH NAME" BONUS [..."APPROACH NAME" BONUS]')
         else:
             if not self.char:
-                messages.append('You don\'t have an active character.\nTry this: ```css\n.d c "CHARACTER NAME"```')
+                messages.append('You don\'t have an active character.\nTry this: ```css\n.d new c "CHARACTER NAME"```')
             elif not self.can_edit:
                 raise Exception('You do not have permission to edit this character')
             else:
@@ -1271,7 +1273,7 @@ class CharacterCommand():
             raise Exception('Skill syntax: .d skill "SKILL NAME" BONUS [..."SKILL NAME" BONUS]')
         else:
             if not self.char:
-                messages.append('You don\'t have an active character.\nTry this: ```css\n.d c "CHARACTER NAME"```')
+                messages.append('You don\'t have an active character.\nTry this: ```css\n.d new c "CHARACTER NAME"```')
             elif not self.can_edit:
                 raise Exception('You do not have permission to edit this character')
             else:
@@ -1323,7 +1325,7 @@ class CharacterCommand():
                 return ['You don\'t have an active aspect.\nTry this: ```css\n.d c a "ASPECT NAME"```']
             messages.append(f'{self.asp.get_string(self.char)}')
         if not self.char:
-            return ['You don\'t have an active character.\nTry this: ```css\n.d c "CHARACTER NAME"```']
+            return ['You don\'t have an active character.\nTry this: ```css\n.d new c "CHARACTER NAME"```']
         elif not self.can_edit:
             raise Exception('You do not have permission to edit this character')
 
@@ -1415,7 +1417,7 @@ class CharacterCommand():
                 return ['You don\'t have an active stunt.\nTry this: ```css\n.d c a "STUNT NAME"```']
             messages.append(f'{self.stu.get_string(self.char)}')
         if not self.char:
-            return ['You don\'t have an active character.\nTry this: ```css\n.d c "CHARACTER NAME"```']
+            return ['You don\'t have an active character.\nTry this: ```css\n.d new c "CHARACTER NAME"```']
         elif not self.can_edit:
             raise Exception('You do not have permission to edit this character')
 
@@ -1506,7 +1508,7 @@ class CharacterCommand():
         [stress_checks.append(t.lower()) for t in stress_titles]
         stress_check_types = ' or '.join([f'({t[0:2 ].lower()}){t[2:].lower()}' for t in stress_titles])
         if not self.char:
-            messages.append('You don\'t have an active character.\nTry this: ```css\n.d c "CHARACTER NAME"```')
+            messages.append('You don\'t have an active character.\nTry this: ```css\n.d new c "CHARACTER NAME"```')
             return messages
         if not self.can_edit:
             raise Exception('You do not have permission to edit this character')
@@ -1682,14 +1684,15 @@ class CharacterCommand():
         modified = None
         consequences = copy.deepcopy(self.char.consequences) if self.char.consequences else CONSEQUENCES
         consequences_titles = copy.deepcopy(self.char.consequences_titles) if self.char.consequences_titles else CONSEQUENCES_TITLES
+        use_consequences = len([c for c in consequences_titles if c in ['Mild', 'Moderate', 'Severe']]) == 3 and len(consequences_titles) == 3
         consequences_shifts = copy.deepcopy(self.char.consequences_shifts) if self.char.consequences_shifts else CONSEQUENCES_SHIFTS
-        consequences_name = 'Condition' if self.char.consequences_titles else 'Consequence'
+        consequences_name = 'Consequence' if use_consequences else 'Condition'
         consequences_checks = []
         [consequences_checks.append(t[0:2].lower()) for t in consequences_titles]
         [consequences_checks.append(t.lower()) for t in consequences_titles]
         consequences_check_types = ' or '.join([f'({t[0:2].lower()}){t[2:].lower()}' for t in consequences_titles])
         if not self.char:
-            messages.append('You don\'t have an active character.\nTry this: ```css\n.d c "CHARACTER NAME"```')
+            messages.append('You don\'t have an active character.\nTry this: ```css\n.d new c "CHARACTER NAME"```')
             return messages
         if not self.can_edit:
             raise Exception('You do not have permission to edit this character')
@@ -1769,18 +1772,18 @@ class CharacterCommand():
             severity = [i for i in range(0, len(consequences_titles)) if 1 if severity_str in [consequences_titles[i].lower()[0:2], consequences_titles[i].lower()]][0]
             severity_shift = consequences_shifts[severity]
             severity_name = consequences_titles[severity]
-            if self.char.consequences[severity][1] == O:
+            if not self.char.consequences or self.char.consequences and self.char.consequences[severity][1] == O:
                 messages.append(f'***{self.char.name}*** does not currently have a _{severity_name}_ {consequences_name}')
                 return messages
             previous = copy.deepcopy(self.char.consequences)
             modified = copy.deepcopy(self.char.consequences)
             modified[severity] = [severity_shift, O]
             self.char.consequences = modified
-            aspect = severity_name if self.char.consequences_titles else previous[severity][2]
+            aspect = previous[severity][2] if use_consequences else severity_name
             messages.append(f'Removed ***{self.char.name}\'s*** _{severity_name}_ from {consequences_name} ("{aspect}")')
-            messages.extend(self.aspect(['a', 'd', aspect]))
+            messages.extend(self.aspect(['a', 'delete', aspect]))
         else:
-            if len(args) == 2 and not self.char.consequences_titles:
+            if len(args) == 2 and use_consequences:
                 messages.append('Missing Consequence aspect')
                 return messages
             if args[1].lower() not in consequences_checks:
@@ -1793,16 +1796,19 @@ class CharacterCommand():
             if self.char.consequences[severity][1] == X:
                 messages.append(f'***{self.char.name}*** already has a _{severity_name}_ {consequences_name} ("{self.char.consequences[severity][2]}")')
                 return messages
-            aspect = severity_name if self.char.consequences else ' '.join(args[2:])
+            aspect = severity_name if not use_consequences else ' '.join(args[2:])
             modified = copy.deepcopy(self.char.consequences)
-            if self.char.consequences_titles:
-                modified[severity] = [severity_shift, X]
-            else:
+            if use_consequences:
                 modified[severity] = [severity_shift, X, aspect]
+            else:
+                modified[severity] = [severity_shift, X]
             messages.append(f'***{self.char.name}*** absorbed {severity_shift} shift for a {severity_name} {consequences_name} "{aspect}"')
             messages.extend(self.aspect(['a', aspect]))
             self.char.consequences = modified
+            # If the character is being targeted, then absorb any available shifts from the attack roll
             messages.extend(self.absorb_shifts(int(severity_shift)))
+            # If the character is being targeted, then the consequence aspect should grant a free invoke
+            messages.extend(self.add_free_invokes())
         messages.append(f'{self.char.get_string_consequences()}')
         char_svc.save(self.char, self.user)
         return messages
@@ -1830,4 +1836,18 @@ class CharacterCommand():
             targeted_by.last_roll = last_roll
             char_svc.save(targeted_by, self.user)
             messages.append(f'{targeted_by.active_action} from ***{targeted_by.name}*** has {p.no("shift", shifts_remaining)} left to absorb.')
+        return messages
+
+    def add_free_invokes(self):
+        """Add free invokes on consequence aspects from an attack
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
+        messages = []
+        targeted_by = Character.filter(active_target=str(self.char.id)).first()
+        if targeted_by and targeted_by.last_roll:
+            messages.extend(self.aspect(['a', 'c', 'st', 't', '1', 'Free Invokes']))
         return messages

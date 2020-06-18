@@ -17,7 +17,7 @@ class SceneService(BaseService):
         if len(args) == 1:
             raise Exception('No characters added')
         if not sc:
-            raise Exception('You don\'t have an active scene. Try this:```css\n.d scene SCENE_NAME```')
+            raise Exception('You don\'t have an active scene. Try this:```css\n.d new scene SCENE_NAME```')
         elif args[1].lower() == 'list' or args[1].lower() == 'l':
             return [sc.get_string_characters(channel)]
         elif args[1].lower() in ['delete','d']:
@@ -52,7 +52,7 @@ class SceneService(BaseService):
                 incorrect_sytax
             ]))
         if not sc:
-            raise Exception('You don\'t have an active scene. Try this:```css\n.d scene SCENE_NAME```')
+            raise Exception('You don\'t have an active scene. Try this:```css\n.d new scene SCENE_NAME```')
         zones = ' '.join(args).replace(f'{args[0]} ', '').split(' to ')
         zone_list = []
         for z in zones:

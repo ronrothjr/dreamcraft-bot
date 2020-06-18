@@ -258,6 +258,14 @@ class Character(Document):
                 available.extend(self.get_invokable_objects(child))
         return available
 
+    def get_available_stress(self, stress_type_str):
+        if self.stress_titles:
+            stress_type = [i for i in range(0, len(self.stress_titles)) if stress_type_str.lower() in [self.stress_titles[i].lower()[0:2], self.stress_titles[i].lower()]]
+            stress_int = stress_type[0] if stress_type else None
+            if stress_int:
+                return sum([1 for s in self.stress[stress_type] if s[1] == O]) if self.stress else 0
+        return 0
+
     def get_character_aspects(self, char=None):
         char = char if char else self
         available = self.get_invokable_objects(char)

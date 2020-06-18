@@ -22,7 +22,8 @@ class ScenarioCommand():
         note - add a note to the scenario
         say - add dialog to the scene from the scenario
         story - display the scenario's story
-        name, n - display and create new scenarios by name
+        new - create new scenarios by name
+        name, n - display scenarios by name
         description, desc - add/edit the Description in the engeagement
         select, = - display existing engeagement
         character, char, c - edit the scenario as a character
@@ -56,6 +57,7 @@ class ScenarioCommand():
         """
 
         self.parent = parent
+        self.new = parent.new
         self.ctx = ctx
         self.args = args[1:]
         self.guild = guild
@@ -81,8 +83,8 @@ class ScenarioCommand():
             # List of subcommands mapped the command methods
             switcher = {
                 'help': self.help,
-                'name': self.name,
-                'n': self.name,
+                'name': self.select,
+                'n': self.select,
                 'select': self.select,
                 '=': self.select,
                 'note': self.note,
@@ -121,11 +123,11 @@ class ScenarioCommand():
                 'delete': self.delete_scenario,
                 'd': self.delete_scenario
             }
+            if self.new:
+                func = self.new_scenario
             # Get the function from switcher dictionary
-            if self.command in switcher:
-                func = switcher.get(self.command, lambda: self.name)
-                # Execute the function
-                messages = func(self.args)
+            elif self.command in switcher:
+                func = switcher.get(self.command, lambda: self.select)
             else:
                 match = self.search(self.args)
                 if match:
@@ -135,7 +137,8 @@ class ScenarioCommand():
                 else:
                     self.args = ('n',) + self.args
                     self.command = 'n'
-                    func = self.name
+                    func = self.select
+            if func:
                 # Execute the function
                 messages = func(self.args)
             # Send messages
@@ -291,7 +294,7 @@ class ScenarioCommand():
         dialog = {
             'create_scenario': ''.join([
                 '**CREATE or SCENARIO**```css\n',
-                '.d scenario "YOUR SCENARIOR\'S NAME"```'
+                '.d new scenario "YOUR SCENARIOR\'S NAME"```'
             ]),
             'active_scenario': ''.join([
                 '***YOU ARE CURRENTLY EDITING...***\n' if self.can_edit else '',
@@ -331,8 +334,8 @@ class ScenarioCommand():
                 dialog_string += dialog.get('go_back_to_parent', '') if self.can_edit else ''
         return dialog_string
     
-    def name(self, args):
-        """Display and create a new Scenario by name
+    def new_scenario(self, args):
+        """Create a new Scenario by name
         
         Parameters
         ----------
@@ -355,9 +358,7 @@ class ScenarioCommand():
         else:
             if len(args) == 1 and args[0].lower() == 'short':
                 return [self.dialog('active_scenario_short')]
-            if len(args) == 1 and self.scenario:
-                return [self.dialog('')]
-            scenario_name = ' '.join(args[1:])
+            scenario_name = ' '.join(args)
             if len(args) > 1 and args[1] == 'rename':
                 scenario_name = ' '.join(args[2:])
                 if not self.scenario:
@@ -393,7 +394,7 @@ class ScenarioCommand():
                     'svc': scenario_svc,
                     'user': self.user,
                     'title': 'Scenario List',
-                    'command': 'scenario ' + ' '.join(args),
+                    'command': 'new scenario ' + ' '.join(args),
                     'type': 'select',
                     'type_name': 'SCENARIO',
                     'getter': {

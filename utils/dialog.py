@@ -224,7 +224,7 @@ class Dialog(object):
             select_str = ''.join([
                 f'\n\n{self.formatter(self.items)}',
                 f'\n\nREPLY TO CONFIRM:',
-                '```css\n.d YES /* to confirm the command */\n.d NO /* to reject the command */```'
+                '```css\n.d yes /* to confirm the command */```'
             ])
         elif self.page_count:
             select_str = ''.join([
@@ -235,7 +235,7 @@ class Dialog(object):
             name = self.confirm['params']['name']
             select_str = ''.join([
                 f'Create a new {self.type_name} named ***{name}***?',
-                f'```css\n.d YES /* to confirm the command */\n.d NO /* to reject the command */```'
+                f'```css\n.d yes /* to confirm the command */```'
             ])
         return select_str
 

@@ -4,7 +4,7 @@ __contact__ = 'u/ensosati'
 
 
 class Setup():
-    start = '**CREATE A CHARACTER**```css\n.d character "YOUR CHARACTER\'S NAME"```\
+    start = '**CREATE A CHARACTER**```css\n.d new character "YOUR CHARACTER\'S NAME"```\
             \n**Character Help:**```css\n.d c help```**Additional Help:**```css\n.d help```Display condensed game instructions```css\n.d cheat\n.d cheat "SEARCH TEXT"```'
 
     help = '\n***ADDITIONAL INSTRUCTIONS***\n\
@@ -113,7 +113,7 @@ class Setup():
 
     scene_help = '.d scene help - display these instructions\nScene Help:\n\
             Display active scene```css\n.d scene```\n\
-            Add/display/set active scene```css\n.d scene name "NAME"```\n\
+            Add/display/set active scene```css\n.d new scene "NAME"```\n\
             Display list of scenes```css\n.d scene list```\n\
             Set the description for the active scene```css\n.d scene description "DESCRIPTION TEXT"```\n\
             Add/remove aspect for active scene```css\n.d scene aspect [delete] "ASPECT NAME"```\n\
@@ -123,7 +123,7 @@ class Setup():
 
     zone_help = '.d z help - display these instructions\nZone Help:\n\
             Display active zone```css\n.d (z)one```\n\
-            Add/display/set active zone```css\n.d z name "NAME"```\n\
+            Add/display/set active zone```css\n.d new z "NAME"```\n\
             Display list of zones```css\n.d z list```\n\
             Set the description for the active zone```css\n.d z description "DESCRIPTION TEXT"```\n\
             Add/remove aspect for active zone```css\n.d z aspect [delete] "ASPECT NAME"```\n\
@@ -134,7 +134,7 @@ class Setup():
 
     session_help = '.d session help - display these instructions\nSession Help:\n\
             Display active session```css\n.d session```\n\
-            Add/display/set active session```css\n.d session name "NAME"```\n\
+            Add/display/set active session```css\n.d new session "NAME"```\n\
             Display list of sessions```css\n.d session list```\n\
             Set the description for the active session```css\n.d session description "DESCRIPTION TEXT"```\n\
             Add/remove aspect for active session```css\n.d session aspect [delete] "ASPECT NAME"```\n\
@@ -144,7 +144,7 @@ class Setup():
 
     engagement_help = '.d e help - display these instructions\nEngagement Help:\n\
             Display active engagement```css\n.d (e)ngagement```\n\
-            Add/display/set active engagement```css\n.d e name "NAME"```\n\
+            Add/display/set active engagement```css\n.d new e "NAME"```\n\
             Display list of engagements```css\n.d e list```\n\
             Set the description for the active engagement```css\n.d e description "DESCRIPTION TEXT"```\n\
             Add/remove aspect for active engagement```css\n.d e aspect [delete] "ASPECT NAME"```\n\

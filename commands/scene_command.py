@@ -6,12 +6,13 @@ import traceback
 from commands import CharacterCommand
 from models import Channel, Scenario, Scene, Zone, Engagement, Character, User, Log
 from config.setup import Setup
-from services import SceneService, ZoneService, ScenarioService
+from services import SceneService, ZoneService, ScenarioService, EngagementService
 from utils import Dialog, T
 
 scene_svc = SceneService()
 zone_svc = ZoneService()
 scenario_svc = ScenarioService()
+engagement_svc = EngagementService()
 SETUP = Setup()
 SCENE_HELP = SETUP.scene_help
 
@@ -24,7 +25,8 @@ class SceneCommand():
         note - add a note to the scene
         say - add dialog to the scene from the scene
         story - display the scene's story
-        name, n - display and create new scenes by name
+        new - create new scenes by name
+        name, n - display scenes by name
         description, desc - add/edit the Description in the scene
         select, = - display existing scene
         character, char, c - edit the scene as a character
@@ -64,6 +66,7 @@ class SceneCommand():
         """
 
         self.parent = parent
+        self.new = parent.new
         self.ctx = ctx
         self.args = args[1:] if args[0] in ['scene', 's'] else args
         self.guild = guild
@@ -93,8 +96,8 @@ class SceneCommand():
                 'note': self.note,
                 'say': self.say,
                 'story': self.story,
-                'name': self.name,
-                'n': self.name,
+                'name': self.select,
+                'n': self.select,
                 'select': self.select,
                 'description': self.description,
                 'desc': self.description,
@@ -139,11 +142,11 @@ class SceneCommand():
                 'move': self.move,
                 'exit': self.exit
             }
+            if self.new:
+                func = self.new_scene
             # Get the function from switcher dictionary
-            if self.command in switcher:
-                func = switcher.get(self.command, lambda: self.name)
-                # Execute the function
-                messages = func(self.args)
+            elif self.command in switcher:
+                func = switcher.get(self.command, lambda: self.select)
             else:
                 match = self.search(self.args)
                 if match:
@@ -153,7 +156,9 @@ class SceneCommand():
                 else:
                     self.args = ('n',) + self.args
                     self.command = 'n'
-                    func = self.name
+                    func = self.select
+            if func:
+                # Execute the function
                 messages = func(self.args)
             # Send messages
             return messages
@@ -179,7 +184,7 @@ class SceneCommand():
 
     def check_scene(self):
         if not self.sc:
-            raise Exception('You don\'t have an active scene. Try this:```css\n.d scene "SCENE NAME"```')
+            raise Exception('You don\'t have an active scene. Try this:```css\n.d new scene "SCENE NAME"```')
 
     def search(self, args):
         """Search for an existing Scene using the command string
@@ -306,7 +311,7 @@ class SceneCommand():
         dialog = {
             'create_scene': ''.join([
                 '**CREATE or SCENE**```css\n',
-                '.d scene "YOUR SCENE\'S NAME"```'
+                '.d new scene "YOUR SCENE\'S NAME"```'
             ]),
             'active_scene': ''.join([
                 '***YOU ARE CURRENTLY EDITING...***\n' if self.can_edit else '',
@@ -373,8 +378,8 @@ class SceneCommand():
                 dialog_string += dialog.get('go_back_to_parent', '')
         return dialog_string
     
-    def name(self, args):
-        """Display and create a new Scene by name
+    def new_scene(self, args):
+        """Create a new Scene by name
         
         Parameters
         ----------
@@ -388,7 +393,7 @@ class SceneCommand():
 
         messages = []
         if not self.scenario:
-            raise Exception('No active scenario. Try this:```css\n.d scenario "SCENARIO NAME"```')
+            raise Exception('No active scenario. Try this:```css\n.d new scenario "SCENARIO NAME"```')
         if len(args) == 0:
             if not self.sc:
                 return [
@@ -399,9 +404,7 @@ class SceneCommand():
         else:
             if len(args) == 1 and args[0].lower() == 'short':
                 return [self.dialog('active_scene_short')]
-            if len(args) == 1 and self.sc:
-                return [self.dialog('')]
-            scene_name = ' '.join(args[1:])
+            scene_name = ' '.join(args)
             if len(args) > 1 and args[1] == 'rename':
                 scene_name = ' '.join(args[2:])
                 if not self.sc:
@@ -443,7 +446,7 @@ class SceneCommand():
                     'svc': scene_svc,
                     'user': self.user,
                     'title': 'Scene List',
-                    'command': 'scene ' + ' '.join(args),
+                    'command': 'new scene ' + ' '.join(args),
                     'type': 'select',
                     'type_name': 'SCENE',
                     'getter': {
@@ -795,6 +798,9 @@ class SceneCommand():
         for l in leaving:
             messages.extend(zone_svc.player(('p', 'delete', self.char.name), self.channel, l, self.user))
             self.note(('note', f'***{self.char.name}*** exits the _{l.name}_ zone'))
+        if self.channel and self.channel.active_engagement:
+            engagement = Engagement().get_by_id(self.channel.active_engagement)
+            messages.extend(engagement_svc.player(('player', 'delete', self.char.name), self.channel, engagement, self.user))
         messages.extend(self.player(('p', 'delete', self.char.name)))
         self.note(('note', f'***{self.char.name}*** exits the _{self.sc.name}_ scene'))
         return messages

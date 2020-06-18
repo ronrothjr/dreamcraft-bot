@@ -14,7 +14,7 @@ class EngagementService(BaseService):
         if len(args) == 1:
             raise Exception('No characters added')
         if not engagement:
-            raise Exception('You don\'t have an active engagement. Try this:```css\n.d engagement "ENGAGEMENT NAME"```')
+            raise Exception('You don\'t have an active engagement. Try this:```css\n.d new engagement "ENGAGEMENT NAME"```')
         elif args[1].lower() == 'list' or args[1].lower() == 'l':
             return [engagement.get_string_characters(channel)]
         elif args[1].lower() in ['delete','d']:
@@ -45,7 +45,7 @@ class EngagementService(BaseService):
         if len(args) == 1:
             raise Exception('No opposition added')
         if not engagement:
-            raise Exception('You don\'t have an active engagement. Try this:```css\n.d engagement "ENGAGEMENT NAME"```')
+            raise Exception('You don\'t have an active engagement. Try this:```css\n.d new engagement "ENGAGEMENT NAME"```')
         elif args[1].lower() == 'list' or args[1].lower() == 'l':
             return [engagement.get_string_opposition(channel)]
         elif args[1].lower() in ['delete','d']:

@@ -45,6 +45,10 @@ class DreamcraftHandler():
         DreamcraftHandler - object for processing Context object and args (list of strings in a command)
         """
         self.ctx = ctx
+        self.new = False
+        if len(args) and args[0].lower() == 'new':
+            self.new = True
+            args = args[1:]
         self.args = args
         self.guild = ctx.guild if ctx.guild else ctx.author
         self.user = User().get_or_create(ctx.author.name, self.guild.name, ctx.author.discriminator, ctx.author.display_name)
@@ -59,7 +63,7 @@ class DreamcraftHandler():
             self.channel.save()
         self.char = Character().get_by_id(self.user.active_character) if self.user and self.user.active_character else None
         self.module = self.char.category if self.char else None
-        self.command = args[0].lower()
+        self.command = self.args[0].lower()
         self.func = None
         self.messages = []
 
@@ -225,6 +229,9 @@ class DreamcraftHandler():
         if self.user and self.user.command:
             answer = ' '.join(self.args[0:])
             self.args = tuple(self.user.command.split(' '))
+            if len(self.args) and self.args[0].lower() == 'new':
+                self.new = True
+                self.args = self.args[1:]
             self.command = self.args[0].lower()
             self.user.answer = answer
             self.user.updated_by = str(self.user.id)

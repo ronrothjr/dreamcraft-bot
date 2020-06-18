@@ -1218,7 +1218,7 @@ class CharacterCommand():
             app_str = '\n        '.join(APPROACHES)
             messages.append(f'**Approaches:**\n        {app_str}')
         elif len(args) < 3:
-            messages.append('Approach syntax: .d approach "APPROACH NAME" BONUS [..."APPROACH NAME" BONUS]')
+            messages.append('Approach syntax: ```css\n.d approach "APPROACH NAME" BONUS [..."APPROACH NAME" BONUS]```')
         else:
             if not self.char:
                 messages.append('You don\'t have an active character.\nTry this: ```css\n.d new c "CHARACTER NAME"```')
@@ -1226,24 +1226,26 @@ class CharacterCommand():
                 raise Exception('You do not have permission to edit this character')
             else:
                 if args[1].lower() in ['delete','d']:
-                    skill = [s for s in APPROACHES if args[2][0:2].lower() == s[0:2].lower()]
-                    skill = skill[0].split(' - ')[0] if skill else args[2]
-                    if skill in self.char.skills:
+                    skill = [a for a in APPROACHES if args[2][0:2].lower() == a[0:2].lower()]
+                    skill = skill[0].split(' - ')[0] if skill else ' '.join(args[2:])
+                    if [s for s in self.char.skills if skill.lower() == s.lower()]:
                         new_skills = {}
                         for key in self.char.skills:
-                            if key != skill:
+                            if key.lower() != skill.lower():
                                 new_skills[key] = self.char.skills[key]
                         self.char.skills = new_skills
-                    char_svc.save(self.char, self.user)
-                    messages.append(f'Removed {skill}')
+                        char_svc.save(self.char, self.user)
+                        messages.append(f'Removed {skill} approach')
+                    else:
+                        messages.append(f'_{skill}_ not found in approaches')
                 else:
                     indices = [0] + [i for i in range(1, len(args)) if args[i].replace('+','').replace('-','').isdigit()]
                     if len(indices) == 1:
-                        raise Exception('Approach syntax: .d approach "APPROACH NAME" BONUS [..."APPROACH NAME" BONUS]')
+                        raise Exception('Approach syntax: ```css\n.d approach "APPROACH NAME" BONUS [..."APPROACH NAME" BONUS]```')
                     for i in range(1, len(indices)):
                         abbr = ' '.join(args[(indices[i-1]+1):indices[i]])
                         val = args[indices[i]]
-                        skill = [s for s in APPROACHES if abbr.lower() == s[0:2].lower()]
+                        skill = [s for s in APPROACHES if abbr[0:2].lower() == s[0:2].lower()]
                         skill = skill[0].split(' - ')[0] if skill else abbr
                         self.char.skills[skill] = val
                         messages.append(f'Updated {skill} to {val}')
@@ -1270,7 +1272,7 @@ class CharacterCommand():
             sk_str = '\n        '.join(SKILLS)
             messages.append(f'**Skills:**\n        {sk_str}')
         elif len(args) < 3:
-            raise Exception('Skill syntax: .d skill "SKILL NAME" BONUS [..."SKILL NAME" BONUS]')
+            raise Exception('Skill syntax: ```css\n.d skill "SKILL NAME" BONUS [..."SKILL NAME" BONUS]```')
         else:
             if not self.char:
                 messages.append('You don\'t have an active character.\nTry this: ```css\n.d new c "CHARACTER NAME"```')
@@ -1279,23 +1281,25 @@ class CharacterCommand():
             else:
                 if args[1].lower() in ['delete','d']:
                     skill = [s for s in SKILLS if args[2][0:2].lower() == s[0:2].lower()]
-                    skill = skill[0].split(' - ')[0] if skill else args[2]
-                    if skill in self.char.skills:
+                    skill = skill[0].split(' - ')[0] if skill else ' '.join(args[2:])
+                    if [s for s in self.char.skills if skill.lower() == s.lower()]:
                         new_skills = {}
                         for key in self.char.skills:
-                            if key != skill:
+                            if key.lower() != skill.lower():
                                 new_skills[key] = self.char.skills[key]
                         self.char.skills = new_skills
-                    char_svc.save(self.char, self.user)
-                    messages.append(f'Removed {skill} skill') 
+                        char_svc.save(self.char, self.user)
+                        messages.append(f'Removed {skill} skill')
+                    else:
+                        messages.append(f'_{skill}_ not found in skill')
                 else:
                     indices = [0] + [i for i in range(1, len(args)) if args[i].replace('+','').replace('-','').isdigit()]
                     if len(indices) == 1:
-                        raise Exception('Skill syntax: .d skill "SKILL NAME" BONUS [..."SKILL NAME" BONUS]')
+                        raise Exception('Skill syntax: ```css\n.d skill "SKILL NAME" BONUS [..."SKILL NAME" BONUS]```')
                     for i in range(1, len(indices)):
                         abbr = ' '.join(args[(indices[i-1]+1):indices[i]])
                         val = args[indices[i]]
-                        skill = [s for s in SKILLS if abbr.lower() == s[0:2].lower()]
+                        skill = [s for s in SKILLS if abbr[0:2].lower() == s[0:2].lower()]
                         skill = skill[0].split(' - ')[0] if skill else abbr
                         self.char.skills[skill] = val
                         messages.append(f'Updated {skill} to {val}')

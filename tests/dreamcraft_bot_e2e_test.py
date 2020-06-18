@@ -115,6 +115,12 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                 ]
             },
             {
+                'args': [('5',)],
+                'assertions': [
+                    ['Page number 5 does not exist', 'should display warning on page number 5']
+                ]
+            },
+            {
                 'args': [('new', 'c', 'npc', 'Test NPC 1'), ('y',)],
                 'assertions': [
                     ['Create a new CHARACTER named ***Test NPC 1***', 'Should ask Create Test NPC 1 question'],
@@ -194,9 +200,21 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                 ]
             },
             {
-                'args': [('skill', 'Will', '+4', 'Dark Magic', '+3', 'Rapport', '+2', 'Lore', '+1')],
+                'args': [('skill', 'will', '+4', 'Dark Magic', '+3', 'Rapport', '+2', 'Lore', '+1')],
                 'assertions': [
                     ['**Skills:**\n        +4 - Will', 'Should add skills']
+                ]
+            },
+            {
+                'args': [('Will',)],
+                'assertions': [
+                    ['.d skill "SKILL NAME" BONUS [..."SKILL NAME" BONUS]', 'Should display skill syntax']
+                ]
+            },
+            {
+                'args': [('provoke', '+3',)],
+                'assertions': [
+                    ['+3 - Dark Magic, Provoke', 'Should add skills']
                 ]
             },
             {

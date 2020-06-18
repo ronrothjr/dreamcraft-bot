@@ -79,7 +79,7 @@ class Setup():
             Set/remove bonuses```css\n.d c skill [delete] "SKILL NAME" BONUS```\n\
             Display a list of skill descriptions```css\n.d c skill help```\n\
             Share a character```css\n.d c share anyone /* READ-ONLY */\n.d c share to copy /* LET OTHERS COPY */\n.d c share revoke /* TURN OFF SHARING */```\n\
-            Copy a character```css\n.d c shared /* VIEW SHARED CHARACTERS */\n.d c copy /* COPIES SELECTED CHARACTER */\n.d c copy to "SERVER NAME" /* COPIES YOU CHARACTER TO ANOTHER SERVER */```'
+            Copy a character```css\n.d c shared /* VIEW SHARED CHARACTERS */\n.d c copy /* COPIES SELECTED CHARACTER */\n.d c copy to "SERVER NAME" /* COPIES YOUR CHARACTER TO ANOTHER SERVER */```'
 
     stress_help = '.d c stress help - display these instructions\nStress Help:\n\
             Add stress```css\n.d c stress Mental|Physical 1|2|3```\n\

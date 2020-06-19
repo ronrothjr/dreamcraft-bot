@@ -11,6 +11,7 @@ from utils import T
 
 SETUP = Setup()
 USER_HELP = SETUP.user_help
+RESERVED = SETUP.reserved_commands
 
 base_svc = BaseService()
 
@@ -180,7 +181,19 @@ class UserCommand():
         if len(self.args) < 3:
             return [f'No alias command provided.```css\n.d alias ALIAS "ORIGINAL COMMAND 1" [... "ORIGINAL COMMAND 2"]```']
         aliases = {}
-        aliases[self.args[1]] = self.args[2:]
+        if self.args[1] in ['delete','d']:
+            alias = self.args[2]
+            if self.user.aliases and alias in self.user.aliases:
+                for a in self.user.aliases:
+                    if a != alias:
+                        aliases[a] = self.user.aliases[a]
+        else:
+            alias = self.args[1]
+            if alias in RESERVED:
+                raise Exception(f'_{alias}_ is a reserved command or subcommand')
+            commands = self.args[2:]
+            aliases = self.user.aliases if self.user.aliases else {}
+            aliases[alias] = commands
         self.user.aliases = aliases
         self.user.updated_by = str(self.user.id)
         self.user.updated = T.now()

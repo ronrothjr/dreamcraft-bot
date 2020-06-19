@@ -167,6 +167,8 @@ class DreamcraftHandler():
             }
             self.messages = []
             self.search = str(self.args[0])
+
+            # Handle alias commands
             self.get_alias()
             if self.alias_commands:
                 alias_messages = []
@@ -175,7 +177,10 @@ class DreamcraftHandler():
                     module, messages = self.get_messages()
                     alias_messages.append(messages)
                 return 'Alias', 'COMMAND_SPLIT'.join(alias_messages)
+
+            # Handle dialog answers
             self.get_answer()
+
             if not self.messages:
                 self.shortcuts()
                 # Get the function from switcher dictionary
@@ -247,9 +252,12 @@ class DreamcraftHandler():
                 if self.command == a:
                     aliases = self.user.aliases[a]
                     for alias in aliases:
-                        while '{}' in alias and len(args):
-                            alias = alias.replace('{}', args[0])
-                            args = args[1:] if len(args) > 1 else tuple()
+                        # Find all instances of '{}'
+                        mataches = re.finditer(r'\[\]|\[([^\]]+)\]|\(\)|\(([^\)]+)\)|\{\}|\{([^\}]+)\}', alias)
+                        for x in mataches:
+                            if len(args):
+                                alias = alias.replace(x.group(0), args[0])
+                                args = args[1:] if len(args) > 1 else tuple()
                         self.alias_commands.append(alias)
 
     def get_answer(self):

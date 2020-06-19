@@ -86,9 +86,27 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                 ]
             },
             {
+                'args': [('u', 'alias', 'character', 'c Test Character 1', 'attack {} exact +1 Forceful')],
+                'assertions': [
+                    ['_character_ is a reserved command or subcommand', 'should warn of reserved commands']
+                ]
+            },
+            {
+                'args': [('u', 'alias', 'character1', 'c Test Character 1', 'attack {} exact +1 Forceful')],
+                'assertions': [
+                    ['***Aliases:***\n. . .***character1***', 'should set up character1 alias']
+                ]
+            },
+            {
+                'args': [('u', 'alias', 'delete', 'character1')],
+                'assertions': [
+                    ['***Aliases:***\n. . .***character1***', 'should not display deleted character1 alias']
+                ]
+            },
+            {
                 'args': [('u', 'alias', 'alias1', 'c Test Character 1', 'attack {} exact +1 Forceful')],
                 'assertions': [
-                    ['***Aliases:***\n. . .***alias1***', 'should set up xray alias']
+                    ['***Aliases:***\n. . .***alias1***', 'should set up alias1 alias']
                 ]
             }
         ])

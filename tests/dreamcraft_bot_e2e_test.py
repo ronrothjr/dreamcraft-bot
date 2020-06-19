@@ -84,6 +84,30 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                 'assertions': [
                     ['Saved time zone as ***America/New_York***', 'should save user time_zone as New York']
                 ]
+            },
+            {
+                'args': [('u', 'alias', 'character', 'c Test Character 1', 'attack {} exact +1 Forceful')],
+                'assertions': [
+                    ['_character_ is a reserved command or subcommand', 'should warn of reserved commands']
+                ]
+            },
+            {
+                'args': [('u', 'alias', 'character1', 'c Test Character 1', 'attack {} exact +1 Forceful')],
+                'assertions': [
+                    ['***Aliases:***\n. . .***character1***', 'should set up character1 alias']
+                ]
+            },
+            {
+                'args': [('u', 'alias', 'delete', 'character1')],
+                'assertions': [
+                    ['***Aliases:***\n. . .***character1***', 'should not display deleted character1 alias']
+                ]
+            },
+            {
+                'args': [('u', 'alias', 'alias1', 'c Test Character 1', 'attack {} exact +1 Forceful')],
+                'assertions': [
+                    ['***Aliases:***\n. . .***alias1***', 'should set up alias1 alias']
+                ]
             }
         ])
 
@@ -637,7 +661,7 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                 ]
             },
             {
-                'args': [('attack', 'NPC', 'exact', '+1', 'Forceful')],
+                'args': [('alias1','NPC')],
                 'assertions': [
                     ['***Test NPC 1*** faces', 'should display \'Test NPC 1\' facing an attack'],
                     ['attack from ***Test Character 1***', 'should display an attack from \'Test Character 1\'']

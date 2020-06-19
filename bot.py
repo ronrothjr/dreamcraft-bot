@@ -56,6 +56,8 @@ async def command_handler(ctx: Context, *args) -> None:
     
     handler = DreamcraftHandler(ctx, args)
     title, messages = handler.get_messages()
+    if 'COMMAND_SPLIT' in messages:
+        messages = messages.split('COMMAND_SPLIT')
     # Concatenate messages and send; handles str and list of str
     if isinstance(messages, list):
         [await send(ctx, title, f'{m}\n') for m in messages]

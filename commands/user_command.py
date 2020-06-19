@@ -11,6 +11,7 @@ from utils import T
 
 SETUP = Setup()
 USER_HELP = SETUP.user_help
+RESERVED = SETUP.reserved_commands
 
 base_svc = BaseService()
 
@@ -23,6 +24,7 @@ class UserCommand():
         user, u - display and create new users by name
         timezone, tz - set or display a list of existing timezones
         url, website, contact - set the contact url for the user
+        alias - set up alias commands
     """
 
     def __init__(self, parent, ctx, args, guild, user, channel):
@@ -76,7 +78,8 @@ class UserCommand():
                 'tz': self.time_zone,
                 'url': self.url,
                 'website': self.url,
-                'contact': self.url
+                'contact': self.url,
+                'alias': self.alias
             }
             # Get the function from switcher dictionary
             if self.command in switcher:
@@ -167,6 +170,31 @@ class UserCommand():
         if len(self.args) < 2:
             return [f'No contact info provided.```css\n.d u contact "CONTACT INFO"```']
         self.user.url = ' '.join(self.args[1:])
+        self.user.updated_by = str(self.user.id)
+        self.user.updated = T.now()
+        self.user.save()
+        return [self.user.get_string()]
+
+    def alias(self):
+        """Set/edit the user's alias commands"""
+
+        if len(self.args) < 3:
+            return [f'No alias command provided.```css\n.d alias ALIAS "ORIGINAL COMMAND 1" [... "ORIGINAL COMMAND 2"]```']
+        aliases = {}
+        if self.args[1] in ['delete','d']:
+            alias = self.args[2]
+            if self.user.aliases and alias in self.user.aliases:
+                for a in self.user.aliases:
+                    if a != alias:
+                        aliases[a] = self.user.aliases[a]
+        else:
+            alias = self.args[1]
+            if alias in RESERVED:
+                raise Exception(f'_{alias}_ is a reserved command or subcommand')
+            commands = self.args[2:]
+            aliases = self.user.aliases if self.user.aliases else {}
+            aliases[alias] = commands
+        self.user.aliases = aliases
         self.user.updated_by = str(self.user.id)
         self.user.updated = T.now()
         self.user.save()

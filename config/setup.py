@@ -45,7 +45,8 @@ class Setup():
             Display user info```css\n.d user```\n\
             Set user time zone```css\n.d u tz "TIME ZONE NAME"```\n\
             Search the list of time zones```css\n.d u tz list {search}```\n\
-            Add contact information```css\n.d u contact "CONTACT INFO".d u contact "\nReddit - u/fuzzywuzzy\nEmail - fuzzy@gmail.com"```\n'
+            Add contact information```css\n.d u contact "CONTACT INFO".d u contact "\nReddit - u/fuzzywuzzy\nEmail - fuzzy@gmail.com"```\n\
+            Create user alias commands```css\n.d u alias punch "c Superman" "attack {target} Forceful invoke Super Punch"\n/* How to use an alias that takes an argument */\n.d punch "Lex Luther"\n.d u alias delete punch /* REMOVES the punch alias */```\n'
 
     revision_help = '.d revision help - display revision help\n\
             \nRevision Setup:\n\
@@ -394,3 +395,15 @@ class Setup():
         'b5': 'Apocolyptic',
         'b6': 'Abysmal'
     }
+    reserved_commands = [
+        'help',
+        'channel', 'chan', 'list', 'users', 'u',
+        'character', 'c', 'note', 'n', 'say', 'story', 'stats', 'parent', 'p', 'new', 'name', 'n', 'select', 'image', 'list', 'l', 'delete', 'restore', 'copy', 'description', 'desc', 'high', 'hc', 'trouble', 't', 'fate', 'f', 'aspects', 'aspect', 'a', 'boost', 'b', 'approaches', 'approach', 'apps', 'app', 'skills', 'skill', 'sks', 'sk', '', 'stunts', 'stunt', 's', 'stress', 'st', 'consequence', 'con', 'custom', 'share', 'shared',
+        'cheat',
+        'engagement', 'e', 'players', 'player', 'p', 'opposition', 'opp', 'o', 'start', 'end',
+        'roll', 'r', 'reroll', 're', 'create', 'advantage', 'attack', 'att', 'defend', 'def', 'overcome', 'takeout', 'out', 'freeinvoke', 'available', 'avail', 'av',
+        'scenario', 'scene', 's', 'session', 'zone', 'connect', 'adjoin', 'ajoin', 'join', 'j', 'enter', 'move', 'exit',
+        'suggest', 'suggestion', 'revision', 'rev',
+        'undo', 'errors', 'error', 'err', 'e', 'last', 'next',
+        'user', 'timezone', 'tz', 'url', 'website', 'contact', 'alias'
+    ]

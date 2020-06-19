@@ -424,7 +424,7 @@ class CharacterCommand():
                 '.d c share revoke /* TURN OFF SHARING */```',
                 '\n***Copy a character***```css\n.d c shared /* VIEW SHARED CHARACTERS */\n',
                 '.d c copy /* COPIES SELECTED CHARACTER */\n',
-                '.d c copy to "SERVER NAME" /* COPIES YOU CHARACTER TO ANOTHER SERVER */```'
+                '.d c copy to "SERVER NAME" /* COPIES YOUR CHARACTER TO ANOTHER SERVER */```'
             ]),
             'add_more_info': ''.join([
                 f'Add more information about ***{name}***',

@@ -2,7 +2,7 @@
 __author__ = 'Ron Roth Jr'
 __contact__ = 'u/ensosati'
 
-from mongoengine import Document, StringField, BooleanField, DateTimeField
+from mongoengine import Document, StringField, BooleanField, DateTimeField, DynamicField
 from bson.objectid import ObjectId
 from utils import T
 
@@ -19,6 +19,7 @@ class User(Document):
     command =  StringField()
     question = StringField()
     answer = StringField()
+    aliases = DynamicField()
     archived = BooleanField(default=False)
     history_id = StringField()
     created_by = StringField()
@@ -69,7 +70,14 @@ class User(Document):
         self.save()
 
     def get_string(self):
-        tz = self.time_zone if self.time_zone else '_None_'
-        url = self.url if self.url else '_None_'
-        return f'_Player:_ ***{self.name}***\n_Timezone:_ ***{tz}***\n***Contact:*** _{url}_'
+        tz = f'\n_Timezone:_ ***{self.time_zone}***' if self.time_zone else '_None_'
+        url = f'\n***Contact:*** _{self.url}_' if self.url else '_None_'
+        al = ''
+        if self.aliases:
+            aliases = []
+            for a in self.aliases:
+                aliases.append(f'***{a}***\n. . . . .' + '\n. . . . .'.join([f'_{c}_' for c in self.aliases[a]]))
+            al = '\n. . .'.join(a for a in aliases)
+        alias_str = f'\n***Aliases:***\n. . .{al}' if al else ''
+        return f'_Player:_ ***{self.name}***{tz}{url}{alias_str}'
         

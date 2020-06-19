@@ -45,6 +45,18 @@ class DreamcraftHandler():
         DreamcraftHandler - object for processing Context object and args (list of strings in a command)
         """
         self.ctx = ctx
+        self.setup(ctx, args)
+
+    def setup(self, ctx, args):
+        """
+        Setup the Dreamcraft Handler with new args
+
+        Parameters
+        ----------
+        args : array(str)
+            The arguments sent to the bot to parse and evaluate
+        """
+
         self.new = False
         if len(args) and args[0].lower() == 'new':
             self.new = True
@@ -64,6 +76,7 @@ class DreamcraftHandler():
         self.char = Character().get_by_id(self.user.active_character) if self.user and self.user.active_character else None
         self.module = self.char.category if self.char else None
         self.command = self.args[0].lower()
+        self.alias_commands = []
         self.func = None
         self.messages = []
 
@@ -107,6 +120,7 @@ class DreamcraftHandler():
                 'suggest': SuggestionCommand,
                 'user': UserCommand,
                 'u': UserCommand,
+                'alias': UserCommand,
                 'channel': ChannelCommand,
                 'chan': ChannelCommand,
                 'character': CharacterCommand,
@@ -153,6 +167,14 @@ class DreamcraftHandler():
             }
             self.messages = []
             self.search = str(self.args[0])
+            self.get_alias()
+            if self.alias_commands:
+                alias_messages = []
+                for ac in self.alias_commands:
+                    self.setup(self.ctx, tuple(ac.split(' ')))
+                    module, messages = self.get_messages()
+                    alias_messages.append(messages)
+                return 'Alias', 'COMMAND_SPLIT'.join(alias_messages)
             self.get_answer()
             if not self.messages:
                 self.shortcuts()
@@ -197,7 +219,7 @@ class DreamcraftHandler():
                 return self.module, [f'{m}\n' for m in self.messages]
             else:
                 return self.module, '\n'.join(self.messages)
-    
+
         except Exception as err:
             traceback.print_exc()    
             # Log every error
@@ -213,6 +235,22 @@ class DreamcraftHandler():
                     'traceback': traceback.format_exc()
                 }, 'created')
             return 'Oops!', 'Hey, bugs happen! We\'re working on it...'
+
+    def get_alias(self):
+        """
+        Check the list of user aliases for a match and prepare them for execution
+        """
+
+        if self.user and self.user.aliases:
+            args = self.args[1:] if len(self.args) > 1 else tuple()
+            for a in self.user.aliases:
+                if self.command == a:
+                    aliases = self.user.aliases[a]
+                    for alias in aliases:
+                        while '{}' in alias and len(args):
+                            alias = alias.replace('{}', args[0])
+                            args = args[1:] if len(args) > 1 else tuple()
+                        self.alias_commands.append(alias)
 
     def get_answer(self):
         """

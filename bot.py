@@ -55,16 +55,16 @@ async def command_handler(ctx: Context, *args) -> None:
         return
     
     handler = DreamcraftHandler(ctx, args)
-    title, messages = handler.get_messages()
+    title, messages, image = handler.get_messages()
     if 'COMMAND_SPLIT' in messages:
         messages = messages.split('COMMAND_SPLIT')
     # Concatenate messages and send; handles str and list of str
     if isinstance(messages, list):
-        [await send(ctx, title, f'{m}\n') for m in messages]
+        [await send(ctx, title, f'{m}\n', image) for m in messages]
     else:
-        await send(ctx, title, messages)
+        await send(ctx, title, messages, image)
 
-async def send(ctx: Context, title: str, message: str) -> None:
+async def send(ctx: Context, title: str, message: str, image: str) -> None:
     """
     Parses the message content to determine how to send it
 
@@ -76,6 +76,8 @@ async def send(ctx: Context, title: str, message: str) -> None:
         The title of the messsage
     message : str
         The body of the message (max 2048 characters)
+    image : str
+        The url of the image
     """
 
     if message:
@@ -87,22 +89,22 @@ async def send(ctx: Context, title: str, message: str) -> None:
             for cursor in range(0, len(chunks)):
                 chunk = chunks[cursor]
                 if len('\n'.join(chunked) + '\n' + chunk) > 2048:
-                    await send_message(ctx, title, '\n'.join(chunked))
+                    await send_message(ctx, title, '\n'.join(chunked), image)
                     chunked = []
                 else:
                     chunked.append(chunk)
             if chunked:
                 if len('\n'.join(chunked)) > 2048:
-                    await send_message(ctx, title, 'Message exceeds maximum length of 2048')
+                    await send_message(ctx, title, 'Message exceeds maximum length of 2048', image)
                 else:
-                    await send_message(ctx, title, '\n'.join(chunked))
+                    await send_message(ctx, title, '\n'.join(chunked), image)
         else:
-            await send_message(ctx, title, message)
+            await send_message(ctx, title, message, image)
     else:
         # Some errors may result in no message content being sent. Let the user know to notify the Admin
-        await send_message(ctx, title, 'Well, I\'ve got nothing to say to you. Ask the Admin.')
+        await send_message(ctx, title, 'Well, I\'ve got nothing to say to you. Ask the Admin.', image)
 
-async def send_message(ctx: Context, title: str, message: str) -> None:
+async def send_message(ctx: Context, title: str, message: str, image: str='') -> None:
     """
     Sends a rich embed message with a title and a message
 
@@ -114,13 +116,15 @@ async def send_message(ctx: Context, title: str, message: str) -> None:
         The title of the messsage
     message : str
         The body of the message (max 2048 characters)
+    image : str
+        The url of the image
     """
 
     title = f'{title} Module - {PREFIX}{COMMAND} {title.lower()} help'
     description = ''
     # Look for the '!image' token which marks the beginning and end of an image url to be embedded
     # Example message with image url: "Blah blah blah image!http://imgur.com/938712634918image!"
-    image_url = ''
+    image_url = image
     if '!image' in message:
         # Split the image url from the message text
         image_split = message.split('!image')

@@ -32,6 +32,7 @@ class Setup():
             Roll fate dice with active character\'s stat bonus```css\n.d r "APPROACH NAME"|"SKILL NAME"```\n\
             Roll fate dice skill/approach with invokes```css\n.d r "APPROACH NAME"|"SKILL NAME" invoke "ASPECT NAME" +2|rerolll [...invoke "ASPECT NAME" +2|reroll]```\n\
             Reroll the character\'s last roll```css\n.d re invoke "ASPECT NAME" +2|rerolll [...invoke "ASPECT NAME" +2|rerolll]```\n\
+            Clear the actions from a previous roll```css\n.d clear\n.d erase```\n\
             Display invocable/compelable aspects```css\n.d available```\n\
             Invoke an aspect and uses the active character\'s fate points```css\n.d invoke "ASPECT NAME" +2|rerolll [...iinvoke "ASPECT NAME" +2|rerolll]```\n\
             Compel aspects and grants the active character a fate point```css\n.d compel "ASPECT NAME" [...ccompel "ASPECT NAME"]```\n\
@@ -407,3 +408,7 @@ class Setup():
         'undo', 'errors', 'error', 'err', 'e', 'last', 'next',
         'user', 'timezone', 'tz', 'url', 'website', 'contact', 'alias'
     ]
+    action_caa_image = 'http://drive.google.com/uc?export=view&id=14r8yVHdvbghvmwlZ-LU_GCv_Rss3CuJd'
+    action_attack_image = 'http://drive.google.com/uc?export=view&id=15AZkpFEuKLtiFRm0dI7c4DFO6ut3ZizX'
+    action_defend_image = 'http://drive.google.com/uc?export=view&id=15OXNLIphfNJLqZU9gXlnS8Un7m7qHxtf'
+    action_overcome_image = 'http://drive.google.com/uc?export=view&id=1hgT8yLTYK3JHsp_N4Meg2qOUbh6AdDz8'

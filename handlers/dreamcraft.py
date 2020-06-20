@@ -79,6 +79,7 @@ class DreamcraftHandler():
         self.alias_commands = []
         self.func = None
         self.messages = []
+        self.image = ''
 
     def get_messages(self):
         """
@@ -91,6 +92,8 @@ class DreamcraftHandler():
                 The title of the response message
             message : str
                 The string for the response message content
+            image : str
+                The string for the response message image
         """
 
         try:
@@ -137,6 +140,7 @@ class DreamcraftHandler():
                 'engagement': EngagementCommand,
                 'engage': EngagementCommand,
                 'e': EngagementCommand,
+                'caa': RollCommand,
                 'create': RollCommand,
                 'advantage': RollCommand,
                 'attack': RollCommand,
@@ -152,6 +156,8 @@ class DreamcraftHandler():
                 'r': RollCommand,
                 'reroll': RollCommand,
                 're': RollCommand,
+                'clear': RollCommand,
+                'erase': RollCommand,
                 'invoke': RollCommand,
                 'i': RollCommand,
                 'compel': RollCommand,
@@ -172,14 +178,19 @@ class DreamcraftHandler():
             self.get_alias()
             if self.alias_commands:
                 alias_messages = []
+                alias_image = ''
                 for ac in self.alias_commands:
                     self.setup(self.ctx, tuple(ac.split(' ')))
-                    module, messages = self.get_messages()
+                    module, messages, image = self.get_messages()
                     alias_messages.append(messages)
-                return 'Alias', 'COMMAND_SPLIT'.join(alias_messages)
+                    alias_image = image if not alias_image else alias_image
+                return 'Alias', 'COMMAND_SPLIT'.join(alias_messages), alias_image
 
             # Handle dialog answers
             self.get_answer()
+
+            # Get image to embed
+            self.get_image()
 
             if not self.messages:
                 self.shortcuts()
@@ -221,9 +232,9 @@ class DreamcraftHandler():
 
             # Concatenate messages and send
             if self.command == 'cheat':
-                return self.module, [f'{m}\n' for m in self.messages]
+                return self.module, [f'{m}\n' for m in self.messages], self.image
             else:
-                return self.module, '\n'.join(self.messages)
+                return self.module, '\n'.join(self.messages), self.image
 
         except Exception as err:
             traceback.print_exc()    
@@ -283,6 +294,23 @@ class DreamcraftHandler():
             self.user.updated_by = str(self.user.id)
             self.user.updated = T.now()
             self.user.save()
+
+    def get_image(self):
+        """
+        Check for an action that should include an image to embed
+        """
+
+        image_switcher = {
+            'caa': SETUP.action_caa_image,
+            'create': SETUP.action_caa_image,
+            'advantage': SETUP.action_caa_image,
+            'attack': SETUP.action_attack_image,
+            'att': SETUP.action_attack_image,
+            'defend': SETUP.action_defend_image,
+            'def': SETUP.action_defend_image,
+            'overcome': SETUP.action_overcome_image
+        }
+        self.image = image_switcher.get(self.command, '')
 
     def shortcuts(self):
         """

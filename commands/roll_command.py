@@ -33,7 +33,8 @@ class RollCommand():
         help - display a set of instructions on RollCommand usage
         roll, r - roll fate dice with approach/skill and invoke/compel options
         reroll, re - reroll a previous roll with additional invoke/compel options
-        create, advantage - create a situational advantage or get free invokes on existing aspects
+        clear, erase - remove the previous roll and target information
+        caa, create, advantage - create a situational advantage or get free invokes on existing aspects
         attack, att - attack another roll within a scene and roll
         defend, def - defend from an attack by another roll within the scene and roll
         overcome - overcome an obstacle or oposition and roll
@@ -110,6 +111,9 @@ class RollCommand():
                 'r': self.roll,
                 'reroll': self.roll,
                 're': self.roll,
+                'clear': self.clear,
+                'erase': self.clear,
+                'caa': self.advantage,
                 'create': self.advantage,
                 'advantage': self.advantage,
                 'attack': self.attack,
@@ -220,8 +224,10 @@ class RollCommand():
                     engagement_svc.save(self.engagement, self.user)
         return messages
 
-    def check_unresolved_actions(self):
-        """If there are any unresolved actions and warn of them"""
+    def get_unresolved_actions(self):
+        """Return any unresolved actions"""
+
+        unresolved = []
         messages = []
         characters = []
         if self.engagement and self.engagement.characters:
@@ -229,17 +235,43 @@ class RollCommand():
         if self.engagement and self.engagement.opposition:
             characters.extend(self.engagement.opposition)
         if characters:
-            attackers = list(Character().filter(id__in=characters, active_action='Attack').all())
+            attackers = list(Character().filter(id__in=characters, active_action__in=['Attack']).all())
             for a in attackers:
                 if a.last_roll and a.last_roll['shifts'] and a.last_roll['shifts_remaining']:
+                    unresolved.append(a)
                     target = Character().get_by_id(a.active_target)
                     shifts_remaining = a.last_roll['shifts_remaining']
-                    messages.append('\n'.join([
+                    messages.append([
                         f'***{self.char.name}*** cannot attack.',
                         f'{self.get_attack_text(a, target)} with {p.no("shift", shifts_remaining)} left to absorb.'
-                    ]))
+                    ])
+        return unresolved, messages
+
+    def check_unresolved_actions(self):
+        """If there are any unresolved actions and warn of them"""
+
+        unresolved, messages = self.get_unresolved_actions()
         if messages:
-            raise Exception('\n\n'.join(messages))
+            raise Exception('\n\n'.join(['\n'.join(m) for m in messages]))
+
+    def clear(self):
+        """Clear any unresolved actions"""
+
+        messages = []
+        unresolved, messages = self.get_unresolved_actions()
+        for u in unresolved:
+            last_roll = copy.deepcopy(u.last_roll)
+            if u.active_target:
+                u.active_target = ''
+            if u.active_target_by:
+                u.active_target_by = ''
+            u.active_action = ''
+            char_svc.save(u, self.user)
+        if unresolved:
+            messages = ['Cleared unresolved actions']
+        else:
+            messages = ['No unresolved actions to clear']
+        return messages
 
     def advantage(self):
         """Execute the advantage subcommand to create a situational advantage or get fre invokes on an existing one and roll for advantage
@@ -249,19 +281,13 @@ class RollCommand():
         list(str) - the response messages string array
         """
 
-        self.check_unresolved_actions()
         if len(self.args) == 0:
-            raise Exception('No target identified for your attack action')
+            raise Exception('No aspect identified for your create an advantage action')
         search = self.args[0]
-        chars = []
-        if self.engagement and self.engagement.characters:
-            chars.extend(list(Character().filter(id__in=[c for c in self.engagement.characters]).all()))
-        targets = [c for c in chars if search.lower() in c.name.lower()]
-        if not targets and self.sc and self.sc.characters:
-            chars.extend(list(Character().filter(id__in=[c for c in self.sc.characters]).all()))
-        targets = [c for c in chars if search.lower() in c.name.lower()]
-        if not targets:
-            raise Exception(f'No target match for _{search}_ found in the ***{self.sc.name}*** scene.')
+        available = self.get_available_invokes(self.char)
+        aspects = [a for a in available if search.lower() in a.name.lower()]
+        if not aspects:
+            raise Exception(f'No aspect match for _{search}_ found in the ***{self.sc.name}*** scene.')
         if len(targets) > 1:
             names = '\n        '.join([f'***{m.name}***' for m in targets])
             raise Exception(f'Multiple targets matched _{search}_ in the ***{self.sc.name}*** scene. Please specify which:{names}')

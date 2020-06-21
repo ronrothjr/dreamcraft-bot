@@ -71,6 +71,8 @@ class RollCommand():
         """
     
         self.parent = parent
+        self.new = parent.new
+        self.delete = parent.delete
         self.ctx = ctx
         self.command = args[0].lower()
         self.args = args[1:]

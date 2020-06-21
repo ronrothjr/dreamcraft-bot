@@ -145,6 +145,12 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                 ]
             },
             {
+                'args': [('c','list')],
+                'assertions': [
+                    ['No ITEMS found', 'should warn of no characters found']
+                ]
+            },
+            {
                 'args': [('new', 'c', 'npc', 'Test NPC 1'), ('y',)],
                 'assertions': [
                     ['Create a new CHARACTER named ***Test NPC 1***', 'Should ask Create Test NPC 1 question'],
@@ -459,7 +465,7 @@ class TestDreamcraftBotE2E(unittest.TestCase):
     def test_scenario_creation(self):
         self.send_and_validate_commands(ctx1, [
             {
-                'args': [('s', 'Test Scene')],
+                'args': [('s', 'Test Scene 1')],
                 'assertions': [
                     ['No active scenario. Try this:```css\n.d scenario "SCENARIO NAME"```', 'Should include instructions to create scenario']
                 ]
@@ -472,21 +478,40 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                 ]
             },
             {
-                'args': [('new', 'scenario', 'Test', 'Scenario')],
+                'args': [('new', 'scenario', 'Test', 'Scenario', '1')],
                 'assertions': [
-                    ['Create a new SCENARIO named ***Test Scenario***?', 'should ask question to create scenario named Test Scenario']
+                    ['Create a new SCENARIO named ***Test Scenario 1***?', 'should ask question to create scenario named Test Scenario 1']
                 ]
             },
             {
                 'args': [('y',)],
                 'assertions': [
-                    ['***Test Scenario*** _(Active Scenario)_', 'should create scenario named Test Scenario']
+                    ['***Test Scenario 1*** _(Active Scenario)_', 'should create scenario named Test Scenario 1']
                 ]
             },
             {
                 'args': [('scenario', 'desc', 'Test', 'description')],
                 'assertions': [
-                    ['***Test Scenario*** _(Active Scenario)_  - "Test description"', 'should add a \'Test description\' scenario named Test Scenario']
+                    ['***Test Scenario 1*** _(Active Scenario)_  - "Test description"', 'should add a \'Test description\' scenario named Test Scenario 1']
+                ]
+            },
+            {
+                'args': [('scenario','list')],
+                'assertions': [
+                    ['***Test Scenario 1*** _(Active Scenario)_', 'should create scenario named Test Scenario 1']
+                ]
+            },
+            {
+                'args': [('new', 'scenario', 'Test', 'Scenario', '2'), ('y',)],
+                'assertions': [
+                    ['Create a new SCENARIO named ***Test Scenario 2***?', 'should ask question to create scenario named Test Scenario 2'],
+                    ['***Test Scenario 2*** _(Active Scenario)_', 'should create scenario named Test Scenario 2']
+                ]
+            },
+            {
+                'args': [('scenario', 'Test', 'Scenario', '1')],
+                'assertions': [
+                    ['***Test Scenario 1***', 'should select scenario named Test Scenario 1']
                 ]
             }
         ])
@@ -501,33 +526,47 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                 ]
             },
             {
-                'args': [('new', 'Test', 'Scene')],
+                'args': [('new', 'scene', 'Test', 'Scene', '1'),('y',)],
                 'assertions': [
-                    ['Create a new SCENE named ***Test Scene***?', 'should ask question to create scene named Test Scene']
-                ]
-            },
-            {
-                'args': [('y',)],
-                'assertions': [
-                    ['***Test Scene*** _(Active Scene)_', 'should create scene named Test Scene']
+                    ['Create a new SCENE named ***Test Scene 1***?', 'should ask question to create scene named Test Scene 1'],
+                    ['***Test Scene 1*** _(Active Scene)_', 'should create scene named Test Scene 1']
                 ]
             },
             {
                 'args': [('desc', 'Test', 'description')],
                 'assertions': [
-                    ['***Test Scene*** _(Active Scene)_  - "Test description"', 'should add a \'Test description\' scene named Test Scene']
+                    ['***Test Scene 1*** _(Active Scene)_  - "Test description"', 'should add a \'Test description\' scene named Test Scene 1']
                 ]
             },
             {
                 'args': [('player', 'Test Character 1')],
                 'assertions': [
-                    ['Added ***Test Character 1*** to _Test Scene_ scene', 'should add \'Test Character 1\' to \'Test Scene\'']
+                    ['Added ***Test Character 1*** to _Test Scene 1_ scene', 'should add \'Test Character 1\' to \'Test Scene 1\'']
                 ]
             },
             {
                 'args': [('start',)],
                 'assertions': [
-                    ['_Started On:_', 'should start the scene named Test Scene']
+                    ['_Started On:_', 'should start the scene named Test Scene 1']
+                ]
+            },
+            {
+                'args': [('scene', 'list')],
+                'assertions': [
+                    ['***Test Scene 1***', 'should display scene named Test Scene 1']
+                ]
+            },
+            {
+                'args': [('new', 'Test', 'Scene', '2'),('y',)],
+                'assertions': [
+                    ['Create a new SCENE named ***Test Scene 2***?', 'should ask question to create scene named Test Scene 2'],
+                    ['***Test Scene 2*** _(Active Scene)_', 'should create scene named Test Scene 2']
+                ]
+            },
+            {
+                'args': [('scene', 'Test', 'Scene', '1')],
+                'assertions': [
+                    ['***Test Scene 1*** _(Active Scene)_', 'should select scene named Test Scene 1']
                 ]
             }
         ])
@@ -588,8 +627,8 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                 ],
                 'assertions': [
                     ['Incorrect syntax:', 'should warn of incorrect syntax'],
-                    ['***Test Zone 1*** and ***Test Zone 2*** are now adjoined in ***Test Scene***', 'should adjoin \'Test Zone 1\' and \'Test Zone 2\''],
-                    ['***Test Zone 1*** and ***Test Zone 2*** are already adjoined in ***Test Scene***', 'should warn that \'Test Zone 1\' and \'Test Zone 2\' are already adjoined']
+                    ['***Test Zone 1*** and ***Test Zone 2*** are now adjoined in ***Test Scene 1***', 'should adjoin \'Test Zone 1\' and \'Test Zone 2\''],
+                    ['***Test Zone 1*** and ***Test Zone 2*** are already adjoined in ***Test Scene 1***', 'should warn that \'Test Zone 1\' and \'Test Zone 2\' are already adjoined']
                 ]
             },
             {
@@ -599,7 +638,7 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                     ('scene', 'enter')
                 ],
                 'assertions': [
-                    ['Added ***Test NPC 1*** to _Test Scene_ scene', 'should add \'Test NPC 1\' to \'Test Scene\'']
+                    ['Added ***Test NPC 1*** to _Test Scene 1_ scene', 'should add \'Test NPC 1\' to \'Test Scene 1\'']
                 ]
             },
             {
@@ -637,7 +676,7 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                     ('scene', 'enter')
                 ],
                 'assertions': [
-                    ['***Test Character 1*** is already in _Test Scene_', 'should report that  \'Test Character 1\' is already in \'Test Scene\'']
+                    ['***Test Character 1*** is already in _Test Scene 1_', 'should report that  \'Test Character 1\' is already in \'Test Scene 1\'']
                 ]
             },
             {
@@ -797,7 +836,7 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                     ('scene', 'exit')
                 ],
                 'assertions': [
-                    ['***Test Character 1*** removed from _Test Scene_', 'should remove \'Test Character 1\' from \'Test Scene\'']
+                    ['***Test Character 1*** removed from _Test Scene 1_', 'should remove \'Test Character 1\' from \'Test Scene 1\'']
                 ]
             },
             {
@@ -807,7 +846,7 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                     ('scene', 'exit')
                 ],
                 'assertions': [
-                    ['***Test NPC 1*** removed from _Test Scene_', 'should remove \'Test NPC 1\' from \'Test Scene\'']
+                    ['***Test NPC 1*** removed from _Test Scene 1_', 'should remove \'Test NPC 1\' from \'Test Scene 1\'']
                 ]
             },
             {
@@ -819,7 +858,7 @@ class TestDreamcraftBotE2E(unittest.TestCase):
             {
                 'args': [('scene', 'end')],
                 'assertions': [
-                    ['_Ended On:_', 'should end the scene named Test Scene']
+                    ['_Ended On:_', 'should end the scene named Test Scene 1']
                 ]
             },
             {
@@ -841,15 +880,39 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                 ]
             },
             {
+                'args': [('scene', 'list')],
+                'assertions': [
+                    ['***Test Scene 1***', 'should display scene named Test Scene 1']
+                ]
+            },
+            {
                 'args': [('scene', 'delete')],
                 'assertions': [
-                    ['***Test Scene*** removed', 'should remove \'Test Scene\'']
+                    ['***Test Scene 1*** removed', 'should remove \'Test Scene 1\'']
+                ]
+            },
+            {
+                'args': [('scene', 'list')],
+                'assertions': [
+                    ['***Test Scene 2***', 'should display scene named Test Scene 2']
+                ]
+            },
+            {
+                'args': [('scene', 'Test Scene 2'), ('delete', 'scene')],
+                'assertions': [
+                    ['***Test Scene 2*** removed', 'should remove \'Test Scene 2\'']
                 ]
             },
             {
                 'args': [('scenario', 'delete')],
                 'assertions': [
-                    ['***Test Scenario*** removed', 'should remove \'Test Scenario\'']
+                    ['***Test Scenario 1*** removed', 'should remove \'Test Scenario 1\'']
+                ]
+            },
+            {
+                'args': [('scenario', 'Test Scenario 2'), ('delete', 'scenario')],
+                'assertions': [
+                    ['***Test Scenario 2*** removed', 'should remove \'Test Scenario 2\'']
                 ]
             },
             {

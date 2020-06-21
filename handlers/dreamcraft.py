@@ -61,6 +61,10 @@ class DreamcraftHandler():
         if len(args) and args[0].lower() == 'new':
             self.new = True
             args = args[1:]
+        self.delete = False
+        if len(args) and args[0].lower() == 'delete':
+            self.delete = True
+            args = args[1:]
         self.args = args
         self.guild = ctx.guild if ctx.guild else ctx.author
         self.user = User().get_or_create(ctx.author.name, self.guild.name, ctx.author.discriminator, ctx.author.display_name)
@@ -288,6 +292,9 @@ class DreamcraftHandler():
             self.args = tuple(self.user.command.split(' '))
             if len(self.args) and self.args[0].lower() == 'new':
                 self.new = True
+                self.args = self.args[1:]
+            if len(self.args) and self.args[0].lower() == 'delete':
+                self.delete = True
                 self.args = self.args[1:]
             self.command = self.args[0].lower()
             self.user.answer = answer

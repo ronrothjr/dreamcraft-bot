@@ -52,6 +52,8 @@ class UserCommand():
         """
 
         self.parent = parent
+        self.new = parent.new
+        self.delete = parent.delete
         self.ctx = ctx
         self.args = args[1:]
         self.guild = guild

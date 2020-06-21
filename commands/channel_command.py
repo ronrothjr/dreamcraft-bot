@@ -45,6 +45,8 @@ class ChannelCommand():
         """
 
         self.parent = parent
+        self.new = parent.new
+        self.delete = parent.delete
         self.ctx = ctx
         self.args = args[1:]
         self.command = self.args[0].lower() if len(self.args) > 0 else 'chan'

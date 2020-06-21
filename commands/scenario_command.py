@@ -58,6 +58,7 @@ class ScenarioCommand():
 
         self.parent = parent
         self.new = parent.new
+        self.delete = parent.delete
         self.ctx = ctx
         self.args = args[1:]
         self.guild = guild
@@ -123,8 +124,10 @@ class ScenarioCommand():
                 'delete': self.delete_scenario,
                 'd': self.delete_scenario
             }
-            if self.new:
+            if self.new and not self.user.command or self.user.command and 'new' in self.user.command:
                 func = self.new_scenario
+            elif self.delete:
+                func = self.delete_scenario
             # Get the function from switcher dictionary
             elif self.command in switcher:
                 func = switcher.get(self.command, lambda: self.select)
@@ -584,4 +587,4 @@ class ScenarioCommand():
         list(str) - the response messages string array
         """
 
-        return scenario_svc.delete_item(args, self.user, self.scenario, Scenario.find, {'guild': self.guild.name, 'channel_id': str(self.channel.id)})
+        return scenario_svc.delete_item(args, self.user, self.scenario, Scenario().find, {'guild': self.guild.name, 'channel_id': str(self.channel.id)})

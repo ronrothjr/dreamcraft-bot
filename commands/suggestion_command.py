@@ -51,6 +51,8 @@ class SuggestionCommand():
         """
 
         self.parent = parent
+        self.new = parent.new
+        self.delete = parent.delete
         self.ctx = ctx
         self.args = args[1:] if args[0] in ['suggestion', 'suggest'] else args
         self.command = self.args[0].lower() if len(self.args) > 0 else ''

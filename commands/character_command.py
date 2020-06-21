@@ -96,6 +96,7 @@ class CharacterCommand():
 
         self.parent = parent
         self.new = parent.new
+        self.delete = parent.delete
         self.ctx = ctx
         self.args = args[1:] if args[0] in ['character', 'char', 'c'] else args
         self.npc = False
@@ -109,7 +110,7 @@ class CharacterCommand():
         self.scenario = Scenario().get_by_id(self.channel.active_scenario) if self.channel and self.channel.active_scenario else None
         self.sc = Scene().get_by_id(self.channel.active_scene) if self.channel and self.channel.active_scene else None
         self.char = char if char else (Character().get_by_id(self.user.active_character) if self.user and self.user.active_character else None)
-        self.can_edit = str(self.user.id) == str(self.char.user.id) or self.user.role == 'Game Master' if self.user and self.char else True
+        self.can_edit = str(self.user.id) == str(self.char.user.id) or self.user.role in ['Admin', 'Game Master'] if self.user and self.char else True
         self.can_copy = self.char.shared and self.char.shared.copy or self.user.role in ['Admin','Game Master'] if self.char else False
         self.asp = Character().get_by_id(self.char.active_aspect) if self.char and self.char.active_aspect else None
         self.stu = Character().get_by_id(self.char.active_stunt) if self.char and self.char.active_stunt else None
@@ -172,8 +173,10 @@ class CharacterCommand():
                 'share': self.share,
                 'shared': self.shared
             }
-            if self.new:
+            if self.new and not self.user.command or self.user.command and 'new' in self.user.command:
                 func = self.new_character
+            elif self.delete:
+                func = self.delete_character
             # Get the function from switcher dictionary
             elif self.command in switcher:
                 func = switcher.get(self.command, lambda: self.select)
@@ -811,7 +814,7 @@ class CharacterCommand():
             if args[1] in ['consequences','consequence','con']:
                 args[0] = 'consequence'
                 args[1] = 'delete'
-                return self.approach(args)
+                return self.consequence(args)
 
         def getter(item, page_num=0, page_size=5):
             return [item]

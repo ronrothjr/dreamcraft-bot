@@ -60,6 +60,7 @@ class SessionCommand():
     
         self.parent = parent
         self.new = parent.new
+        self.delete = parent.delete
         self.ctx = ctx
         self.args = args[1:]
         self.guild = guild
@@ -107,8 +108,10 @@ class SessionCommand():
                 'start': self.start,
                 'end': self.end
             }
-            if self.new:
+            if self.new and not self.user.command or self.user.command and 'new' in self.user.command:
                 func = self.new_session
+            elif self.delete:
+                func = self.delete_session
             # Get the function from switcher dictionary
             elif self.command in switcher:
                 func = switcher.get(self.command, lambda: self.select)

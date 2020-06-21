@@ -67,6 +67,7 @@ class SceneCommand():
 
         self.parent = parent
         self.new = parent.new
+        self.delete = parent.delete
         self.ctx = ctx
         self.args = args[1:] if args[0] in ['scene', 's'] else args
         self.guild = guild
@@ -142,8 +143,10 @@ class SceneCommand():
                 'move': self.move,
                 'exit': self.exit
             }
-            if self.new:
+            if self.new and not self.user.command or self.user.command and 'new' in self.user.command:
                 func = self.new_scene
+            elif self.delete:
+                func = self.delete_scene
             # Get the function from switcher dictionary
             elif self.command in switcher:
                 func = switcher.get(self.command, lambda: self.select)
@@ -650,7 +653,7 @@ class SceneCommand():
         if not self.scenario:
             raise Exception('No active scenario. Try this:```css\n.d scenario "SCENARIO NAME"```')
 
-        return scene_svc.delete_item(args, self.user, self.sc, Scene.find, {'guild': self.guild.name, 'channel_id': str(self.channel.id), 'scenario_id': str(self.scenario.id)})
+        return scene_svc.delete_item(args, self.user, self.sc, Scene().find, {'guild': self.guild.name, 'channel_id': str(self.channel.id), 'scenario_id': str(self.scenario.id)})
 
     def start(self, args):
         """Add a start time to the Scene

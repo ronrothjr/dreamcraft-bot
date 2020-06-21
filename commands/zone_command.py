@@ -58,6 +58,7 @@ class ZoneCommand():
     
         self.parent = parent
         self.new = parent.new
+        self.delete = parent.delete
         self.ctx = ctx
         self.args = args[1:] if args[0] in ['zone', 'z'] else args
         self.guild = guild
@@ -123,8 +124,10 @@ class ZoneCommand():
                 'delete': self.delete_zone,
                 'd': self.delete_zone
             }
-            if self.new:
+            if self.new and not self.user.command or self.user.command and 'new' in self.user.command:
                 func = self.new_zone
+            elif self.delete:
+                func = self.delete_zone
             # Get the function from switcher dictionary
             elif self.command in switcher:
                 func = switcher.get(self.command, lambda: self.select)

@@ -790,30 +790,38 @@ class CharacterCommand():
             raise Exception('You do not have permission to delete this character')
 
         # Handle alternate syntax for deleting character properties
-        if len(args) > 1:
-            if args[1] in ['approaches','approach','app']:
-                args[0] = 'approach'
-                args[1] = 'delete'
+        if len(args) > 0:
+            if args[0].lower() in ('d', 'delete') and len(args) > 1:
+                args = args[1:]
+            if args[0] in ['approaches','approach','app']:
+                if len(args) < 2:
+                    raise Exception(f'Syntax error:```css\n.d delete {args[0]} "NAME"```')
+                args = ('approach', 'delete') + args[1:]
                 return self.approach(args)
-            if args[1] in ['skills','skill','sks','sk']:
-                args[0] = 'skill'
-                args[1] = 'delete'
+            if args[0] in ['skills','skill','sks','sk']:
+                if len(args) < 2:
+                    raise Exception(f'Syntax error:```css\n.d delete {args[0]} "NAME"```')
+                args = ('skill', 'delete') + args[1:]
                 return self.skill(args)
-            if args[1] in ['aspects','aspect','a']:
-                args[0] = 'aspect'
-                args[1] = 'delete'
+            if args[0] in ['aspects','aspect','a']:
+                if len(args) < 2:
+                    raise Exception(f'Syntax error:```css\n.d delete {args[0]} "NAME"```')
+                args = ('aspect', 'delete') + args[1:]
                 return self.aspect(args)
-            if args[1] in ['stunts','stunt','s']:
-                args[0] = 'stunt'
-                args[1] = 'delete'
+            if args[0] in ['stunts','stunt','s']:
+                if len(args) < 2:
+                    raise Exception(f'Syntax error:```css\n.d delete {args[0]} "NAME"```')
+                args = ('stunt', 'delete') + args[1:]
                 return self.stunt(args)
-            if args[1] in ['stresses','stress','st']:
-                args[0] = 'stress'
-                args[1] = 'delete'
+            if args[0] in ['stresses','stress','st']:
+                if len(args) < 2:
+                    raise Exception(f'Syntax error:```css\n.d delete {args[0]} "NAME"\n.d delete {args[0]} title "NAME"```')
+                args = ('stress', 'title', 'delete') + tuple([a for a in args[1:] if a not in ['delete', 'title']])
                 return self.stress(args)
-            if args[1] in ['consequences','consequence','con']:
-                args[0] = 'consequence'
-                args[1] = 'delete'
+            if args[0] in ['consequences','consequence','con']:
+                if len(args) < 2:
+                    raise Exception(f'Syntax error:```css\n.d delete {args[0]} "NAME"\n.d delete {args[0]} title "NAME"```')
+                args = ('consequence', 'title', 'delete') + tuple([a for a in args[1:] if a not in ['delete', 'title']])
                 return self.consequence(args)
 
         def getter(item, page_num=0, page_size=5):
@@ -1229,7 +1237,7 @@ class CharacterCommand():
                 raise Exception('You do not have permission to edit this character')
             else:
                 if args[1].lower() in ['delete','d']:
-                    skill = [a for a in APPROACHES if args[2][0:2].lower() == a[0:2].lower()]
+                    skill = [a for a in APPROACHES if len(args[2]) == 2 and args[2][0:2].lower() == a[0:2].lower() or args[2].lower() == a.lower()]
                     skill = skill[0].split(' - ')[0] if skill else ' '.join(args[2:])
                     if [s for s in self.char.skills if skill.lower() == s.lower()]:
                         new_skills = {}
@@ -1283,7 +1291,7 @@ class CharacterCommand():
                 raise Exception('You do not have permission to edit this character')
             else:
                 if args[1].lower() in ['delete','d']:
-                    skill = [s for s in SKILLS if args[2][0:2].lower() == s[0:2].lower()]
+                    skill = [s for s in SKILLS if len(args[2]) == 2 and args[2][0:2].lower() == a[0:2].lower() or args[2].lower() == a.lower()]
                     skill = skill[0].split(' - ')[0] if skill else ' '.join(args[2:])
                     if [s for s in self.char.skills if skill.lower() == s.lower()]:
                         new_skills = {}

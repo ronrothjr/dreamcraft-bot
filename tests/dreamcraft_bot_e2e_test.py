@@ -3,8 +3,31 @@ __author__ = 'Ron Roth Jr'
 __contact__ = 'u/ensosati'
 
 import unittest
+import copy
+import traceback
 from handlers import DreamcraftHandler
 from mocks import CTX
+
+results = {
+    'commands': 0,
+    'assertions': 0,
+    'passed': 0,
+    'failed': 0,
+    'failed_commands': [],
+    'errors': 0,
+    'command_errors': []
+}
+
+def print_results():
+    for key in results:
+        if key == 'failed_commands':
+            for f in results[key]:
+                print(f'Failed commands:\n\n' + '\n\n'.join('    Command: {}\nAssertion: {}'.format(**f)))
+        elif key == 'command_errors':
+            for f in results[key]:
+                print(f'Failed command_errors:\n\n' + '\n\n'.join('    Command: {}\n    Assertion: {}\n    Error: {}\n    Traceback: {}'.format(**f)))
+        else:
+            print('{}: {}'.format(key, results[key]))
 
 ctx1 = CTX('Test Guild 1', 'Test User 1', 'bot_testing', '1111', 'test_user_1')
 ctx2 = CTX('Test Guild 1', 'Test User 2', 'bot_testing', '2222', 'test_user_2')
@@ -16,24 +39,44 @@ class TestDreamcraftBotE2E(unittest.TestCase):
     def send_and_validate_commands(self, ctx, commands):
         for command in commands:
             complete_messages = []
-            for arg  in command['args']:
+            args = copy.deepcopy(command['args'])
+            results['commands'] += len(args)
+            for arg  in args:
+                a = copy.deepcopy(arg)
                 messages = []
-                self.print_command('Command: ' + ' '.join(arg), '-')
-                handler = DreamcraftHandler(command['ctx'] if 'ctx' in command else ctx, arg)
+                self.command = ' '.join(a)
+                self.print_command('Command: ' + self.command, '-')
+                handler = DreamcraftHandler(command['ctx'] if 'ctx' in command else ctx, a)
                 messages.extend(handler.get_messages())
                 [print(message) for message in messages]
                 complete_messages.extend(messages)
             if 'assertions' in command:
+                results['assertions'] += len(command['assertions'])
                 [self.assert_command(complete_messages, a[0], a[1]) for a in command['assertions']]
 
     def assert_command(self, messages, assert_str, err_str):
-        if 'should not' in err_str:
-            assert_test = assert_str not in ''.join(messages)
-        else:
-            assert_test = assert_str in ''.join(messages)
-        assert_result = (f'Passed: ' if assert_test else 'Failed: ') + err_str
-        self.print_command(assert_result)
-        self.assertTrue(assert_test, err_str)
+        try:
+            if 'should not' in err_str.lower():
+                assert_test = assert_str not in ''.join(messages)
+            else:
+                assert_test = assert_str in ''.join(messages)
+            results['passed' if assert_test else 'failed'] += 1
+            assert_result = (f'Passed: ' if assert_test else 'Failed: ') + err_str
+            self.print_command(assert_result)
+            if not assert_test:
+                results['failed_commands'].append({
+                    'command': copy.deepcopy(self.command),
+                    'assertion': err_str
+                })
+        except Exception as err:
+            results['command_errors'].append({
+                'command': copy.deepcopy(self.command),
+                'assertion': err_str,
+                'error': ' '.join(err.args),
+                'traceback': traceback.format_exc()
+            })
+            traceback.print_exc()
+            raise Exception(' '.join(err.args))
 
     def print_command(self, result, sep='*'):
         seps = sep * 84
@@ -142,6 +185,12 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                 'args': [('5',)],
                 'assertions': [
                     ['Page number 5 does not exist', 'should display warning on page number 5']
+                ]
+            },
+            {
+                'args': [('c','new')],
+                'assertions': [
+                    ['How to use the ***new*** prefix:', 'should display new syntax commands']
                 ]
             },
             {
@@ -260,13 +309,13 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                 ]
             },
             {
-                'args': [('skill', 'delete', 'Lore')],
+                'args': [('delete', 'skill', 'Lore')],
                 'assertions': [
                     ['Removed Lore skill', 'Should remove Lore skill']
                 ]
             },
             {
-                'args': [('skill', 'delete', 'Dark Magic')],
+                'args': [('delete', 'skill', 'Dark Magic')],
                 'assertions': [
                     ['Removed Dark Magic skill', 'Should remove Dark Magic skill']
                 ]
@@ -338,10 +387,29 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                 ]
             },
             {
+                'args': [('r', 'i')],
+                'assertions': [
+                    ['An invoke is missing an aspect', 'Should warn of missing aspect']
+                ]
+            },
+            {
                 'args': [('r', 'i', 'Test Stunt 1')],
                 'assertions': [
                     ['_Energy:_  [X] [   ] [   ] [   ]', 'Should absorb 1 custom Energy'],
                     ['**Fate Points:** 2', 'Should spend 1 Fate Point']
+                ]
+            },
+            {
+                'args': [('r', 'Will', 'i')],
+                'assertions': [
+                    ['An invoke is missing an aspect', 'Should warn of missing aspect']
+                ]
+            },
+            {
+                'args': [('r', 'Will', 'i', 'Test Stunt 1')],
+                'assertions': [
+                    ['_Energy:_  [X] [X] [   ] [   ]', 'Should absorb 1 custom Energy'],
+                    ['**Fate Points:** 1', 'Should spend 1 Fate Point']
                 ]
             },
             {
@@ -354,6 +422,24 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                 'args': [('fate', 'refresh')],
                 'assertions': [
                     ['**Fate Points:** 3', 'Should refresh Fate Points']
+                ]
+            },
+            {
+                'args': [('stunt', 'Test Stunt 2')],
+                'assertions': [
+                    ['***Test Stunt 2*** _(Active)_  _(Stunt)_', 'Should add Test Stunt 2']
+                ]
+            },
+            {
+                'args': [('delete', 'stunt')],
+                'assertions': [
+                    ['Syntax error:```css\n.d delete stunt "NAME"```', 'Should warn with delete stunt syntax']
+                ]
+            },
+            {
+                'args': [('delete', 'stunt', 'Test Stunt 2')],
+                'assertions': [
+                    ['"Test Stunt 2" removed from stunts', 'Should display removal of \'Test Stunt 2']
                 ]
             }
         ])
@@ -994,7 +1080,7 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                     ('y',)
                 ],
                 'assertions': [
-                    ['***Test NPC 1*** removed', 'should archive \'Text NPC\'']
+                    ['***Test NPC 1*** removed', 'should archive \'Test NPC 1\'']
                 ]
             },
             {
@@ -1019,7 +1105,7 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                 'assertions': [
                     ['***Test Character 1*** restored', 'should restore \'Test Character 1\''],
                     ['***Test Aspect 1*** _(Aspect)_', 'Should have Test Aspect 1'],
-                    ['***Test Stunt 1*** _(Active)_  _(Stunt)_', 'Should have Test Stunt 1']
+                    ['***Test Stunt 1*** _(Stunt)_', 'Should have Test Stunt 1']
                 ]
             },
             {
@@ -1059,7 +1145,24 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                 'assertions': [
                     ['***Test Character 1*** restored', 'should restore \'Test Character 1\''],
                     ['***Test Aspect 1*** _(Aspect)_', 'should have Test Aspect 1'],
-                    ['***Test Stunt 1*** _(Active)_  _(Stunt)_', 'should have Test Stunt 1']
+                    ['***Test Stunt 1*** _(Stunt)_', 'should have Test Stunt 1']
+                ]
+            },
+            {
+                'args': [
+                    ('c', 'delete', 'approach', 'Forceful'),
+                    ('c', 'delete', 'aspect', 'Test Aspect 1'),
+                    ('c', 'delete', 'stunt', 'Test Stunt 1'),
+                    ('c', 'delete', 'stress', 'title', 'Energy'),
+                    ('c', 'delete', 'consequence', 'title', 'Mild')
+                ],
+                'assertions': [
+                    ['Are you sure you want to delete this CHARACTER?', 'should not ask to delete the character'],
+                    ['+4 - Forceful', 'should not have skill \'+4 - Forceful\''],
+                    ['***Test Aspect 1*** _(Aspect)_', 'should not have Test Aspect 1'],
+                    ['***Test Stunt 1*** _(Stunt)_', 'should not have Test Stunt 1'],
+                    ['_Energy:_  [   ] [   ] [   ] [   ]', 'should not have Energy stress track'],
+                    ['[   ] _2_ _Mild_', 'should not have Mild consequence']
                 ]
             },
             {

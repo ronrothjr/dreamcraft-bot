@@ -1,1 +1,1 @@
-from tests.dreamcraft_bot_e2e_test import TestDreamcraftBotE2E
+from tests.dreamcraft_bot_e2e_test import print_results, TestDreamcraftBotE2E

@@ -30,8 +30,7 @@ class Setup():
             \n.d new challenge "Challenge Name```'
 
     delete_help = '\n***DELETE PREFIX INSTRUCTIONS***\n\
-            \nHow to use the ***delete*** prefix:\n```css\
-            \n.d delete skill "NAME"\
+            \nHow to use the ***delete*** prefix:\n```css\n.d delete skill "NAME"\
             \n.d delete approach "NAME"\
             \n.d delete aspect "NAME"\
             \n.d delete stunt "NAME"\

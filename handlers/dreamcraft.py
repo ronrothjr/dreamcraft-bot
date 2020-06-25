@@ -183,7 +183,7 @@ class DreamcraftHandler():
                 return 'New', SETUP.new_help, self.image
 
             # Handle delete syntax errors
-            if 'delete' in [a.lower() for a in self.args] and len(self.args) > 0 and self.args[0] in ['help']:
+            if 'help' in [a.lower() for a in self.args] and (self.delete or 'delete' in [a.lower() for a in self.args]):
                 return 'Delete', SETUP.delete_help, self.image
 
             # Handle alias commands

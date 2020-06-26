@@ -132,7 +132,7 @@ class CharacterCommand():
                 'say': self.say,
                 'story': self.story,
                 'stats': self.stats,
-                'parent': self.parent,
+                'parent': self.get_parent,
                 'p': self.get_parent,
                 'name': self.select,
                 'n': self.select,
@@ -1238,7 +1238,7 @@ class CharacterCommand():
             else:
                 if args[1].lower() in ['delete','d']:
                     skill = [a for a in APPROACHES if len(args[2]) == 2 and args[2][0:2].lower() == a[0:2].lower() or args[2].lower() == a.lower()]
-                    skill = skill[0].split(' - ')[0] if skill else ' '.join(args[2:])
+                    skill = skill[0].split(' - ')[0] if skill else ' '.join(args[2:]).title()
                     if [s for s in self.char.skills if skill.lower() == s.lower()]:
                         new_skills = {}
                         for key in self.char.skills:
@@ -1257,7 +1257,7 @@ class CharacterCommand():
                         abbr = ' '.join(args[(indices[i-1]+1):indices[i]])
                         val = args[indices[i]]
                         skill = [s for s in APPROACHES if abbr[0:2].lower() == s[0:2].lower()]
-                        skill = skill[0].split(' - ')[0] if skill else abbr
+                        skill = skill[0].split(' - ')[0] if skill else abbr.title()
                         self.char.skills[skill] = val
                         messages.append(f'Updated {skill} to {val}')
                     self.char.use_approaches = True
@@ -1291,8 +1291,8 @@ class CharacterCommand():
                 raise Exception('You do not have permission to edit this character')
             else:
                 if args[1].lower() in ['delete','d']:
-                    skill = [s for s in SKILLS if len(args[2]) == 2 and args[2][0:2].lower() == a[0:2].lower() or args[2].lower() == a.lower()]
-                    skill = skill[0].split(' - ')[0] if skill else ' '.join(args[2:])
+                    skill = [s for s in SKILLS if len(args[2]) == 2 and args[2][0:2].lower() == s[0:2].lower() or args[2].lower() == s.lower()]
+                    skill = skill[0].split(' - ')[0] if skill else ' '.join(args[2:]).title()
                     if [s for s in self.char.skills if skill.lower() == s.lower()]:
                         new_skills = {}
                         for key in self.char.skills:
@@ -1311,7 +1311,7 @@ class CharacterCommand():
                         abbr = ' '.join(args[(indices[i-1]+1):indices[i]])
                         val = args[indices[i]]
                         skill = [s for s in SKILLS if abbr[0:2].lower() == s[0:2].lower()]
-                        skill = skill[0].split(' - ')[0] if skill else abbr
+                        skill = skill[0].split(' - ')[0] if skill else abbr.title()
                         self.char.skills[skill] = val
                         messages.append(f'Updated {skill} to {val}')
                     self.char.use_approaches = False

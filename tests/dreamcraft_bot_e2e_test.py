@@ -21,8 +21,7 @@ results = {
 def print_results():
     for key in results:
         if key == 'failed_commands':
-            for f in results[key]:
-                print(f'Failed commands:\n\n' + '\n\n'.join('    Command: {}\nAssertion: {}'.format(**f)))
+            print(f'Failed commands:\n\n' + '\n\n'.join(['    Command: {command}\n    Assertion: {assertion}'.format(**f) for f in results[key]]))
         elif key == 'command_errors':
             for f in results[key]:
                 print(f'Failed command_errors:\n\n' + '\n\n'.join('    Command: {}\n    Assertion: {}\n    Error: {}\n    Traceback: {}'.format(**f)))
@@ -279,9 +278,15 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                 ]
             },
             {
-                'args': [('skill', 'will', '+4', 'Dark Magic', '+3', 'Rapport', '+2', 'Lore', '+1')],
+                'args': [('skill', 'will', '+4', 'Rapport', '+2', 'Lore', '+1')],
                 'assertions': [
                     ['**Skills:**\n        +4 - Will', 'Should add skills']
+                ]
+            },
+            {
+                'args': [('skill', 'dark magic', '+3')],
+                'assertions': [
+                    ['+3 - Dark Magic', 'Should add Dark \'Magic\' skill']
                 ]
             },
             {
@@ -315,7 +320,7 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                 ]
             },
             {
-                'args': [('delete', 'skill', 'Dark Magic')],
+                'args': [('delete', 'skill', 'dark magic')],
                 'assertions': [
                     ['Removed Dark Magic skill', 'Should remove Dark Magic skill']
                 ]
@@ -895,7 +900,7 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                 'ctx': ctx2,
                 'args': [
                     ('c', 'con', 'Moderate', 'Dislocated Shoulder'),
-                    ('c', 'p')
+                    ('c', 'parent')
                 ],
                 'assertions': [
                     ['[X] _4_ _Moderate:_  - Dislocated Shoulder', 'should display \'Dislocated Shoulder\' in Moderate consequence'],

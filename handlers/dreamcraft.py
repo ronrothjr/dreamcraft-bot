@@ -60,11 +60,11 @@ class DreamcraftHandler():
         self.new = False
         if len(args) and args[0].lower() == 'new':
             self.new = True
-            args = args[1:]
+            args = args[1:] if len(args) > 1 else args
         self.delete = False
         if len(args) and args[0].lower() == 'delete':
             self.delete = True
-            args = args[1:]
+            args = args[1:] if len(args) > 1 else args
         self.args = args
         self.guild = ctx.guild if ctx.guild else ctx.author
         self.user = User().get_or_create(ctx.author.name, self.guild.name, ctx.author.discriminator, ctx.author.display_name)
@@ -177,6 +177,14 @@ class DreamcraftHandler():
             }
             self.messages = []
             self.search = str(self.args[0])
+
+            # Handle new syntax errors
+            if 'new' in [a.lower() for a in self.args] or (self.new and (len(self.args) < 2 or self.new and len(self.args) > 0 and self.args[0] in ['h', 'help'])):
+                return 'New', SETUP.new_help, self.image
+
+            # Handle delete syntax errors
+            if 'help' in [a.lower() for a in self.args] and (self.delete or 'delete' in [a.lower() for a in self.args]):
+                return 'Delete', SETUP.delete_help, self.image
 
             # Handle alias commands
             self.get_alias()

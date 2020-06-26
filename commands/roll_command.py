@@ -713,7 +713,7 @@ class RollCommand():
         self.re = self.command in ['reroll', 're']
         stress_targets = []
         for i in self.invoke_index:
-            if len(self.args) < i+1 or self.skill and len(self.args) < i+2:
+            if len(self.args) < i+2:
                 self.invokes.append({'aspect_name': 'error', 'error': f'An invoke is missing an aspect'})
                 continue
             search = self.args[i+1]

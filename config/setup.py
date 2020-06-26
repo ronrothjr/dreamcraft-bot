@@ -19,6 +19,24 @@ class Setup():
             \n**Zone Setup**```css\n.d z help\n/* Display active zone */\n.d zone```\
             \n**Engagement Setup**```css\n.d e help\n/* Display active zone */\n.d zone```'
 
+    new_help = '\n***NEW PREFIX INSTRUCTIONS***\n\
+            \nHow to use the ***new*** prefix:\n```css\n.d new character "Character Name"\
+            \n.d new session "Session Name"\
+            \n.d new scenario "Scenario Name\
+            \n.d new scene "Scene Name"\
+            \n.d new zone "Zone Name"\
+            \n.d new conflict "Conflict Name"\
+            \n.d new contest "Contest Name"\
+            \n.d new challenge "Challenge Name```'
+
+    delete_help = '\n***DELETE PREFIX INSTRUCTIONS***\n\
+            \nHow to use the ***delete*** prefix:\n```css\n.d delete skill "NAME"\
+            \n.d delete approach "NAME"\
+            \n.d delete aspect "NAME"\
+            \n.d delete stunt "NAME"\
+            \n.d delete stress "NAME"\n.d delete stress title "NAME"\
+            \n.d delete consequence "NAME"\n.d delete consequence title "NAME"```'
+
     undo_help = '\n***UNDO INSTRUCTIONS***\n\
             \n**Log Story:**```css\n.d log story\n/* Display a list of changes */```\n\
             \n**Log Errors:**```css\n.d log errors\n/* Display a list of errors */```\n\

@@ -31,3 +31,4 @@ if __name__ == '__main__':
     disconnect()
 
     print(results)
+    tests.print_results()

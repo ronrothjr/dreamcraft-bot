@@ -21,7 +21,7 @@ results = {
 def print_results():
     for key in results:
         if key == 'failed_commands':
-            print(f'Failed commands:\n\n' + '\n\n'.join(['    Command: {command}\n    Assertion: {assertion}'.format(**f) for f in results[key]]))
+            print(f'Failed commands:\n\n' + '\n\n'.join(['    Command: {command}\n    Assertion: {assertion}\n    Expected: {expected}\n    Received: {received}'.format(**f) for f in results[key]]))
         elif key == 'command_errors':
             for f in results[key]:
                 print(f'Failed command_errors:\n\n' + '\n\n'.join('    Command: {}\n    Assertion: {}\n    Error: {}\n    Traceback: {}'.format(**f)))
@@ -65,7 +65,9 @@ class TestDreamcraftBotE2E(unittest.TestCase):
             if not assert_test:
                 results['failed_commands'].append({
                     'command': copy.deepcopy(self.command),
-                    'assertion': err_str
+                    'assertion': err_str,
+                    'expected': ('NOT TO FIND ' if 'should not' in err_str.lower() else '') + assert_str,
+                    'received': '\n'.join(messages)
                 })
         except Exception as err:
             results['command_errors'].append({
@@ -445,6 +447,67 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                 'args': [('delete', 'stunt', 'Test Stunt 2')],
                 'assertions': [
                     ['"Test Stunt 2" removed from stunts', 'Should display removal of \'Test Stunt 2']
+                ]
+            },
+            {
+                'args': [('counter', 'help')],
+                'assertions': [
+                    ['Counters Help:', 'Should display counters help']
+                ]
+            },
+            {
+                'args': [('counter', 'add', 'Karmic Debt')],
+                'assertions': [
+                    ['Incorrect syntax for counter.\nTry this: ```css\n.d c counter add 3 "Strikes"```', 'Should warn of add syntax error']
+                ]
+            },
+            {
+                'args': [('counter', 'add', 'Karmic Debt', '6')],
+                'assertions': [
+                    ['Incorrect syntax for counter.\nTry this: ```css\n.d c counter add 3 "Strikes"```', 'Should warn of add syntax error']
+                ]
+            },
+            {
+                'args': [('counter', 'add', '6', 'Karmic Debt')],
+                'assertions': [
+                    ['**_Karmic Debt:_**  [   ] [   ] [   ] [   ] [   ] [   ]', 'Should add Karmic Debt counter track']
+                ]
+            },
+            {
+                'args': [('counter', 'edit', '7', 'Karmic Debt')],
+                'assertions': [
+                    ['**_Karmic Debt:_**  [   ] [   ] [   ] [   ] [   ] [   ] [   ]', 'Should add Karmic Debt counter track']
+                ]
+            },
+            {
+                'args': [('count', 'Karmic Debt')],
+                'assertions': [
+                    ['**_Karmic Debt:_**  [X] [   ] [   ] [   ] [   ] [   ] [   ]', 'Should count 1 Karmic Debt counter']
+                ]
+            },
+            {
+                'args': [('tick', '2', 'Karmic Debt')],
+                'assertions': [
+                    ['**_Karmic Debt:_**  [X] [X] [X] [   ] [   ] [   ] [   ]', 'Should tick 2 Karmic Debt counters']
+                ]
+            },
+            {
+                'args': [('tick', '5', 'Karmic Debt')],
+                'assertions': [
+                    ['Cannot tick for 5 Karmic Debt (4 available)', 'Should warn of unavailable ticks']
+                ]
+            },
+            {
+                'args': [('delete', 'counter', 'Karmic Debt')],
+                'assertions': [
+                    ['Removed **_Karmic Debt_** counter', 'Should remove Karmic Debt counter'],
+                    ['**_Karmic Debt:_**', 'Should not display Karmic Debt counter']
+                ]
+            },
+            {
+                'args': [('counter', 'add', '7', 'Karmic Debt')],
+                'assertions': [
+                    ['**_Karmic Debt:_**  [   ] [   ] [   ] [   ] [   ] [   ] [   ]', 'Should add Karmic Debt counter track']
                 ]
             }
         ])
@@ -876,7 +939,7 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                     ('scene', 'enter')
                 ],
                 'assertions': [
-                    ['**_Free Invokes_**  [   ]  [   ]', 'should add 2 \'Free Invokes\' to \'Test Aspect 4\'']
+                    ['**_Invokes_**  [   ]  [   ]', 'should add 2 \'Invokes\' to \'Test Aspect 4\'']
                 ]
             },
             {
@@ -1051,7 +1114,7 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                     ('copy',)
                 ],
                 'assertions': [
-                    ['You cannot copy your own shared character', 'should warn that you cannot copy your own shared character']
+                    ['You cannot copy your own character within the same guild', 'should warn that you cannot copy your own character within the same guild']
                 ]
             },
             {

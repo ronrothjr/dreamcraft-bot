@@ -101,6 +101,13 @@ class Setup():
             Share a character```css\n.d c share anyone /* READ-ONLY */\n.d c share to copy /* LET OTHERS COPY */\n.d c share revoke /* TURN OFF SHARING */```\n\
             Copy a character```css\n.d c shared /* VIEW SHARED CHARACTERS */\n.d c copy /* COPIES SELECTED CHARACTER */\n.d c copy to "SERVER NAME" /* COPIES YOUR CHARACTER TO ANOTHER SERVER */```'
 
+    counters_help = '.d c counters help - display these instructions\nCounters Help:\n\
+            Add counter```css\n.d c counter add 2 "Strikes"```\n\
+            Edit counter```css\n.d c counter edit 3 "Strikes"```\n\
+            Tick counter```css\n.d c tick Strikes```\n\
+            Tick counter```css\n.d c tick 2 Strikes```\n\
+            Remove stress```css\n.d c delete counter Strikes```'
+
     stress_help = '.d c stress help - display these instructions\nStress Help:\n\
             Add stress```css\n.d c stress Mental|Physical 1|2|3```\n\
             Remove stress```css\n.d c stress delete Mental|Physical 1|2|3```\n\

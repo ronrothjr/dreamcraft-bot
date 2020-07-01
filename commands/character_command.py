@@ -21,6 +21,7 @@ SETUP = Setup()
 APPROACHES = SETUP.approaches
 SKILLS = SETUP.skills
 CHARACTER_HELP = SETUP.character_help
+COUNTERS_HELP = SETUP.counters_help
 STRESS_HELP = SETUP.stress_help
 CONSEQUENCES_HELP = SETUP.consequences_help
 X = SETUP.x
@@ -61,6 +62,7 @@ class CharacterCommand():
         approaches, approach, apps, app - add/edit approaches in the character sheet
         skills, skill, sks, sk - add/edit skills in the characater sheet
         stunts, stunt, s - add/delete stunts
+        counters, counter, count, tickers, ticker, tick - add/edit counter tracks in the character sheet
         stress, st - add/edit stress tracks in the character sheet
         consequence, con - add/edit consequences and conditions in the character sheet
         custom - add/edit custom fields in the character sheet
@@ -165,6 +167,12 @@ class CharacterCommand():
                 'stunts': self.stunt,
                 'stunt': self.stunt,
                 's': self.stunt,
+                'counters': self.counter,
+                'counter': self.counter,
+                'count': self.counter,
+                'tickers': self.counter,
+                'ticker': self.counter,
+                'tick': self.counter,
                 'stress': self.stress,
                 'st': self.stress,
                 'consequence': self.consequence,
@@ -723,13 +731,13 @@ class CharacterCommand():
         if not self.char:
             raise Exception('No active character to copy')
         if not self.can_edit and not self.can_copy:
-            raise Exception('You do not have permission to edit this character')
+            raise Exception('You do not have permission to copy this character')
         if self.char.category != 'Character':
             raise Exception(f'You may only copy characters. ***{self.char.name}*** is {p.an(self.char.category)}.')
         guilds = [g['guild'] for g in Character().get_guilds() if g['guild'] and g['guild'].lower() not in self.guild.name.lower()]
         if self.can_copy and len(args) == 1:
             if str(self.char.user.id) == str(self.user.id):
-                raise Exception(f'You cannot copy your own shared character')
+                raise Exception(f'You cannot copy your own character within the same guild')
             user = self.user
             guild = self.guild.name
             messages.append(f'***{self.char.name}*** copied\n')
@@ -813,6 +821,9 @@ class CharacterCommand():
                     raise Exception(f'Syntax error:```css\n.d delete {args[0]} "NAME"```')
                 args = ('stunt', 'delete') + args[1:]
                 return self.stunt(args)
+            if args[0] in ['counters','counter','count','tickers','ticker','tick']:
+                args = ('count', 'delete') + tuple([a for a in args[1:] if a not in ['delete']])
+                return self.counter(args)
             if args[0] in ['stresses','stress','st']:
                 if len(args) < 2:
                     raise Exception(f'Syntax error:```css\n.d delete {args[0]} "NAME"\n.d delete {args[0]} title "NAME"```')
@@ -1403,7 +1414,7 @@ class CharacterCommand():
                 self.asp.is_boost = True
                 char_svc.save(self.asp, self.user)
             if freeinvokes:
-                cmd = CharacterCommand(self.parent, self.ctx, ('stress', 'title', str(freeinvokes), 'Free Invokes'), self.guild, self.user, self.channel, self.asp)
+                cmd = CharacterCommand(self.parent, self.ctx, ('stress', 'title', str(freeinvokes), 'Invokes'), self.guild, self.user, self.channel, self.asp)
                 cmd.run()
             self.char.active_aspect = str(self.asp.id)
             char_svc.save(self.char, self.user)
@@ -1480,6 +1491,111 @@ class CharacterCommand():
             messages.append(self.dialog('edit_active_stunt'))
         return messages
 
+    def get_available_ticks(self, char, counter_key):
+        """Calculate the availble stress for a given type
+        
+        Parameters
+        ----------
+        char : Character
+            Character to inspect
+        counter_key : str
+            Name of the countery key
+
+        Returns
+        -------
+        int - the number of available counter ticks
+        """
+
+        return sum([1 for c in char.counters[counter_key]['ticks'] if c == O]) if char.counters and counter_key in char.counters else 0
+
+    def counter(self, args, check_user=None):
+        """Add/edit counters track
+        
+        Parameters
+        ----------
+        args : list(str)
+            List of strings with subcommands
+        check_user : boolean
+            Check for counter command errors on this user
+
+        Returns
+        -------
+        list(str) - the response messages string array
+        """
+
+        messages = []
+        if len(args) == 1:
+            messages.append(COUNTERS_HELP)
+            return messages
+        if args[1].lower() == 'help':
+            messages.append(COUNTERS_HELP)
+            return messages
+        modified = None
+        if not self.char:
+            messages.append('You don\'t have an active character.\nTry this: ```css\n.d new c "CHARACTER NAME"```')
+        if not self.can_edit:
+            raise Exception('You do not have permission to edit this character')
+
+        # Handle adding/editing counters
+        if args[1] in ['add','edit']:
+            if len(args) < 4 or (len(args) > 2 and not args[2].isdigit()):
+                raise Exception(f'Incorrect syntax for counter.\nTry this: ```css\n.d c counter {args[1]} 3 "Strikes"```')
+            modified = copy.deepcopy(self.char.counters) if self.char.counters else {}
+            name = ' '.join(args[3:])
+            key = name.replace(' ','_').replace('__','_').lower()
+            modified[key] = {
+                'name': name.replace('  ',' '),
+                'ticks': [O for i in range(0, int(args[2]))]
+            }
+
+        # Handle deleting counters
+        elif args[1] in ['delete']:
+            modified = copy.deepcopy(self.char.counters) if self.char.counters else {}
+            name = ' '.join(args[2:])
+            key = name.replace(' ','_').replace('__','_').lower()
+            if key not in modified:
+                messages.append(f'_{name}_ is not a counter')
+                return messages
+            modified = {}
+            for c in self.char.counters:
+                if key != c:
+                    modified[key] = self.char.counters[c]
+            if not check_user:
+                messages.append(f'Removed **_{name}_** counter')
+
+        # Handle ticking counters
+        else:
+            if len(args) < 2:
+                messages.append(f'Incorrect syntax for ticking a counter.\nTry this: ```css\n.d c tick "Strikes"\n.d c tick 2 "Strikes"```')
+                return messages
+            if args[1].isdigit():
+                name = ' '.join(args[2:])
+                ticks = int(args[1])
+            else:
+                name = ' '.join(args[1:])
+                ticks = 1
+            key = name.replace(' ','_').replace('__','_').lower()
+            modified = copy.deepcopy(self.char.counters) if self.char.counters and key in self.char.counters else {}
+            if not modified:
+                messages.append(f'_{name}_ is not a counter')
+                return messages
+            available = self.get_available_ticks(self.char, key) 
+            if not available or available < ticks:
+                messages.append(f'Cannot tick for {ticks} {name} ({available} available)')
+                return messages
+            for i in range(0,len(modified[key]['ticks'])):
+                if ticks > 0 and modified[key]['ticks'][i] == O:
+                    ticks -= 1
+                    modified[key]['ticks'][i] = X
+
+        if check_user:
+            return messages
+        else:
+            self.char.counters = modified
+            messages.append(f'{self.char.get_string_name(self.user)}{self.char.get_string_counters()}')
+            char_svc.save(self.char, self.user)
+        return messages
+
     def get_available_stress(self, stress_type):
         """Calculate the availble stress for a given type
         
@@ -1502,6 +1618,8 @@ class CharacterCommand():
         ----------
         args : list(str)
             List of strings with subcommands
+        check_user : boolean
+            Check for stress command errors on this user
 
         Returns
         -------
@@ -1864,5 +1982,5 @@ class CharacterCommand():
         messages = []
         targeted_by = Character.filter(active_target=str(self.char.id)).first()
         if targeted_by and targeted_by.last_roll:
-            messages.extend(self.aspect(['a', 'c', 'st', 't', '1', 'Free Invokes']))
+            messages.extend(self.aspect(['a', 'c', 'st', 't', '1', 'Invokes']))
         return messages

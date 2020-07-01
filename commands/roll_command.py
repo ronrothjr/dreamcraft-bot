@@ -603,12 +603,12 @@ class RollCommand():
                 if invoke['is_boost']:
                     cmd = CharacterCommand(self.parent, self.ctx, ('c', 'aspect', 'delete', invoke['aspect_name']), self.guild, self.user, self.channel, self.char)
                     self.messages.extend(cmd.run())
-                # Consume Free Invokes
+                # Consume Invokes
                 if invoke['is_free_invoke'] and invoke['aspect']:
-                    cmd = CharacterCommand(self.parent, self.ctx, ('c', 'stress', 'Free Invokes', '1'), self.guild, self.user, self.channel, invoke['aspect'])
+                    cmd = CharacterCommand(self.parent, self.ctx, ('c', 'stress', 'Invokes', '1'), self.guild, self.user, self.channel, invoke['aspect'])
                     self.messages.extend(cmd.run())
-                    if not invoke['aspect'].get_available_stress('Free Invokes'):
-                        cmd = CharacterCommand(self.parent, self.ctx, ('c', 'stress', 'title', 'delete', 'Free Invokes'), self.guild, self.user, self.channel, invoke['aspect'])
+                    if not invoke['aspect'].get_available_stress('Invokes'):
+                        cmd = CharacterCommand(self.parent, self.ctx, ('c', 'stress', 'title', 'delete', 'Invokes'), self.guild, self.user, self.channel, invoke['aspect'])
                         self.messages.extend(cmd.run())
             self.messages.append(self.char.get_string_fate())
 
@@ -737,7 +737,7 @@ class RollCommand():
                 else:
                     aspect_name = aspect.name
                     is_boost = True if aspect.is_boost else False
-                    is_free_invoke = True if 'Free Invokes' in aspect.stress_titles else False
+                    is_free_invoke = True if 'Invokes' in aspect.stress_titles else False
                     skills = aspect.skills if aspect.skills else []
                     if aspect.fate_points is not None:
                         fate_points = aspect.fate_points

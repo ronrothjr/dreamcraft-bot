@@ -43,6 +43,7 @@ class Character(Document):
     fate_points = IntField()
     refresh = IntField()
     last_roll = DynamicField()
+    counters = DynamicField()
     stress = DynamicField()
     stress_titles = ListField()
     stress_categories = ListField()
@@ -318,6 +319,13 @@ class Character(Document):
             stunts_by_type[stunt_type] += self.sep() + s.get_string(user, self)
         stunts_string =  f'{self.nl()}{self.nl()}' + (f'{self.nl()}{self.nl()}'.join([ f'**{s}:**{stunts_by_type[s]}' for s in stunts_by_type])) if stunts else ''
         return stunts_string
+
+    def get_string_counters(self):
+        counters_string = ''
+        if self.counters:
+            for key in sorted(self.counters.keys()):
+                counters_string += '**_{name}:_**  {counter}'.format(name=self.counters[key]['name'], counter=' '.join(self.counters[key]['ticks']))
+        return f'{self.nl()}{self.nl()}{counters_string}' if counters_string else ''
 
     def get_string_skills(self):
         title = 'Approaches' if self.use_approaches else 'Skills'

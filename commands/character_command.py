@@ -1408,7 +1408,11 @@ class CharacterCommand():
                     freeinvokes = 1
                     aspect = ' '.join(args[2:])
             else:
-                aspect = ' '.join(args[1:])
+                with_invokes = len(args) > 4 and 'invoke' in args[-1].lower() and args[-2].isdigit() and args[-3].lower() == 'with'
+                invokes = len(args) > 3 and 'invoke' in args[-1].lower() and args[-2].isdigit() and args[-3].lower() != 'with'
+                freeinvokes = int(args[-2]) if with_invokes or invokes else 0
+                aspect = ' '.join(args[1:-3]) if with_invokes else ' '.join(args[1:])
+                aspect = ' '.join(args[1:-2]) if invokes else aspect
             self.asp = Character().get_or_create(self.user, aspect, self.guild.name, self.char, 'Aspect')
             if is_boost:
                 self.asp.is_boost = True
@@ -1609,7 +1613,7 @@ class CharacterCommand():
         int - the number of available stress track marks available
         """
 
-        return sum([1 for s in self.char.stress[stress_type] if s[1] == O]) if self.char.stress else 0
+        return sum([1 * (int(s[0]) if s[0].isdigit() else 1) for s in self.char.stress[stress_type] if s[1] == O]) if self.char.stress else 0
 
     def stress(self, args, check_user=None):
         """Add/edit stress or customize a stress track
@@ -1769,7 +1773,7 @@ class CharacterCommand():
             if args[1].lower() not in stress_checks:
                 messages.append(f'{args[1].lower()} is not a valid stress type for ***{self.char.name}*** - {stress_check_types}')
                 return messages
-            shift = args[2]
+            shift = args[1] if args[1].isdigit() else args[2]
             if not shift.isdigit():
                 messages.append('Stress shift must be a positive integer')
                 return messages

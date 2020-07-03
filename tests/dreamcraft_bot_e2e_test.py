@@ -249,7 +249,7 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                 ]
             },
             {
-                'args': [('y',)],
+                'args': [('y',),('st', 't', 'CORE')],
                 'assertions': [
                     ['YOU ARE CURRENTLY EDITING', 'Should be editing a character'],
                     ['***Test Character 1*** _(Active)_  _(Character)_', 'Test Character 1 should be the active character'],
@@ -358,15 +358,15 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                 ]
             },
             {
-                'args': [('st', 't', '1', 'Energy')],
+                'args': [('st', 't', 'CORE'),('st', 't', '1', 'Energy')],
                 'assertions': [
-                    ['**_Energy_**  [   ]', 'Should add custom Energy stress track']
+                    ['_Energy:_  [   ]', 'Should add custom Energy stress track']
                 ]
             },
             {
                 'args': [('st', 'Energy')],
                 'assertions': [
-                    ['**_Energy_**  [X]', 'Should absorb 1 Energy stress']
+                    ['_Energy:_  [X]', 'Should absorb 1 Energy stress']
                 ]
             },
             {
@@ -939,15 +939,19 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                     ('new', 'c', 'npc', 'Test NPC 2'),
                     ('y',),
                     ('approach', 'Fo', '-2'),
-                    ('st', 't', 'CORE'),
+                    ('st', 't', 'FAE'),
                     ('con', 't', 'FATE'),
                     ('aspect', 'freeinvoke', 'Test Aspect 3'),
                     ('aspect', 'freeinvoke', '2', 'Test Aspect 4'),
+                    ('aspect', 'Test Aspect 5', 'with', '3', 'Invokes'),
+                    ('aspect', 'Test Aspect 6', '1', 'invoke'),
                     ('stunt', 'Test Stunt 2'),
                     ('scene', 'enter')
                 ],
                 'assertions': [
-                    ['**_Invokes:_**  [   ] [   ]', 'should add 2 \'Invokes\' to \'Test Aspect 4\'']
+                    ['**_Invokes:_**  [   ] [   ]', 'should add 2 \'Invokes\' to \'Test Aspect 4\''],
+                    ['**_Invokes:_**  [   ] [   ] [   ]', 'should add 3 \'Invokes\' to \'Test Aspect 5\''],
+                    ['***Test Aspect 6***', 'should add \'Test Aspect 6\'']
                 ]
             },
             {
@@ -991,6 +995,15 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                     ['.d boost "BOOST NAME"', 'should display boost syntax warning'],
                     ['***Prone*** _(Active)_  _(Boost)_  _(Aspect)_', 'should display the \'Prone\' boost on the defender'],
                     ['The boost has already been claimed from \'Succeed with Style\'.', 'should warn of boost already claimed']
+                ]
+            },
+            {
+                'ctx': ctx2,
+                'args': [
+                    ('c', 'st', '3')
+                ],
+                'assertions': [
+                    ['Attack from ***Test Character 1*** has 8 shifts left to absorb.', 'should show the remaining 8 shifts']
                 ]
             },
             {

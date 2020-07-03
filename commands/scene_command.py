@@ -278,7 +278,7 @@ class SceneCommand():
             'getter': {
                 'method': Log.get_by_page,
                 'params': {
-                    'params': {'parent_id': str(self.sc.id)},
+                    'params': {'parent_id': str(self.sc.id), 'data__note__exists': True},
                     'sort': 'created'
                 },
                 'parent_method': Scene.get_by_page,

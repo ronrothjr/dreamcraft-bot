@@ -838,6 +838,14 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                 'assertions': [
                     ['***Test Character 1*** is already in the _Test Zone 1_ zone', 'should show \'Test Character 1\' is already in \'Test Zone 1\'']
                 ]
+            },
+            {
+                'args': [('scene', 'note', 'An eerie cloud of mist rolls over the walls of Castle Dracula'), ('c', 'say','The children of the night. What beautiful music they make.'), ('scene', 'story')],
+                'assertions': [
+                    ['Log created', 'should record that a note was recorded'],
+                    ['An eerie cloud of mist rolls over the walls of Castle Dracula', 'should display scene note in the story dialog'],
+                    ['_note:_ ***Test Character 1*** says, "The children of the night. What beautiful music they make."', 'should display character dialog in the story']
+                ]
             }
         ])
 
@@ -939,24 +947,50 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                     ('scene', 'enter')
                 ],
                 'assertions': [
-                    ['**_Invokes_**  [   ]  [   ]', 'should add 2 \'Invokes\' to \'Test Aspect 4\'']
+                    ['**_Invokes:_**  [   ] [   ]', 'should add 2 \'Invokes\' to \'Test Aspect 4\'']
                 ]
             },
             {
-                'args': [('attack', 'Test NPC 2', 'exact', '+8', 'Forceful')],
+                'args': [
+                    ('attack', 'Test NPC 2', 'exact', '+8', 'Forceful'),
+                    ('freeinvoke',),
+                    ('freeinvoke', 'Not So Fast')
+                ],
                 'assertions': [
                     ['***Test NPC 2*** faces', 'should display \'Test NPC 2\' facing an attack'],
-                    ['attack from ***Test Character 1***', 'should display an attack from \'Test Character 1\'']
+                    ['attack from ***Test Character 1***', 'should display an attack from \'Test Character 1\''],
+                    ['The outcome of your \'Attack\' has not yet been determined.', 'should warn of undetermined outcome']
                 ]
             },
             {
                 'ctx': ctx2,
                 'args': [
-                    ('defend', 'exact', '+0', 'Forceful', 'invoke', 'Test Aspect 3')
+                    ('defend', 'exact', '+0', 'Forceful', 'invoke', 'Test Aspect 3'),
+                    ('boost',)
                 ],
                 'assertions': [
                     [' shifts to absorb', 'should display \'Test NPC 2\' rolling with shifts to absorb'],
-                    ['option to take a boost in exchange for one shift', 'should allow succeed with style boost']
+                    ['option to take a boost in exchange for one shift', 'should allow succeed with style boost'],
+                    ['You may not claim a boost', 'should warn of being unable to claim a boost'],
+                ]
+            },
+            {
+                'args': [
+                    ('freeinvoke',),
+                    ('freeinvoke', 'Not So Fast'),
+                    ('freeinvoke', 'Not So Fast'),
+                    ('boost',),
+                    ('boost', 'Prone'),
+                    ('boost', 'Prone')
+                ],
+                'assertions': [
+                    ['.d freeinvoke "ASPECT NAME"', 'should warn of freeinvoke syntax error'],
+                    ['***Not So Fast*** _(Active)_  _(Aspect)_', 'should display \'Not So Fast\' aspect'],
+                    ['The free invoke has already been claimed from \'Succeed with Style\'.', 'should warn of freeinvoke already claimed'],
+                    ['**_Invokes:_**  [   ] [   ]', 'should display \'Invokes\' on the \'Not So Fast\' aspect'],
+                    ['.d boost "BOOST NAME"', 'should display boost syntax warning'],
+                    ['***Prone*** _(Active)_  _(Boost)_  _(Aspect)_', 'should display the \'Prone\' boost on the defender'],
+                    ['The boost has already been claimed from \'Succeed with Style\'.', 'should warn of boost already claimed']
                 ]
             },
             {

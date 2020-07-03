@@ -89,6 +89,7 @@ class Setup():
             Removes a character```css\n.d c delete "NAME"```\n\
             Display, refresh, add or subtract fate points```css\n.d c fate refresh|+|-```\n\
             Add/remove aspects```css\n.d c aspect [delete] "ASPECT NAME"```\n\
+            Add aspects with invokes```css\n.d c aspect "ASPECT NAME" with 2 invokes```\n\
             Set custom aspect type```css\n.d c aspect delete "ASPECT TYPE"```\n\
             Set the current aspect as the active character```css\n.d c aspect character```\n\
             Add/remove stunts```css\n.d c stunt [delete] "STUNT NAME"```\n\
@@ -389,13 +390,15 @@ class Setup():
     fate_dice = {'-1': '-', '0': 'b', '1': '+'}
     x = '[X]'
     o = '[   ]'
-    stress = [[['1', o],['1', o],['1', o]],[['1', o],['1', o],['1', o]]]
+    stress = [[['1', o]],[['2', o]],[['3', o]]]
     stress_FAE = [[['1', o]],[['2', o]],[['3', o]]]
-    stress_Core = [[['1', o],['1', o]],[['1', o],['1', o]]]
+    stress_Core = [[['1', o],['1', o],['1', o]],[['1', o],['1', o],['1', o]]]
+    stress_Condensed = [[['1', o],['1', o],['1', o]],[['1', o],['1', o],['1', o]]]
     stress_categories = ['Stress', 'Stress']
-    stress_titles = ['Physical', 'Mental']
+    stress_titles = ['1', '2', '3']
     stress_titles_FAE = ['1', '2', '3']
     stress_titles_Core = ['Physical', 'Mental']
+    stress_titles_Condensed = ['Physical', 'Mental']
     consequences = [['2', o],['4', o],['6', o]]
     consequences_categories = ['Consequences', 'Consequences', 'Consequences']
     consequences_titles = ['Mild', 'Moderate', 'Severe']

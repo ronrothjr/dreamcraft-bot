@@ -396,7 +396,7 @@ class RollCommand():
         if not self.char.active_action:
             raise Exception('You have not taken any action. Try one of these:```\n.d attack "OPPONENT NAME" "SKILL NAME"```')
         if 'outcome' not in self.char.last_roll:
-            raise Exception(f'The outcome of your \'{self.char.active_action}\' has not yet been determined.')
+            raise Exception('You may not claim a boost unless you have taken an action with a Tie or Succeed with Style outcome.```')
         if self.char.active_action == 'Attack' and self.char.last_roll['outcome'] in ['Tie', 'Succeed with Style']:
             outcome = self.char.last_roll['outcome']
             if not self.args:
@@ -441,15 +441,21 @@ class RollCommand():
             raise Exception('You have not taken any action. Try one of these:```\n.d attack "OPPONENT NAME" "SKILL NAME"```')
         if 'outcome' not in self.char.last_roll:
             raise Exception(f'The outcome of your \'{self.char.active_action}\' has not yet been determined.')
-        if self.char.active_action == 'Advantage' and self.char.last_roll['outcome'] in ['Fail', 'Succeed', 'Succeed with Style']:
+        if self.char.active_action in ['Advantage','Attack'] and self.char.last_roll['outcome'] in ['Fail', 'Succeed', 'Succeed with Style']:
+            last_roll = copy.deepcopy(self.char.last_roll)
             outcome = self.char.last_roll['outcome']
+            if 'freeinvoke_claimed' in last_roll:
+                raise Exception(f'The free invoke has already been claimed from \'{outcome}\'.')
             if not self.args:
                 raise Exception(f'No name given to claim the free invok(s) from \'{outcome}\'.```css\n.d freeinvoke "ASPECT NAME"```')
-            freeinvokes_num = 2 if outcome == 'Succeed with Style' else 1
+            freeinvokes_num = '2' if outcome == 'Succeed with Style' else '1'
             cmd = CharacterCommand(self.parent, self.ctx, ('c', 'aspect', 'freeinvoke', freeinvokes_num, ' '.join(self.args)), self.guild, self.user, self.channel, self.char)
             self.messages.extend(cmd.run())
-            self.char.active_action = ''
-            self.char.active_target = ''
+            last_roll['freeinvoke_claimed'] = True
+            self.char.last_roll = last_roll
+            if self.char.active_action in ['Advantage']:
+                self.char.active_action = ''
+                self.char.active_target = ''
             char_svc.save(self.char, self.user)
             self.messages.append(f'{self.char.active_action} from ***{self.char.name}*** has been resolved.')
         return self.messages
@@ -605,10 +611,10 @@ class RollCommand():
                     self.messages.extend(cmd.run())
                 # Consume Invokes
                 if invoke['is_free_invoke'] and invoke['aspect']:
-                    cmd = CharacterCommand(self.parent, self.ctx, ('c', 'stress', 'Invokes', '1'), self.guild, self.user, self.channel, invoke['aspect'])
+                    cmd = CharacterCommand(self.parent, self.ctx, ('c', 'tick', 'Invokes'), self.guild, self.user, self.channel, invoke['aspect'])
                     self.messages.extend(cmd.run())
-                    if not invoke['aspect'].get_available_stress('Invokes'):
-                        cmd = CharacterCommand(self.parent, self.ctx, ('c', 'stress', 'title', 'delete', 'Invokes'), self.guild, self.user, self.channel, invoke['aspect'])
+                    if not invoke['aspect'].get_available_ticks(invoke['aspect'], 'Invokes'):
+                        cmd = CharacterCommand(self.parent, self.ctx, ('c', 'counter', 'delete', 'Invokes'), self.guild, self.user, self.channel, invoke['aspect'])
                         self.messages.extend(cmd.run())
             self.messages.append(self.char.get_string_fate())
 
@@ -737,7 +743,7 @@ class RollCommand():
                 else:
                     aspect_name = aspect.name
                     is_boost = True if aspect.is_boost else False
-                    is_free_invoke = True if 'Invokes' in aspect.stress_titles else False
+                    is_free_invoke = True if isinstance(aspect.counters, list) and 'Invokes' in [c['name'] for c in aspect.counters] else False
                     skills = aspect.skills if aspect.skills else []
                     if aspect.fate_points is not None:
                         fate_points = aspect.fate_points

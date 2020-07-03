@@ -1398,9 +1398,7 @@ class CharacterCommand():
             if args[1].lower() == 'boost':
                 is_boost = True
                 aspect = ' '.join(args[2:])
-            else:
-                aspect = ' '.join(args[1:])
-            if args[1].lower() == 'freeinvoke':
+            elif args[1].lower() == 'freeinvoke':
                 if len(args) < 3:
                     raise Exception('Here\'s how to create an aspect with a free invoke:```css\n.d c aspect freeinvoke "Aspect Name```Create an aspect with 2 free invokes:```css\n.d c aspect freeinvoke 2 "Aspect Name"```')
                 if args[2].isdigit():
@@ -1409,12 +1407,14 @@ class CharacterCommand():
                 else:
                     freeinvokes = 1
                     aspect = ' '.join(args[2:])
+            else:
+                aspect = ' '.join(args[1:])
             self.asp = Character().get_or_create(self.user, aspect, self.guild.name, self.char, 'Aspect')
             if is_boost:
                 self.asp.is_boost = True
                 char_svc.save(self.asp, self.user)
             if freeinvokes:
-                cmd = CharacterCommand(self.parent, self.ctx, ('stress', 'title', str(freeinvokes), 'Invokes'), self.guild, self.user, self.channel, self.asp)
+                cmd = CharacterCommand(self.parent, self.ctx, ('counter', 'add', str(freeinvokes), 'Invokes'), self.guild, self.user, self.channel, self.asp)
                 cmd.run()
             self.char.active_aspect = str(self.asp.id)
             char_svc.save(self.char, self.user)

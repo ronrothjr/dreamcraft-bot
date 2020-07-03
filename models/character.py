@@ -405,11 +405,12 @@ class Character(Document):
         aspects = self.get_string_aspects(user)
         stunts = self.get_string_stunts(user)
         skills = self.get_string_skills()
+        counters = self.get_string_counters()
         stress = self.get_string_stress()
         consequenses = self.get_string_consequences()
         image = f'!image{self.image_url}!image' if self.image_url else ''
         sharing = self.get_sharing_string(user)
-        return f'{archived}{name}{description}{high_concept}{trouble}{fate_points}{custom}{skills}{stress}{aspects}{stunts}{consequenses}{sharing}{image}'
+        return f'{archived}{name}{description}{high_concept}{trouble}{fate_points}{custom}{skills}{stress}{counters}{aspects}{stunts}{consequenses}{sharing}{image}'
 
     def get_short_string(self, user=None, parent=None):
         archived = '```css\nARCHIVED```' if self.archived else ''

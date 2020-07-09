@@ -20,7 +20,7 @@ results = {
 
 def print_results():
     for key in results:
-        if key == 'failed_commands':
+        if key == 'failed_commands' and results['failed']:
             print(f'Failed commands:\n\n' + '\n\n'.join(['    Command: {command}\n    Assertion: {assertion}\n    Expected: {expected}\n    Received: {received}'.format(**f) for f in results[key]]))
         elif key == 'command_errors':
             for f in results[key]:
@@ -227,15 +227,39 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                 ]
             },
             {
+                'args': [('aspect',)],
+                'assertions': [
+                    ['You don\'t have an active aspect.', 'Should warn that there is no active aspect']
+                ]
+            },
+            {
                 'args': [('aspect', 'Test Aspect 2')],
                 'assertions': [
                     ['***Test Aspect 2*** _(Active)_  _(Aspect)_', 'Should add Test Aspect 2']
                 ]
             },
             {
+                'args': [('aspects',)],
+                'assertions': [
+                    ['***Test Aspect 2*** _(Aspect)_', 'Should display Test Aspect 2']
+                ]
+            },
+            {
+                'args': [('stunt',)],
+                'assertions': [
+                    ['.d c a "STUNT NAME"', 'should warn that there is no active stunt']
+                ]
+            },
+            {
                 'args': [('stunt', 'Test Stunt 2')],
                 'assertions': [
                     ['***Test Stunt 2*** _(Active)_  _(Stunt)_', 'Should add Test Stunt 2']
+                ]
+            },
+            {
+                'args': [('stunts',)],
+                'assertions': [
+                    ['***Test Stunt 2*** _(Stunt)_', 'Should display Test Stunt 2']
                 ]
             }
         ])
@@ -1018,6 +1042,21 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                 ]
             },
             {
+                'args': [
+                    ('compel',),
+                    ('compel', 'with', 'Dislocated Shoulder'),
+                    ('compel', 'prevent'),
+                    ('compel', 'with', 'Dislocated Shoulder'),
+                    ('compel', 'accept'),
+                ],
+                'assertions': [
+                    ['Incorrect compel syntax. Try this:```css', 'should have instructions for how to use compel'],
+                    ['***Test Character 1*** is being compelled by ***Test NPC 2\'s*** ***Dislocated Shoulder***', 'should display compel'],
+                    ['***Test Character 1*** prevented the compel', 'should prevent compel'],
+                    ['***Test Character 1*** accepted the compel and received a fate point', 'should accept compel']
+                ]
+            },
+            {
                 'ctx': ctx2,
                 'args': [
                     ('c', 'con', 'delete', 'Moderate')
@@ -1041,13 +1080,21 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                 ]
             },
             {
-                'ctx': ctx2,
                 'args': [
-                    ('c', 'npc', 'Test NPC 1'),
+                    ('scene', 'enter'),
+                    ('scene', 'player', 'delete', 'Test Character 1')
+                ],
+                'assertions': [
+                    ['***Test Character 1*** removed from _Test Scene 1_',  'should remove \'Test Character 1\' from \'Test Scene 1\'']
+                ]
+            },
+            {
+                'args': [
+                    ('c', 'npc', 'Test NPC 2'),
                     ('scene', 'exit')
                 ],
                 'assertions': [
-                    ['***Test NPC 1*** removed from _Test Scene 1_', 'should remove \'Test NPC 1\' from \'Test Scene 1\'']
+                    ['***Test NPC 2*** removed from _Test Scene 1_', 'should allow other players to remove remove \'Test NPC 2\' from \'Test Scene 1\'']
                 ]
             },
             {

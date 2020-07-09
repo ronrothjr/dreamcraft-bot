@@ -261,9 +261,7 @@ class SceneCommand():
         command = 'scene ' + (' '.join(args))
         def canceler(cancel_args):
             if cancel_args[0].lower() in ['scene','s']:
-                self.args = cancel_args
-                self.command = self.args[0]
-                return self.run()
+                return SceneCommand(parent=self.parent, ctx=self.ctx, args=cancel_args, guild=self.guild, user=self.user, channel=self.channel).run()
             else:
                 self.parent.args = cancel_args
                 self.parent.command = self.parent.args[0]

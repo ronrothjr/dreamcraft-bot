@@ -276,8 +276,11 @@ class CharacterCommand():
         list(str) - the response messages string array
         """
 
+        if len(args) < 2:
+            raise Exception('Note subcommand is missing content. Try this:```css\n.d c note "Something really cool just happened."')
         if self.char:
-            Log().create_new(str(self.char.id), f'Character: {self.char.name}', str(self.user.id), self.guild.name, 'Character', {'by': self.user.name, 'note': '"' + ' '.join(args[1:])} + '"', 'created')
+            note_text = ' '.join(args[1:])
+            Log().create_new(str(self.char.id), f'Character: {self.char.name}', str(self.user.id), self.guild.name, 'Character', {'by': self.user.name, 'note': '"' + note_text + '"'}, 'created')
             return ['Log created']
         else:
             return ['No active character to log']
@@ -295,6 +298,8 @@ class CharacterCommand():
         list(str) - the response messages string array
         """
 
+        if len(args) < 2:
+            raise Exception('Say subcommand is missing content. Try this:```css\n.d c say "I\'m about to say something really cool."')
         if not self.char:
             return ['No active character to log']
         if not self.sc:
@@ -329,7 +334,7 @@ class CharacterCommand():
             'getter': {
                 'method': Log.get_by_page,
                 'params': {
-                    'params': {'parent_id': str(self.char.id)},
+                    'params': {'parent_id': str(self.char.id), 'data__note__exists': True},
                     'sort': 'created'
                 },
                 'parent_method': Character.get_by_page,

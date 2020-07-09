@@ -1350,6 +1350,7 @@ class CharacterCommand():
             if not self.asp:
                 return ['You don\'t have an active aspect.\nTry this: ```css\n.d c a "ASPECT NAME"```']
             messages.append(f'{self.asp.get_string(self.char)}')
+            return messages
         if not self.char:
             return ['You don\'t have an active character.\nTry this: ```css\n.d new c "CHARACTER NAME"```']
         elif not self.can_edit:
@@ -1446,6 +1447,7 @@ class CharacterCommand():
             if not self.stu:
                 return ['You don\'t have an active stunt.\nTry this: ```css\n.d c a "STUNT NAME"```']
             messages.append(f'{self.stu.get_string(self.char)}')
+            return messages
         if not self.char:
             return ['You don\'t have an active character.\nTry this: ```css\n.d new c "CHARACTER NAME"```']
         elif not self.can_edit:

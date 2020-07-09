@@ -33,6 +33,7 @@ class RollCommand():
         help - display a set of instructions on RollCommand usage
         roll, r - roll fate dice with approach/skill and invoke/compel options
         reroll, re - reroll a previous roll with additional invoke/compel options
+        compel - propose a compel on a character using an aspect
         clear, erase - remove the previous roll and target information
         caa, create, advantage - create a situational advantage or get free invokes on existing aspects
         attack, att - attack another roll within a scene and roll
@@ -114,6 +115,7 @@ class RollCommand():
                 'reroll': self.roll,
                 're': self.roll,
                 'clear': self.clear,
+                'compel': self.compel,
                 'erase': self.clear,
                 'caa': self.advantage,
                 'create': self.advantage,
@@ -275,6 +277,57 @@ class RollCommand():
             messages = ['No unresolved actions to clear']
         return messages
 
+    def compel(self):
+        """Propose a compel on a character using an aspect"""
+
+        messages = []
+        if len(self.args) == 0:
+            raise Exception('Incorrect compel syntax. Try this:```css\n.d compel Superman with Always Saves Bystanders')
+        if not self.sc:
+            raise Exception('There is no active scene')
+        if self.sc and not self.sc.character:
+            raise Exception(f'The active scene, ***{self.sc.name}*** has no charactersin it')
+        if self.char and self.char.active_action == 'Compel':
+            if self.args[0].lower() in ['acc','accept','accepted']:
+                self.char.fate_points += 1
+                self.char.active_action = ''
+                char_svc.save(self.char, self.user)
+                messages.append(f'***{self.char.name}*** accepted the compel and received a fate point')
+            elif self.args[0].lower() in ['rej','reject','rejected','prevent','prevented']:
+                if self.char.fate_points and  self.char.fate_points == 0:
+                    raise Exception(f'***{self.char.name}*** doesn\'t have enough fate points to prevent the compel')
+                else:
+                    self.char.fate_points -= 1
+                    self.char.active_action = ''
+                    char_svc.save(self.char, self.user)
+                    messages.append(f'***{self.char.name}*** prevented the compel')
+        elif 'with' in [a.lower() for a in self.args] or 'by' in [a.lower() for a in self.args]:
+            by_with = [i for i in range(0, len(self.args)) if self.args[i].lower() in ['by','with']]
+            if by_with and by_with[0] + 1 == len(self.args):
+                raise Exception('No aspect specified to compel')
+            by_with = by_with[0]
+            char_name = 'Unspecified Character'
+            char = None
+            if by_with > 0:
+                char_name = self.args[0:by_with]
+                char = Character.filter(id__in=self.sc.characters, name__icontains=char_name.lower(), guild=self.guild.name, archived=False).first()
+            elif self.char and str(self.char.id) in self.sc.characters:
+                char = self.char
+                char_name = char.name
+            if not char:
+                raise Exception(f'***{char_name}*** isn\'t a characcter in ***{self.sc.name}***')
+            aspect_name = ' '.join(self.args[by_with+1:])
+            self.get_available_invokes()
+            aspects = [a for a in self.available if aspect_name.lower() in a['char'].name.lower()]
+            if not aspects:
+                raise Exception(f'***{aspect_name}*** is not an invokable aspect within the ***{self.sc.name}*** scene')
+            char.active_action = 'Compel'
+            char_svc.save(char, self.user)
+            messages.append('***{char_name}*** is being compelled by ***{parent}\'s*** ***{name}***'.format(char_name=char_name, parent=aspects[0]['parent'].name, name=aspects[0]['char'].name))
+        else:
+            raise Exception('Incorrect compel syntax. Try this:```css\n.d compel Superman with Always Saves Bystanders')
+        return messages
+
     def advantage(self):
         """Execute the advantage subcommand to create a situational advantage or get fre invokes on an existing one and roll for advantage
         
@@ -283,6 +336,7 @@ class RollCommand():
         list(str) - the response messages string array
         """
 
+        messages = []
         if len(self.args) == 0:
             raise Exception('No aspect identified for your create an advantage action')
         search = self.args[0]
@@ -921,14 +975,14 @@ class RollCommand():
         self.available.extend(zone_aspects)
         if self.sc and self.sc.characters:
             for char_id in self.sc.characters:
-                char = Character.get_by_id(char_id)
-                if char and not char.name == char.name:
-                    self.available.extend(char.get_invokable_objects())
+                sc_char = Character.get_by_id(char_id)
+                if not char or (char and not char.name == sc_char.name):
+                    self.available.extend(sc_char.get_invokable_objects())
         if self.zone and self.zone.characters:
             for char_id in self.zone.characters:
-                char = Character.get_by_id(char_id)
-                if char and not char.name == self.char.name:
-                    self.available.extend(char.get_invokable_objects())
+                z_char = Character.get_by_id(char_id)
+                if not char or (char and not char.name == z_char.name):
+                    self.available.extend(z_char.get_invokable_objects())
         return self.available
 
     def find_aspect(self, aspect):

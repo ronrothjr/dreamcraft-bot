@@ -22,7 +22,7 @@ class SceneService(BaseService):
             return [sc.get_string_characters(channel)]
         elif args[1].lower() in ['delete','d']:
             for char_name in args[2:]:
-                char = Character().find(user=user, name=char_name, guild=channel.guild, category='Character')
+                char = Character().filter(id__in=sc.characters, name=char_name, guild=channel.guild, category='Character', archived=False).first()
                 [sc.characters.remove(s) for s in sc.characters if char and str(char.id) == s]
                 messages.append(f'\n***{char.name}*** removed from _{sc.name}_' if char else f'**{char_name}** was not found')
             self.save(sc, user)

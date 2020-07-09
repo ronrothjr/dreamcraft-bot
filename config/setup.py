@@ -52,6 +52,9 @@ class Setup():
             Reroll the character\'s last roll```css\n.d re invoke "ASPECT NAME" +2|rerolll [...invoke "ASPECT NAME" +2|rerolll]```\n\
             Clear the actions from a previous roll```css\n.d clear\n.d erase```\n\
             Display invocable/compelable aspects```css\n.d available```\n\
+            Propose a compel```css\n.d compel Superman with Cryptonite```\n\
+            Accept a compel```css\n.d compel accepted```\n\
+            Reject a compel```css\n.d compel rejected```\n\
             Invoke an aspect and uses the active character\'s fate points```css\n.d invoke "ASPECT NAME" +2|rerolll [...iinvoke "ASPECT NAME" +2|rerolll]```\n\
             Compel aspects and grants the active character a fate point```css\n.d compel "ASPECT NAME" [...ccompel "ASPECT NAME"]```\n\
             Attack another character```css\n.d attack "Character Name" Forceful invoke "Man of Steel"```\n\

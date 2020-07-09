@@ -858,6 +858,23 @@ class TestDreamcraftBotE2E(unittest.TestCase):
                 ]
             },
             {
+                'args': [
+                    ('c', 'note'),
+                    ('c', 'note', 'Test Character 1 has \'arrived\''),
+                    ('c', 'story'),
+                    ('c', 'say'),
+                    ('c', 'say', 'I have "arrived".'),
+                    ('scene', 'story')
+                ],
+                'assertions': [
+                    ['Note subcommand is missing content. Try this:```css', 'should display note content warning'],
+                    ['Log created', 'should create the note on the character'],
+                    ['Test Character 1 has \'arrived\'', 'should display the note in the character story'],
+                    ['Say subcommand is missing content. Try this:```css', 'should display note content warning'],
+                    ['***Test Character 1*** says, "I have "arrived"."', 'should display the quote from \'Test Character 1\' in the character story']
+                ]
+            },
+            {
                 'args': [('scene', 'move', 'Test Zone 1')],
                 'assertions': [
                     ['***Test Character 1*** is already in the _Test Zone 1_ zone', 'should show \'Test Character 1\' is already in \'Test Zone 1\'']
